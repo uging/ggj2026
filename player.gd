@@ -16,9 +16,11 @@ extends CharacterBody2D
 @export var slide_speed := 600.0
 @export var wall_slide_speed := 50.0
 @export var slope_limit_deg := 30.0
+
+
 signal health_changed(new_health)
 @export var max_health := 10
-var current_health := 3  # Starts at 3 as requested
+var current_health := 3  # Starts at 3
 
 var charge_time := 0.0
 var is_charging := false

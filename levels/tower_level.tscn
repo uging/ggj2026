@@ -1,9 +1,10 @@
-[gd_scene load_steps=10 format=4 uid="uid://bgh77nwtdn33x"]
+[gd_scene load_steps=11 format=4 uid="uid://cahd13mh34s3u"]
 
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_hr45r"]
 [ext_resource type="Texture2D" uid="uid://ch537l21ahu2k" path="res://resources/building.png" id="2_35uxj"]
 [ext_resource type="Texture2D" uid="uid://ctkhdrwvmkjsh" path="res://resources/sheet.png" id="3_32ucf"]
 [ext_resource type="PackedScene" uid="uid://p6cwmp2367e6" path="res://player.tscn" id="4_35uxj"]
+[ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://heart_pickup.tscn" id="5_32ucf"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3qyff"]
 texture = ExtResource("2_35uxj")
@@ -473,3 +474,6 @@ tile_set = SubResource("TileSet_32ucf")
 
 [node name="Player" parent="." instance=ExtResource("4_35uxj")]
 position = Vector2(720, 254)
+
+[node name="HeartPickup" parent="." instance=ExtResource("5_32ucf")]
+position = Vector2(718, -1342)
