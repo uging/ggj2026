@@ -18,7 +18,7 @@ gravity = Vector3(0, -10, 0)
 scale_min = 0.099999994
 scale_max = 0.19999999
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody2D" groups=["player"]]
 script = ExtResource("1_mehiu")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

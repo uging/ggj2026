@@ -15,6 +15,9 @@ extends CharacterBody2D
 @export var gravity := 1500.0
 @export var slide_speed := 600.0
 @export var slope_limit_deg := 30.0
+signal health_changed(new_health)
+@export var max_health := 10
+var current_health := 3  # Starts at 3 as requested
 
 var charge_time := 0.0
 var is_charging := false
@@ -224,3 +227,26 @@ func stop_wall_stick():
 	is_sticking = false
 	# Return to normal scale gummy-style
 	apply_landing_squash()
+
+
+# --- Health Logic ---
+
+func take_damage(amount: int):
+	current_health = clampi(current_health - amount, 0, max_health)
+	health_changed.emit(current_health) # Notify the UI to remove a heart
+	
+	# Visual feedback: Flash red
+	var tween = create_tween()
+	tween.tween_property(visuals, "modulate", Color.RED, 0.1)
+	tween.tween_property(visuals, "modulate", Color.WHITE, 0.1)
+	
+	if current_health <= 0:
+		die()
+
+func heal(amount: int):
+	current_health = clampi(current_health + amount, 0, max_health)
+	health_changed.emit(current_health) # Notify the UI to add a heart
+
+func die():
+	# For now, just reload the scene when health hits 0
+	get_tree().reload_current_scene()
