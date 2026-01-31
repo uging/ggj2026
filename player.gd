@@ -14,6 +14,7 @@ extends CharacterBody2D
 @export var ground_friction_factor := 5.0
 @export var gravity := 1500.0
 @export var slide_speed := 600.0
+@export var wall_slide_speed := 50.0
 @export var slope_limit_deg := 30.0
 signal health_changed(new_health)
 @export var max_health := 10
@@ -33,7 +34,7 @@ var stick_timer := 0.0
 var charge_recovery_timer := 0.0
 
 @export var wall_stick_duration := 0.6  # How long he stays stuck (seconds)
-@export var charge_cooldown := 3.0      # Seconds to refill ONE charge
+@export var charge_cooldown := 2.0      # Seconds to refill ONE charge
 
 # --- Equipment Sets ---
 var equipment_sets = {
@@ -72,18 +73,25 @@ func _physics_process(delta: float) -> void:
 			if gum_charges > 0 and not is_sticking:
 				start_wall_stick()
 
-	# --- 4. GRAVITY & STATE HANDLING ---
+# --- 4. GRAVITY & STATE HANDLING ---
 	if is_sticking:
-		velocity = Vector2.ZERO # Stop all movement while stuck
-		stick_timer -= delta
+		# If timer is still active, Goma is stuck perfectly still
+		if stick_timer > 0:
+			velocity = Vector2.ZERO
+			stick_timer -= delta
+		else:
+			# SLIME MODE: The timer ran out, so slide down slowly
+			velocity.y = wall_slide_speed
+			# Optional: Slow down horizontal drift if he's sliding off a corner
+			velocity.x = 0 
 		
 		# Visual: Flatten Goma against the wall vertically
 		var flip_mult = -1.0 if is_facing_right else 1.0
 		visuals.scale.x = 0.7 * flip_mult
 		visuals.scale.y = 1.3
 		
-		# Release if time runs out, he hits the floor, or jumps
-		if stick_timer <= 0 or is_on_floor():
+		# Release if he hits the floor or is no longer touching a wall
+		if is_on_floor() or not is_on_wall():
 			stop_wall_stick()
 	else:
 		# Apply normal gravity if not sticking
@@ -116,13 +124,17 @@ func _physics_process(delta: float) -> void:
 						# Visual: Match the slope angle smoothly
 						visuals.rotation = lerp_angle(visuals.rotation, floor_normal.angle() + PI/2, 10 * delta)
 
-	# --- 7. JUMP CHARGING (Floor or Wall) ---
-	# We allow charging if on floor OR currently sticking to a wall
-	if Input.is_key_pressed(KEY_SPACE) and (is_on_floor() or is_sticking):
+# --- 7. JUMP CHARGING (Floor, Wall, or Sticky) ---
+	# We allow charging if on floor, sticking, OR near a wall for non-mask jumping
+	var can_jump = is_on_floor() or is_sticking or is_on_wall()
+	
+	if Input.is_key_pressed(KEY_SPACE) and can_jump:
 		is_charging = true
-		charge_time = min(charge_time + delta * 2.0, 1.0) 
+		# Gummy Mask (ID 3) charges much faster
+		var charge_speed = 4.0 if current_set_id == 3 else 2.0
+		charge_time = min(charge_time + delta * charge_speed, 1.0) 
 		
-		# If we start charging while on a wall, stop the "stick" but stay in place
+		# Stop sticking so we can aim the jump
 		if is_sticking: 
 			is_sticking = false 
 		
@@ -132,17 +144,28 @@ func _physics_process(delta: float) -> void:
 		velocity.x = lerp(velocity.x, 0.0, 10 * delta)
 	
 	elif is_charging:
-		# --- 8. PERFORM LAUNCH ---
-		var jump_direction = Vector2(input_vector.x, -1.5).normalized()
-		var power_boost = 1.8 if current_set_id == 3 else 1.0
-		var max_speed_cap = 1300.0 if current_set_id == 3 else 800.0
-		
-		var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
-		velocity = jump_direction * min(final_force, max_speed_cap)
-		
-		apply_launch_stretch(flip_dir)
-		charge_time = 0.0
-		is_charging = false
+			# --- 8. PERFORM LAUNCH ---
+			var jump_direction = Vector2(input_vector.x, -1.5).normalized()
+			
+			# WALL KICK: If Goma is touching a wall but not the floor, push him away
+			if is_on_wall() and not is_on_floor():
+				var wall_normal = get_wall_normal()
+				# If the player isn't holding a direction, jump away from the wall automatically
+				if input_vector.x == 0:
+					jump_direction = (wall_normal + Vector2(0, -1.2)).normalized()
+				else:
+					# Mix player input with the wall bounce
+					jump_direction = (Vector2(input_vector.x, -1.5) + wall_normal * 0.5).normalized()
+
+			var power_boost = 1.8 if current_set_id == 3 else 1.0
+			var max_speed_cap = 1300.0 if current_set_id == 3 else 800.0
+			
+			var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
+			velocity = jump_direction * min(final_force, max_speed_cap)
+			
+			apply_launch_stretch(flip_dir)
+			charge_time = 0.0
+			is_charging = false
 	
 # --- 9. NORMAL MOVEMENT ---
 	if not is_charging and not is_sticking:
