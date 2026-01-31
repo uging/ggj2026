@@ -101,8 +101,8 @@ func _physics_process(delta: float) -> void:
 			is_sticking = false 
 		
 		# Visual Squish
-		visuals.scale.y = lerp(visuals.scale.y, 0.4, 10 * delta)
-		visuals.scale.x = 1.6 * flip_dir 
+		visuals.scale.y = lerp(visuals.scale.y, 0.75, 10 * delta)
+		visuals.scale.x = 1.25 * flip_dir 
 		velocity.x = lerp(velocity.x, 0.0, 10 * delta)
 	
 	elif is_charging:
@@ -127,7 +127,7 @@ func _physics_process(delta: float) -> void:
 		visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
 		
 		# Gummy scale based on speed
-		var stretch_factor = abs(velocity.x) * 0.0002
+		var stretch_factor = abs(velocity.x) * 0.0001
 		visuals.scale.x = (1.0 + stretch_factor) * flip_dir
 		visuals.scale.y = lerp(visuals.scale.y, 1.0 - stretch_factor, 10 * delta)
 
@@ -159,18 +159,18 @@ func change_set(id: int):
 func apply_launch_stretch(f_dir: float):
 	var tween = create_tween()
 	# Stretch tall and thin on takeoff
-	tween.tween_property(visuals, "scale", Vector2(0.6 * f_dir, 1.6), 0.1)
-	tween.tween_property(visuals, "scale", Vector2(1.0 * f_dir, 1.0), 0.5).set_trans(Tween.TRANS_ELASTIC)
+	tween.tween_property(visuals, "scale", Vector2(0.85 * f_dir, 1.15), 0.1)
+	tween.tween_property(visuals, "scale", Vector2(1.0 * f_dir, 1.0), 0.4).set_trans(Tween.TRANS_ELASTIC)
 	
 func apply_landing_squash():
 	var tween = create_tween()
 	var flip_mult = -1.0 if is_facing_right else 1.0
 	
 	# 1. Squash down (wider and shorter)
-	tween.tween_property(visuals, "scale", Vector2(1.4 * flip_mult, 0.6), 0.1)
+	tween.tween_property(visuals, "scale", Vector2(1.2 * flip_mult, 0.8), 0.1)
 	
 	# 2. Bounce back to normal size with an elastic "boing"
-	tween.tween_property(visuals, "scale", Vector2(1.0 * flip_mult, 1.0), 0.5).set_trans(Tween.TRANS_ELASTIC)
+	tween.tween_property(visuals, "scale", Vector2(1.0 * flip_mult, 1.0), 0.4).set_trans(Tween.TRANS_ELASTIC)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
