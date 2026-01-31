@@ -13,6 +13,8 @@ extends CharacterBody2D
 @export var max_jump_multiplier := 1.8
 @export var ground_friction_factor := 5.0
 @export var gravity := 1500.0
+@export var slide_speed := 600.0
+@export var slope_limit_deg := 30.0
 
 var charge_time := 0.0
 var is_charging := false
@@ -89,8 +91,29 @@ func _physics_process(delta: float) -> void:
 	if input_vector.x > 0: is_facing_right = true
 	elif input_vector.x < 0: is_facing_right = false
 	var flip_dir = -1.0 if is_facing_right else 1.0
+	
+	# --- 6. SLOPE SLIDING CALCULATION ---
+	var is_on_steep_slope = false
+	floor_snap_length = 32.0     # Keep Goma glued to the floor
+	floor_constant_speed = true  # Ignore jagged speed changes
 
-	# --- 6. JUMP CHARGING (Floor or Wall) ---
+	if is_on_floor():
+		var floor_normal = get_floor_normal() #
+		var floor_angle = rad_to_deg(acos(floor_normal.dot(Vector2.UP))) #
+		
+		if floor_angle > slope_limit_deg:
+					var gum_can_resist = (current_set_id == 3 and gum_charges > 0)
+					if not gum_can_resist:
+						is_on_steep_slope = true
+						
+						# Set velocity based on slope direction for a smoother ride
+						# We use the X component of the normal to determine direction
+						velocity.x = lerp(velocity.x, floor_normal.x * slide_speed, 5 * delta)
+						
+						# Visual: Match the slope angle smoothly
+						visuals.rotation = lerp_angle(visuals.rotation, floor_normal.angle() + PI/2, 10 * delta)
+
+	# --- 7. JUMP CHARGING (Floor or Wall) ---
 	# We allow charging if on floor OR currently sticking to a wall
 	if Input.is_key_pressed(KEY_SPACE) and (is_on_floor() or is_sticking):
 		is_charging = true
@@ -106,7 +129,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = lerp(velocity.x, 0.0, 10 * delta)
 	
 	elif is_charging:
-		# --- 7. PERFORM LAUNCH ---
+		# --- 8. PERFORM LAUNCH ---
 		var jump_direction = Vector2(input_vector.x, -1.5).normalized()
 		var power_boost = 1.8 if current_set_id == 3 else 1.0
 		var max_speed_cap = 1300.0 if current_set_id == 3 else 800.0
@@ -118,20 +141,30 @@ func _physics_process(delta: float) -> void:
 		charge_time = 0.0
 		is_charging = false
 	
-	# --- 8. NORMAL MOVEMENT ---
+# --- 9. NORMAL MOVEMENT ---
 	if not is_charging and not is_sticking:
 		var target_speed = input_vector.x * speed
-		# Use lower friction in the air
-		velocity.x = lerp(velocity.x, target_speed, (10 if is_on_floor() else 3) * delta)
 		
-		visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
+		if is_on_steep_slope:
+			# SLIDE CONTROL: Give only 10% influence to player input to stop the "rough" jitter
+			# This lets gravity handle the heavy lifting while sliding
+			velocity.x = lerp(velocity.x, velocity.x + (target_speed * 0.1), 2 * delta)
+		else:
+			# NORMAL GROUND/AIR CONTROL:
+			# Use 10.0 for snappy floor movement, 3.0 for air drift
+			var lerp_weight = 20.0 if is_on_floor() else 3.0
+			velocity.x = lerp(velocity.x, target_speed, lerp_weight * delta)
+			
+			# Only apply the "speed lean" when NOT on a steep slope 
+			# (Because on slopes, Section 6 handles the rotation)
+			visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
 		
-		# Gummy scale based on speed
+		# Gummy scale effects based on the final velocity
 		var stretch_factor = abs(velocity.x) * 0.0001
 		visuals.scale.x = (1.0 + stretch_factor) * flip_dir
 		visuals.scale.y = lerp(visuals.scale.y, 1.0 - stretch_factor, 10 * delta)
 
-	# --- 9. EXECUTE MOVEMENT & LANDING ---
+	# --- 10. EXECUTE MOVEMENT & LANDING ---
 	var was_in_air = not is_on_floor()
 	move_and_slide() #
 	
