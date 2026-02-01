@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=4 uid="uid://cywrg0bjuyd0q"]
+[gd_scene load_steps=11 format=4 uid="uid://cywrg0bjuyd0q"]
 
 [ext_resource type="Script" path="res://levels/basic_level.gd" id="1_jxqax"]
 [ext_resource type="Texture2D" uid="uid://co4nqst4qm0h1" path="res://resources/tilesheet_complete.png" id="2_h6lqb"]
@@ -8,7 +8,6 @@
 [ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://heart_pickup.tscn" id="6_6t68p"]
 [ext_resource type="PackedScene" uid="uid://b7e4hrbvbf413" path="res://plant_trap.tscn" id="7_lc1pu"]
 [ext_resource type="PackedScene" uid="uid://bdewhpmq5hjkl" path="res://mask_gum_pickup.tscn" id="8_neare"]
-[ext_resource type="PackedScene" uid="uid://dn4teulm8by8r" path="res://mask_feather_pickup.tscn" id="9_tf5ar"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6t68p"]
 texture = ExtResource("2_h6lqb")
@@ -317,6 +316,3 @@ position = Vector2(1085, 441)
 
 [node name="MaskGumPickup" parent="." instance=ExtResource("8_neare")]
 position = Vector2(2262, 173)
-
-[node name="MaskFeatherPickup" parent="." instance=ExtResource("9_tf5ar")]
-position = Vector2(2112, 241)
