@@ -33,6 +33,8 @@ var wall_kick_boost_timer := 0.0
 signal health_changed(new_health)
 @export var max_health := 10
 var current_health := 3  # Starts at 3
+var is_invincible := false
+@export var invincibility_duration := 1.5 # Seconds of safety
 
 var charge_time := 0.0
 var is_charging := false
@@ -308,16 +310,44 @@ func collect_mask(mask_name: String):
 # --- Health Logic ---
 
 func take_damage(amount: int):
+	if is_invincible:
+		return
+		
 	current_health = clampi(current_health - amount, 0, max_health)
 	health_changed.emit(current_health) # Notify the UI to remove a heart
 	
-	# Visual feedback: Flash red
-	var tween = create_tween()
-	tween.tween_property(visuals, "modulate", Color.RED, 0.1)
-	tween.tween_property(visuals, "modulate", Color.WHITE, 0.1)
-	
 	if current_health <= 0:
 		die()
+		return # Exit early if dead
+		
+	# Start Invincibility
+	is_invincible = true
+	start_invincibility_effect() # Start visual feedback
+	
+	# Wait for the duration, then turn invincibility off
+	await get_tree().create_timer(invincibility_duration).timeout
+	is_invincible = false
+	
+func start_invincibility_effect():
+	# 1. THE RED FLASH (One time, very fast)
+	var flash_tween = create_tween()
+	# Change color to red immediately, then fade back to white
+	visuals.modulate = Color.RED 
+	flash_tween.tween_property(visuals, "modulate", Color.WHITE, 0.4)
+	
+	# 2. THE BLINKING (Repeats for the whole duration)
+	# We use a loop that runs until invincibility is over
+	var blink_tween = create_tween().set_loops(int(invincibility_duration / 0.2))
+	
+	# Transition transparency (Alpha) from 1.0 (Solid) to 0.3 (Ghostly)
+	blink_tween.tween_property(visuals, "modulate:a", 0.3, 0.1)
+	blink_tween.tween_property(visuals, "modulate:a", 1.0, 0.1)
+	
+	# 3. CLEANUP
+	await get_tree().create_timer(invincibility_duration).timeout
+	# Ensure Goma isn't stuck red or transparent
+	visuals.modulate = Color.WHITE
+	visuals.modulate.a = 1.0
 
 func heal(amount: int):
 	current_health = clampi(current_health + amount, 0, max_health)
