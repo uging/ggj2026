@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=4 uid="uid://bgh77nwtdn33x"]
+[gd_scene load_steps=10 format=4 uid="uid://bgh77nwtdn33x"]
 
 [ext_resource type="Script" uid="uid://cqwsgmf7gyux6" path="res://levels/tower_level.gd" id="1_a8dg0"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_hr45r"]
@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://ch78g7lbwgpoq" path="res://levels/main_ground.tscn" id="2_on3hq"]
 [ext_resource type="TileSet" uid="uid://majylxj4tle1" path="res://levels/mainground.tres" id="3_a8dg0"]
 [ext_resource type="PackedScene" path="res://heart_pickup.tscn" id="5_32ucf"]
-[ext_resource type="PackedScene" uid="uid://cqaupd1yu7des" path="res://hud.tscn" id="6_3qyff"]
 [ext_resource type="PackedScene" path="res://mask_feather_pickup.tscn" id="8_a8dg0"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_35uxj"]
@@ -230,8 +229,6 @@ tile_set = SubResource("TileSet_32ucf")
 
 [node name="HeartPickup" parent="." instance=ExtResource("5_32ucf")]
 position = Vector2(716, -1342)
-
-[node name="HUD" parent="." instance=ExtResource("6_3qyff")]
 
 [node name="MaskFeatherPickup" parent="." instance=ExtResource("8_a8dg0")]
 position = Vector2(305, -1708)
