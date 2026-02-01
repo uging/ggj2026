@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+@export var is_top_down := false # Enable this in the Inspector for your Main Scene
+
 # --- References ---
 @onready var visuals = $Visuals
 @onready var goma = $Visuals/Goma
@@ -80,7 +82,12 @@ func _physics_process(delta: float) -> void:
 				start_wall_stick()
 
 # --- 4. GRAVITY & STATE HANDLING ---
-	if is_sticking:
+	if is_top_down:
+		# We "pass" here because we don't want gravity or wall-sticking 
+		# to interfere with map movement. Section 9 handles the speed.
+		pass 
+		
+	elif is_sticking:
 		# If timer is still active, Goma is stuck perfectly still
 		if stick_timer > 0:
 			velocity = Vector2.ZERO
@@ -88,7 +95,6 @@ func _physics_process(delta: float) -> void:
 		else:
 			# SLIME MODE: The timer ran out, so slide down slowly
 			velocity.y = wall_slide_speed
-			# Optional: Slow down horizontal drift if he's sliding off a corner
 			velocity.x = 0 
 		
 		# Visual: Flatten Goma against the wall vertically
@@ -99,8 +105,9 @@ func _physics_process(delta: float) -> void:
 		# Release if he hits the floor or is no longer touching a wall
 		if is_on_floor() or not is_on_wall():
 			stop_wall_stick()
+			
 	else:
-		# Apply normal gravity if not sticking
+		# Apply normal gravity ONLY if we aren't top-down and aren't sticking
 		if not is_on_floor():
 			velocity.y += gravity * delta
 
@@ -175,21 +182,25 @@ func _physics_process(delta: float) -> void:
 	
 # --- 9. NORMAL MOVEMENT ---
 	if not is_charging and not is_sticking:
-		var target_speed = input_vector.x * speed
-		
-		if is_on_steep_slope:
-			# SLIDE CONTROL: Give only 10% influence to player input to stop the "rough" jitter
-			# This lets gravity handle the heavy lifting while sliding
-			velocity.x = lerp(velocity.x, velocity.x + (target_speed * 0.1), 2 * delta)
-		else:
-			# NORMAL GROUND/AIR CONTROL:
-			# Use 10.0 for snappy floor movement, 3.0 for air drift
-			var lerp_weight = 20.0 if is_on_floor() else 3.0
-			velocity.x = lerp(velocity.x, target_speed, lerp_weight * delta)
+		var target_vel = input_vector * speed
+		if is_top_down:
+			# TOP-DOWN MOVEMENT: Move in all directions (X and Y)
+			# We use a high lerp weight (15.0) for snappy movement on the map
+			velocity = velocity.lerp(target_vel, 15.0 * delta)
 			
-			# Only apply the "speed lean" when NOT on a steep slope 
-			# (Because on slopes, Section 6 handles the rotation)
-			visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
+			# Keep visuals upright on the flat map
+			visuals.rotation = lerp_angle(visuals.rotation, 0.0, 10.0 * delta)
+		else:
+			if is_on_steep_slope:
+				# Slide control on slopes
+				velocity.x = lerp(velocity.x, velocity.x + (target_vel.x * 0.1), 2 * delta)
+			else:
+				# Normal ground/air control
+				var lerp_weight = 20.0 if is_on_floor() else 3.0
+				velocity.x = lerp(velocity.x, target_vel.x, lerp_weight * delta)
+				
+				# Apply the "speed lean" only in platformer mode
+				visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
 		
 		# Gummy scale effects based on the final velocity
 		var stretch_factor = abs(velocity.x) * 0.0001
@@ -200,8 +211,9 @@ func _physics_process(delta: float) -> void:
 	var was_in_air = not is_on_floor()
 	move_and_slide() #
 	
-	if was_in_air and is_on_floor():
-		apply_landing_squash() #
+	if not is_top_down:
+		if was_in_air and is_on_floor():
+			apply_landing_squash()
 
 # --- Helper Functions ---
 
