@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=4 uid="uid://dmj2qw2x7b5id"]
+[gd_scene load_steps=37 format=4 uid="uid://dmj2qw2x7b5id"]
 
 [ext_resource type="Script" uid="uid://pxuck3h5ht54" path="res://main/main.gd" id="1_oagth"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_pjrb6"]
@@ -20,6 +20,7 @@
 [ext_resource type="Script" uid="uid://cdlwtab4fbggm" path="res://main/castle_area.gd" id="15_piupu"]
 [ext_resource type="Script" uid="uid://brmx07ibt3j68" path="res://main/pyramid_area.gd" id="17_q0sk7"]
 [ext_resource type="AudioStream" uid="uid://c1wmn443t6ec0" path="res://resources/sounds/autism island.ogg" id="18_4hmqs"]
+[ext_resource type="Script" uid="uid://ddi46rcepqq8b" path="res://main/key_label.gd" id="21_vapsy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4dugh"]
 size = Vector2(759, 754)
@@ -71,6 +72,11 @@ size = Vector2(48, 768)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_73k8k"]
 size = Vector2(856, 49)
+
+[sub_resource type="LabelSettings" id="LabelSettings_jofbb"]
+font = ExtResource("11_n3o0a")
+font_size = 17
+font_color = Color(0.043137256, 0.11764706, 0.24705882, 1)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_oagth")
@@ -301,3 +307,14 @@ shape = SubResource("RectangleShape2D_73k8k")
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("18_4hmqs")
 autoplay = true
+
+[node name="KeyLabel" type="Label" parent="."]
+visible = false
+offset_left = 556.0
+offset_top = -1.0
+offset_right = 752.0
+offset_bottom = 56.0
+text = "AWSD: Move
+SPace bar: skills"
+label_settings = SubResource("LabelSettings_jofbb")
+script = ExtResource("21_vapsy")

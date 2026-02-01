@@ -22,6 +22,8 @@ func _process(delta: float) -> void:
 func _on_start_button_pressed() -> void:
 	if $TitleNode:
 		$TitleNode.hide()
+		
+	$KeyLabel.show()
 	
 	add_child(Global.player)
 	Global.player.is_top_down = true
