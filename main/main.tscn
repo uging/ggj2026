@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=4 uid="uid://dmj2qw2x7b5id"]
+[gd_scene load_steps=35 format=4 uid="uid://dmj2qw2x7b5id"]
 
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_pjrb6"]
 [ext_resource type="Texture2D" uid="uid://ck2ra00l06ruo" path="res://resources/cloud4.png" id="2_3wy1v"]
@@ -17,6 +17,8 @@
 [ext_resource type="Texture2D" uid="uid://bskalatk18jjp" path="res://resources/house_beige_front.png" id="11_73k8k"]
 [ext_resource type="FontFile" uid="uid://dqj3kl2spwtkw" path="res://resources/fonts/Kenney Blocks.ttf" id="11_n3o0a"]
 [ext_resource type="Texture2D" uid="uid://ckjrph8yrw7w" path="res://resources/temple.png" id="12_fwcvl"]
+[ext_resource type="Script" uid="uid://cdlwtab4fbggm" path="res://main/castle_area.gd" id="15_piupu"]
+[ext_resource type="Script" uid="uid://brmx07ibt3j68" path="res://main/pyramid_area.gd" id="17_q0sk7"]
 [ext_resource type="AudioStream" uid="uid://c1wmn443t6ec0" path="res://resources/sounds/autism island.ogg" id="18_4hmqs"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4dugh"]
@@ -42,11 +44,27 @@ size = Vector2(137, 94)
 [sub_resource type="LabelSettings" id="LabelSettings_s758e"]
 font = ExtResource("11_n3o0a")
 font_size = 20
-font_color = Color(0.04917437, 0.052643955, 0, 1)
+font_color = Color(0.2901961, 0.5647059, 0, 1)
 outline_color = Color(0.20784314, 1, 1, 1)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5xyti"]
 size = Vector2(97, 105)
+
+[sub_resource type="LabelSettings" id="LabelSettings_q0sk7"]
+font = ExtResource("11_n3o0a")
+font_size = 20
+font_color = Color(1, 0, 0, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_piupu"]
+size = Vector2(101, 111)
+
+[sub_resource type="LabelSettings" id="LabelSettings_vapsy"]
+font = ExtResource("11_n3o0a")
+font_size = 20
+font_color = Color(0.4, 0.33333334, 1, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jofbb"]
+size = Vector2(126, 86)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_na0o7"]
 size = Vector2(48, 768)
@@ -85,11 +103,6 @@ texture = ExtResource("7_grrlh")
 position = Vector2(1016, 658)
 texture = ExtResource("6_67ri8")
 
-[node name="Sprite2D3" type="Sprite2D" parent="Clouds/Cloud3"]
-position = Vector2(-185, -576.99994)
-scale = Vector2(0.32142854, 0.38768113)
-texture = ExtResource("6_67ri8")
-
 [node name="Cloud2" type="Sprite2D" parent="Clouds"]
 position = Vector2(1155, 123)
 texture = ExtResource("3_4dugh")
@@ -105,7 +118,7 @@ tile_set = SubResource("TileSet_67ri8")
 tile_set = SubResource("TileSet_3wy1v")
 
 [node name="TowerLevel" type="Node2D" parent="."]
-position = Vector2(910, 329)
+position = Vector2(426, 415)
 metadata/_edit_group_ = true
 
 [node name="Tower1" type="Sprite2D" parent="TowerLevel"]
@@ -140,7 +153,7 @@ position = Vector2(1.5, 17)
 shape = SubResource("RectangleShape2D_4hmqs")
 
 [node name="BasicLevel" type="Node2D" parent="."]
-position = Vector2(449, 457)
+position = Vector2(798, 287)
 metadata/_edit_group_ = true
 
 [node name="Tree1" type="Sprite2D" parent="BasicLevel"]
@@ -177,25 +190,79 @@ horizontal_alignment = 1
 position = Vector2(9.5, 19.5)
 shape = SubResource("RectangleShape2D_5xyti")
 
-[node name="CastleLevel" type="Sprite2D" parent="."]
-position = Vector2(473, 151)
+[node name="CastleLevel" type="Node2D" parent="."]
+position = Vector2(362, 50)
+metadata/_edit_group_ = true
+
+[node name="Castle" type="Sprite2D" parent="CastleLevel"]
+position = Vector2(28, 24)
 scale = Vector2(0.5833333, 0.6098901)
 texture = ExtResource("10_na0o7")
 
-[node name="Sprite2D6" type="Sprite2D" parent="."]
-position = Vector2(819.125, 130.125)
+[node name="CastleArea" type="Area2D" parent="CastleLevel"]
+script = ExtResource("15_piupu")
+
+[node name="NameLabel" type="Label" parent="CastleLevel/CastleArea"]
+offset_left = -58.0
+offset_top = -75.0
+offset_right = 122.0
+offset_bottom = 120.0
+text = "King's Castle
+
+
+
+
+\"LOCKED\""
+label_settings = SubResource("LabelSettings_q0sk7")
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CastleLevel/CastleArea"]
+position = Vector2(27.5, 27.5)
+shape = SubResource("RectangleShape2D_piupu")
+
+[node name="PyramidLevel" type="Node2D" parent="."]
+position = Vector2(929, 28)
+metadata/_edit_group_ = true
+
+[node name="Cloud1" type="Sprite2D" parent="PyramidLevel"]
+position = Vector2(10, -81.25)
+scale = Vector2(0.32142854, 0.38768113)
+texture = ExtResource("6_67ri8")
+
+[node name="Pyramid" type="Sprite2D" parent="PyramidLevel"]
+position = Vector2(-1.875, 12.874939)
 scale = Vector2(0.60874456, 0.63931286)
 texture = ExtResource("12_fwcvl")
 
-[node name="Sprite2D5" type="Sprite2D" parent="."]
-position = Vector2(760, 105)
+[node name="Cloud2" type="Sprite2D" parent="PyramidLevel"]
+position = Vector2(-61.000122, -12.250061)
 scale = Vector2(0.34210527, 0.36290324)
 texture = ExtResource("2_3wy1v")
 
-[node name="Sprite2D7" type="Sprite2D" parent="."]
-position = Vector2(870, 102)
+[node name="Cloud3" type="Sprite2D" parent="PyramidLevel"]
+position = Vector2(49, -15.250061)
 scale = Vector2(0.27136767, 0.33898336)
 texture = ExtResource("7_grrlh")
+
+[node name="PyramidArea" type="Area2D" parent="PyramidLevel"]
+position = Vector2(-1, 3)
+script = ExtResource("17_q0sk7")
+
+[node name="NameLabel" type="Label" parent="PyramidLevel/PyramidArea"]
+offset_left = -89.0
+offset_top = -74.0
+offset_right = 96.0
+offset_bottom = 88.0
+text = "Lost Pyramid
+
+
+
+\"Press Enter\""
+label_settings = SubResource("LabelSettings_vapsy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PyramidLevel/PyramidArea"]
+position = Vector2(0, 12)
+shape = SubResource("RectangleShape2D_jofbb")
 
 [node name="InvisibleWall1" type="StaticBody2D" parent="."]
 position = Vector2(943, 25)
@@ -239,5 +306,3 @@ gravity = 0.0
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("18_4hmqs")
 autoplay = true
-
-[node name="CastleLevel2" type="Node2D" parent="."]
