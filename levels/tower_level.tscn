@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://ch78g7lbwgpoq" path="res://levels/main_ground.tscn" id="2_on3hq"]
 [ext_resource type="TileSet" uid="uid://majylxj4tle1" path="res://levels/mainground.tres" id="3_a8dg0"]
 [ext_resource type="PackedScene" uid="uid://p6cwmp2367e6" path="res://player.tscn" id="4_35uxj"]
-[ext_resource type="PackedScene" path="res://heart_pickup.tscn" id="5_32ucf"]
+[ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://heart_pickup.tscn" id="5_32ucf"]
 [ext_resource type="PackedScene" uid="uid://cqaupd1yu7des" path="res://hud.tscn" id="6_3qyff"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_35uxj"]
@@ -230,6 +230,6 @@ tile_set = SubResource("TileSet_32ucf")
 position = Vector2(720, 254)
 
 [node name="HeartPickup" parent="." instance=ExtResource("5_32ucf")]
-position = Vector2(718, -1342)
+position = Vector2(716, -1342)
 
 [node name="HUD" parent="." instance=ExtResource("6_3qyff")]

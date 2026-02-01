@@ -13,7 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://cvuob01xh3ln" path="res://resources/tree08.png" id="9_fwcvl"]
 [ext_resource type="Script" uid="uid://c0vmebaxo40o4" path="res://main/basic_level_area.gd" id="10_n3o0a"]
 [ext_resource type="Texture2D" uid="uid://by73abb2gxjsa" path="res://resources/castle_grey.png" id="10_na0o7"]
-[ext_resource type="Script" uid="uid://do8ihgbuyeai3" path="res://main/tower_area.gd" id="10_s758e"]
+[ext_resource type="Script" path="res://main/tower_area.gd" id="10_s758e"]
 [ext_resource type="Texture2D" uid="uid://bskalatk18jjp" path="res://resources/house_beige_front.png" id="11_73k8k"]
 [ext_resource type="FontFile" uid="uid://dqj3kl2spwtkw" path="res://resources/fonts/Kenney Blocks.ttf" id="11_n3o0a"]
 [ext_resource type="Texture2D" uid="uid://ckjrph8yrw7w" path="res://resources/temple.png" id="12_fwcvl"]

@@ -11,15 +11,24 @@ extends CharacterBody2D
 
 # --- Movement & Gummy Stats ---
 @export var speed := 460.0
-@export var jump_force_base := 400.0
-@export var max_jump_multiplier := 1.8
+@export var jump_force_base := 320.0
+@export var max_jump_multiplier := 1.5
 @export var ground_friction_factor := 5.0
-@export var gravity := 1500.0
+@export var gravity := 1600.0
 @export var slide_speed := 600.0
-@export var wall_slide_speed := 50.0
 @export var slope_limit_deg := 30.0
-@export var wall_stick_duration := 0.6  # How long he stays stuck (seconds)
+
+# --- Wall Scaling Logic (Added) ---
+@export var wall_rejump_window := 0.20  # Time allowed to re-kick same wall
+var wall_rejump_timer := 0.0
+var last_wall_normal := Vector2.ZERO
+
+# --- Gum Ability Stats ---
+@export var super_jump_mult := 2.0      # How much higher the super jump goes
+var is_super_charging := false
 @export var charge_cooldown := 2.0      # Seconds to refill ONE charge
+var wall_kick_boost_timer := 0.0
+@export var wall_kick_boost_duration := 0.25 
 
 signal health_changed(new_health)
 @export var max_health := 10
@@ -34,8 +43,6 @@ var has_mask := false
 # --- Gum Ability Stats ---
 var gum_charges := 3
 var max_gum_charges := 3
-var is_sticking := false
-var stick_timer := 0.0
 var charge_recovery_timer := 0.0
 
 var unlocked_masks = {
@@ -59,13 +66,13 @@ func _ready() -> void:
 	tween.tween_property(visuals, "position:y", 5.0, 0.8).as_relative()
 
 func _physics_process(delta: float) -> void:
-	# --- 1. INPUT DETECTION ---
+# --- 1. INPUT DETECTION ---
 	var input_vector := Vector2(
 		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
 		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
 	)
 
-	# --- 2. GUM RESOURCE MANAGEMENT (Gum Mask ID 3) ---
+# --- 2. GUM RESOURCE MANAGEMENT (Gum Mask ID 3) ---
 	if gum_charges < max_gum_charges:
 		charge_recovery_timer += delta
 		if charge_recovery_timer >= charge_cooldown:
@@ -73,50 +80,36 @@ func _physics_process(delta: float) -> void:
 			charge_recovery_timer = 0.0
 			# print("Gum Charge Refilled! Current: ", gum_charges)
 
-	# --- 3. WALL STICK LOGIC (Gum Mask ID 3 only) ---
-	# We check if Goma is touching a wall, in the air, and pushing toward the wall
-	if current_set_id == 3 and is_on_wall() and not is_on_floor():
-		# Only stick if moving toward the wall or holding a direction
-		if abs(input_vector.x) > 0.1:
-			if gum_charges > 0 and not is_sticking:
-				start_wall_stick()
 
-# --- 4. GRAVITY & STATE HANDLING ---
+# --- 3. GRAVITY & STATE HANDLING ---
 	if is_top_down:
-		# We "pass" here because we don't want gravity or wall-sticking 
-		# to interfere with map movement. Section 9 handles the speed.
 		pass 
-		
-	elif is_sticking:
-		# If timer is still active, Goma is stuck perfectly still
-		if stick_timer > 0:
-			velocity = Vector2.ZERO
-			stick_timer -= delta
-		else:
-			# SLIME MODE: The timer ran out, so slide down slowly
-			velocity.y = wall_slide_speed
-			velocity.x = 0 
-		
-		# Visual: Flatten Goma against the wall vertically
-		var flip_mult = -1.0 if is_facing_right else 1.0
-		visuals.scale.x = 0.7 * flip_mult
-		visuals.scale.y = 1.3
-		
-		# Release if he hits the floor or is no longer touching a wall
-		if is_on_floor() or not is_on_wall():
-			stop_wall_stick()
-			
 	else:
-		# Apply normal gravity ONLY if we aren't top-down and aren't sticking
+		# Apply normal gravity if not on floor
 		if not is_on_floor():
-			velocity.y += gravity * delta
+			var current_gravity = gravity
+			if wall_kick_boost_timer > 0:
+				current_gravity *= 0.3
+				wall_kick_boost_timer -= delta
+			velocity.y += current_gravity * delta
+			
+			if wall_rejump_timer > 0: wall_rejump_timer -= delta
+			
+			# NEW: Check for Aerial Super Jump (Gum Mask ID 3)
+			# We use is_action_just_pressed so it doesn't fire every frame
+			if Input.is_action_just_pressed("ui_accept") and current_set_id == 3:
+				if gum_charges > 0:
+					# We call the logic to consume the charge
+					perform_super_jump_logic()
+					# And manually apply the upward burst since we are in the air
+					velocity.y = -jump_force_base * 1.5
 
-	# --- 5. SNAPPY FLIP TRACKER ---
+# --- 4. SNAPPY FLIP TRACKER ---
 	if input_vector.x > 0: is_facing_right = true
 	elif input_vector.x < 0: is_facing_right = false
 	var flip_dir = -1.0 if is_facing_right else 1.0
 	
-	# --- 6. SLOPE SLIDING CALCULATION ---
+# ---5. SLOPE SLIDING CALCULATION ---
 	var is_on_steep_slope = false
 	floor_snap_length = 32.0     # Keep Goma glued to the floor
 	floor_constant_speed = true  # Ignore jagged speed changes
@@ -126,62 +119,77 @@ func _physics_process(delta: float) -> void:
 		var floor_angle = rad_to_deg(acos(floor_normal.dot(Vector2.UP))) #
 		
 		if floor_angle > slope_limit_deg:
-					var gum_can_resist = (current_set_id == 3 and gum_charges > 0)
-					if not gum_can_resist:
-						is_on_steep_slope = true
-						
-						# Set velocity based on slope direction for a smoother ride
-						# We use the X component of the normal to determine direction
-						velocity.x = lerp(velocity.x, floor_normal.x * slide_speed, 5 * delta)
-						
-						# Visual: Match the slope angle smoothly
-						visuals.rotation = lerp_angle(visuals.rotation, floor_normal.angle() + PI/2, 10 * delta)
+			var gum_can_resist = (current_set_id == 3 and gum_charges > 0)
+			if not gum_can_resist:
+				is_on_steep_slope = true
+				
+				# Set velocity based on slope direction for a smoother ride
+				# We use the X component of the normal to determine direction
+				velocity.x = lerp(velocity.x, floor_normal.x * slide_speed, 5 * delta)
+				
+				# Visual: Match the slope angle smoothly
+				visuals.rotation = lerp_angle(visuals.rotation, floor_normal.angle() + PI/2, 10 * delta)
 
-# --- 7. JUMP CHARGING (Floor, Wall, or Sticky) ---
-	# We allow charging if on floor, sticking, OR near a wall for non-mask jumping
-	var can_jump = is_on_floor() or is_sticking or is_on_wall()
-	
+# --- 6. JUMP CHARGING (Floor, Wall, or Sticky) ---
+	var is_near_wall = is_on_wall() or wall_rejump_timer > 0
+	var can_jump = is_on_floor() or is_near_wall
+
 	if Input.is_key_pressed(KEY_SPACE) and can_jump:
 		is_charging = true
-		# Gummy Mask (ID 3) charges much faster
 		var charge_speed = 4.0 if current_set_id == 3 else 2.0
 		charge_time = min(charge_time + delta * charge_speed, 1.0) 
 		
-		# Stop sticking so we can aim the jump
-		if is_sticking: 
-			is_sticking = false 
+		# NEW: Long Press Detection for Gum Mask
+		if current_set_id == 3 and charge_time >= 1.0 and gum_charges > 0:
+			is_super_charging = true
+			# Optional: Visual indicator that Super Jump is ready (e.g., vibrating)
+			visuals.position.x = randf_range(-2, 2) 
 		
 		# Visual Squish
-		visuals.scale.y = lerp(visuals.scale.y, 0.75, 10 * delta)
-		visuals.scale.x = 1.25 * flip_dir 
+		visuals.scale.y = lerp(visuals.scale.y, 0.6, 10 * delta) # Deeper squish for long press
+		visuals.scale.x = 1.35 * flip_dir 
 		velocity.x = lerp(velocity.x, 0.0, 10 * delta)
 	
 	elif is_charging:
-			# --- 8. PERFORM LAUNCH ---
-			var jump_direction = Vector2(input_vector.x, -1.5).normalized()
+		# --- 7. PERFORM LAUNCH ---
+		# Normal jump Y is -1.4. Regular Gum jump is -1.7.
+		var launch_y = -1.7 if current_set_id == 3 else -1.4
+		
+		# If it was a long press, trigger the Super Jump
+		if is_super_charging:
+			perform_super_jump_logic() 
+			launch_y = -2.1 # The Super Jump height (Tuned for 20% reduction)
+			is_super_charging = false
 			
-			# WALL KICK: If Goma is touching a wall but not the floor, push him away
-			if is_on_wall() and not is_on_floor():
-				var wall_normal = get_wall_normal()
-				# If the player isn't holding a direction, jump away from the wall automatically
-				if input_vector.x == 0:
-					jump_direction = (wall_normal + Vector2(0, -1.2)).normalized()
-				else:
-					# Mix player input with the wall bounce
-					jump_direction = (Vector2(input_vector.x, -1.5) + wall_normal * 0.5).normalized()
+		var jump_direction = Vector2(input_vector.x, launch_y).normalized()
+		
+		# WALL KICK: Only trigger if on a wall and in air
+		if is_near_wall and not is_on_floor():
+			var wall_normal = get_wall_normal() if is_on_wall() else last_wall_normal
+			wall_kick_boost_timer = wall_kick_boost_duration
+			
+			# Scale UP if holding nothing or pushing INTO the wall
+			if input_vector.x == 0 or sign(input_vector.x) == sign(-wall_normal.x):
+				jump_direction = (wall_normal * 1.2 + Vector2(0, launch_y * 1.8)).normalized()
+			else:
+				# Kick AWAY if holding the direction away
+				jump_direction = (wall_normal * 3.5 + Vector2(0, launch_y * 1.2)).normalized()
+				
+			wall_rejump_timer = 0 # Consume the window
 
-			var power_boost = 1.8 if current_set_id == 3 else 1.0
-			var max_speed_cap = 1300.0 if current_set_id == 3 else 800.0
-			
-			var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
-			velocity = jump_direction * min(final_force, max_speed_cap)
-			
-			apply_launch_stretch(flip_dir)
-			charge_time = 0.0
-			is_charging = false
+		var power_boost = 1.15 if current_set_id == 3 else 1.0
+		var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
+		
+		# Cap the speed so he doesn't break the map
+		var max_cap = 900.0 if current_set_id == 3 else 750.0
+		velocity = jump_direction * min(final_force, max_cap)
+		
+		apply_launch_stretch(flip_dir)
+		charge_time = 0.0
+		is_charging = false
 	
-# --- 9. NORMAL MOVEMENT ---
-	if not is_charging and not is_sticking:
+# --- 8. NORMAL MOVEMENT ---
+	if not is_charging:
 		var target_vel = input_vector * speed
 		if is_top_down:
 			# TOP-DOWN MOVEMENT: Move in all directions (X and Y)
@@ -207,8 +215,12 @@ func _physics_process(delta: float) -> void:
 		visuals.scale.x = (1.0 + stretch_factor) * flip_dir
 		visuals.scale.y = lerp(visuals.scale.y, 1.0 - stretch_factor, 10 * delta)
 
-	# --- 10. EXECUTE MOVEMENT & LANDING ---
+	# --- 9. EXECUTE MOVEMENT & LANDING ---
 	var was_in_air = not is_on_floor()
+	if is_on_wall():
+		last_wall_normal = get_wall_normal()
+		wall_rejump_timer = wall_rejump_window
+
 	move_and_slide() #
 	
 	if not is_top_down:
@@ -274,18 +286,17 @@ func _input(event: InputEvent) -> void:
 			KEY_3: change_set(3)
 			KEY_4: change_set(4)
 
-func start_wall_stick():
-	is_sticking = true
-	stick_timer = wall_stick_duration
+func perform_super_jump_logic():
 	gum_charges -= 1
-	charge_recovery_timer = 0.0 # Reset recovery whenever a charge is used
-	print("Stuck! Charges left: ", gum_charges)
-
-func stop_wall_stick():
-	is_sticking = false
-	# Return to normal scale gummy-style
-	apply_landing_squash()
-
+	charge_recovery_timer = 0.0
+	
+	# Visual Feedback for the "Burst"
+	smoke.emitting = true
+	smoke.restart()
+	
+	# Reset visual shake from the long press
+	visuals.position.x = 0
+	
 signal masks_updated(unlocked_dict)
 
 # Function to call when Goma picks up a mask item
