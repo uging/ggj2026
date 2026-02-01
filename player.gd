@@ -306,6 +306,14 @@ func collect_mask(mask_name: String):
 	if unlocked_masks.has(mask_name):
 		unlocked_masks[mask_name] = true
 		masks_updated.emit(unlocked_masks)
+		
+		# --- AUTO-EQUIP LOGIC ---
+		# Create a quick mapping to find the ID based on the name
+		var name_to_id = { "feather": 2, "gum": 3, "rock": 4 }
+		
+		if name_to_id.has(mask_name):
+			var new_id = name_to_id[mask_name]
+			change_set(new_id) # This triggers the smoke and visual swap automatically
 
 # --- Health Logic ---
 
