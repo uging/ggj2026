@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dpggf5xckot1n"
+path="res://.godot/imported/Exploring Town.ogg-656b9c6f5c85cd2d06c4018b890aab7c.oggvorbisstr"
+
+[deps]
+
+source_file="res://resources/sounds/Exploring Town.ogg"
+dest_files=["res://.godot/imported/Exploring Town.ogg-656b9c6f5c85cd2d06c4018b890aab7c.oggvorbisstr"]
+
+[params]
+
+loop=true
+loop_offset=0.0
+bpm=0.0
+beat_count=0
+bar_beats=4

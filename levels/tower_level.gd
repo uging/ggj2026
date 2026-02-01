@@ -7,7 +7,7 @@ func _ready() -> void:
 	
 	add_child(Global.player)
 	Global.player.is_top_down = false
-	Global.player.global_position = Vector2.ZERO
+	Global.player.global_position = Vector2(700, 450) 
 	
 	add_child(Global.hud)
 

@@ -4,7 +4,14 @@ extends Node2D
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	pass
+	if Global.isTitleShown:
+		var title_scene = preload("res://main/title.tscn")
+		var title = title_scene.instantiate()
+		add_child(title)
+		title.start_game.connect(_on_start_button_pressed)
+		Global.isTitleShown = false
+	else:
+		_on_start_button_pressed()
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -13,7 +20,8 @@ func _process(delta: float) -> void:
 
 
 func _on_start_button_pressed() -> void:
-	$TitleNode.hide()
+	if $TitleNode:
+		$TitleNode.hide()
 	
 	add_child(Global.player)
 	Global.player.is_top_down = true

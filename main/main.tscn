@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=4 uid="uid://dmj2qw2x7b5id"]
+[gd_scene load_steps=35 format=4 uid="uid://dmj2qw2x7b5id"]
 
 [ext_resource type="Script" uid="uid://pxuck3h5ht54" path="res://main/main.gd" id="1_oagth"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_pjrb6"]
@@ -20,9 +20,6 @@
 [ext_resource type="Script" uid="uid://cdlwtab4fbggm" path="res://main/castle_area.gd" id="15_piupu"]
 [ext_resource type="Script" uid="uid://brmx07ibt3j68" path="res://main/pyramid_area.gd" id="17_q0sk7"]
 [ext_resource type="AudioStream" uid="uid://c1wmn443t6ec0" path="res://resources/sounds/autism island.ogg" id="18_4hmqs"]
-[ext_resource type="FontFile" uid="uid://bbc5b2ody45vr" path="res://resources/fonts/KaushanScript-Regular.otf" id="21_jofbb"]
-[ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="23_re7it"]
-[ext_resource type="Script" uid="uid://dni3b2kj7lc1w" path="res://main/caption.gd" id="24_oagth"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4dugh"]
 size = Vector2(759, 754)
@@ -74,17 +71,6 @@ size = Vector2(48, 768)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_73k8k"]
 size = Vector2(856, 49)
-
-[sub_resource type="LabelSettings" id="LabelSettings_oagth"]
-font = ExtResource("21_jofbb")
-font_size = 108
-font_color = Color(0.23137255, 0.078431375, 0.47058824, 1)
-shadow_size = 10
-
-[sub_resource type="LabelSettings" id="LabelSettings_re7it"]
-font = ExtResource("11_n3o0a")
-font_size = 30
-font_color = Color(0.043137256, 0.11764706, 0.24705882, 1)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_oagth")
@@ -315,57 +301,3 @@ shape = SubResource("RectangleShape2D_73k8k")
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("18_4hmqs")
 autoplay = true
-
-[node name="TitleNode" type="Node2D" parent="."]
-position = Vector2(546, 132)
-
-[node name="Cloud1" type="Sprite2D" parent="TitleNode"]
-position = Vector2(-76, 49)
-scale = Vector2(1.8333334, 1.7096775)
-texture = ExtResource("2_3wy1v")
-
-[node name="Cloud2" type="Sprite2D" parent="TitleNode"]
-position = Vector2(325, 129)
-scale = Vector2(1.8421053, 1.7971015)
-texture = ExtResource("6_67ri8")
-
-[node name="Title" type="Label" parent="TitleNode"]
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -97.0
-offset_top = -8.0
-offset_right = 324.0
-offset_bottom = 150.0
-grow_horizontal = 2
-text = "G.O.M.A."
-label_settings = SubResource("LabelSettings_oagth")
-metadata/_edit_group_ = true
-
-[node name="StartButton" type="Button" parent="TitleNode"]
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = 5.0
-offset_top = 317.0
-offset_right = 255.0
-offset_bottom = 417.0
-grow_horizontal = 2
-grow_vertical = 0
-size_flags_horizontal = 0
-theme_override_fonts/font = ExtResource("23_re7it")
-theme_override_font_sizes/font_size = 40
-text = "Let's Go!"
-
-[node name="Caption" type="Label" parent="TitleNode"]
-offset_left = -163.0
-offset_top = 130.0
-offset_right = 430.0
-offset_bottom = 176.0
-text = "Guardian of Masked Artifacts"
-label_settings = SubResource("LabelSettings_re7it")
-script = ExtResource("24_oagth")
-
-[connection signal="pressed" from="TitleNode/StartButton" to="." method="_on_start_button_pressed"]
