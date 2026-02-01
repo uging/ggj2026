@@ -13,6 +13,7 @@ extends CharacterBody2D
 @onready var ability_ui = $AbilityUI
 @onready var ability_container = $AbilityUI/HBoxContainer
 var ability_icons = [] # This will hold your 3 progress bars
+@onready var feather_particles = $Visuals/FeatherParticles
 
 var ability_textures = {
 	2: { "p": preload("res://assets/character/bar_feather.png"), "u": preload("res://assets/character/bar_feather_dim.png") },
@@ -33,7 +34,7 @@ var ui_fade_timer := 0.0
 @export var slide_speed := 600.0
 @export var slope_limit_deg := 30.0
 
-# --- Wall Scaling Logic (Added) ---
+# --- Wall Scaling Logic ---
 @export var wall_rejump_window := 0.20  # Time allowed to re-kick same wall
 var wall_rejump_timer := 0.0
 var last_wall_normal := Vector2.ZERO
@@ -44,6 +45,14 @@ var is_super_charging := false
 @export var charge_cooldown := 2.0      # Seconds to refill ONE charge
 var wall_kick_boost_timer := 0.0
 @export var wall_kick_boost_duration := 0.25 
+
+# --- Feather Ability Stats ---
+var feather_charges := 3
+var max_feather_charges := 3
+@export var glide_gravity_mult := 0.08  # Lower = Lighter (was 0.15)
+@export var glide_max_fall_speed := 80.0 # Lower = Slower descent (was 150.0)
+@export var glide_horizontal_speed := 600.0 # Higher = More zip while gliding
+var is_gliding := false
 
 signal health_changed(new_health)
 @export var max_health := 10
@@ -57,10 +66,11 @@ var is_facing_right := false
 var current_set_id : int = 1 
 var has_mask := false
 
-# --- Gum Ability Stats ---
-var gum_charges := 3
-var max_gum_charges := 3
+# --- Active Ability Resources (Generic) ---
+var ability_charges := 3.0 
+var max_ability_charges := 3
 var charge_recovery_timer := 0.0
+
 
 var unlocked_masks = {
 	"feather": false,
@@ -92,56 +102,74 @@ func _physics_process(delta: float) -> void:
 		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
 		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
 	)
+	var flip_dir = -1.0 if is_facing_right else 1.0
 
-# --- 2. GUM RESOURCE MANAGEMENT (Gum Mask ID 3) ---
-	if gum_charges < max_gum_charges:
+# --- 2. RESOURCE MANAGEMENT ---
+	# Only recharge if we AREN'T currently using an ability
+	var is_using_ability = is_gliding or (is_charging and current_set_id == 3)
+	
+	if ability_charges < max_ability_charges and not is_using_ability:
 		charge_recovery_timer += delta
 		update_ability_visuals()
 		
-		# KEEP UI VISIBLE: Prevents the bars from fading while recharging
 		ui_fade_timer = ui_display_time
 		ability_ui.modulate.a = 1.0 
 		
 		if charge_recovery_timer >= charge_cooldown:
-			gum_charges += 1
+			ability_charges = min(ability_charges + 1, max_ability_charges)
 			charge_recovery_timer = 0.0
 			update_ability_visuals()
-			# Optional: add a 'ping' or sound effect here
 			
-	# Handle the fade-out timer (only happens when NOT recharging)
-	if ui_fade_timer > 0:
+	# Handle the fade-out timer
+	if ui_fade_timer > 0 and not is_using_ability:
 		ui_fade_timer -= delta
 		if ui_fade_timer <= 0:
 			fade_out_ui()
 
-
 # --- 3. GRAVITY & STATE HANDLING ---
-	if is_top_down:
-		pass 
-	else:
-		# Apply normal gravity if not on floor
-		if not is_on_floor():
-			var current_gravity = gravity
+	if not is_on_floor():
+		var current_gravity = gravity
+
+		# FEATHER GLIDE (ID 2)
+		if current_set_id == 2 and Input.is_action_pressed("ui_accept") and ability_charges > 0:
+			is_gliding = true 
+			feather_particles.emitting = true
+
+			if Input.is_action_just_pressed("ui_accept"): 
+				velocity.y = -250.0
+				var flap_tween = create_tween()
+				flap_tween.tween_property(visuals, "scale", Vector2(1.3 * flip_dir, 0.8), 0.1)
+				flap_tween.tween_property(visuals, "scale", Vector2(1.0 * flip_dir, 1.0), 0.3)
+			
+			current_gravity *= glide_gravity_mult
+			velocity.y = min(velocity.y, glide_max_fall_speed)
+			var glide_input = Input.get_axis("move_left", "move_right")
+			velocity.x = lerp(velocity.x, glide_input * glide_horizontal_speed, 8.0 * delta)
+			visuals.rotation = lerp_angle(visuals.rotation, glide_input * 0.2, 5.0 * delta)
+			
+			ability_charges -= delta * 0.5 
+			show_ability_ui()
+		else:
+			is_gliding = false 
+			feather_particles.emitting = false
+			visuals.rotation = lerp_angle(visuals.rotation, 0, 5.0 * delta)
+			
 			if wall_kick_boost_timer > 0:
 				current_gravity *= 0.3
 				wall_kick_boost_timer -= delta
-			velocity.y += current_gravity * delta
 			
-			if wall_rejump_timer > 0: wall_rejump_timer -= delta
-			
-			# NEW: Check for Aerial Super Jump (Gum Mask ID 3)
-			# We use is_action_just_pressed so it doesn't fire every frame
-			if Input.is_action_just_pressed("ui_accept") and current_set_id == 3:
-				if gum_charges > 0:
-					# We call the logic to consume the charge
-					perform_super_jump_logic()
-					# And manually apply the upward burst since we are in the air
-					velocity.y = -jump_force_base * 1.5
+		velocity.y += current_gravity * delta
+		if wall_rejump_timer > 0: wall_rejump_timer -= delta
+
+		# GUM AERIAL JUMP (ID 3)
+		if Input.is_action_just_pressed("ui_accept") and current_set_id == 3:
+			if ability_charges >= 1.0:
+				perform_super_jump_logic()
+				velocity.y = -jump_force_base * 1.5
 
 # --- 4. SNAPPY FLIP TRACKER ---
 	if input_vector.x > 0: is_facing_right = true
 	elif input_vector.x < 0: is_facing_right = false
-	var flip_dir = -1.0 if is_facing_right else 1.0
 	
 # ---5. SLOPE SLIDING CALCULATION ---
 	var is_on_steep_slope = false
@@ -153,7 +181,7 @@ func _physics_process(delta: float) -> void:
 		var floor_angle = rad_to_deg(acos(floor_normal.dot(Vector2.UP))) #
 		
 		if floor_angle > slope_limit_deg:
-			var gum_can_resist = (current_set_id == 3 and gum_charges > 0)
+			var gum_can_resist = (current_set_id == 3 and ability_charges >= 1.0)
 			if not gum_can_resist:
 				is_on_steep_slope = true
 				
@@ -173,8 +201,7 @@ func _physics_process(delta: float) -> void:
 		var charge_speed = 4.0 if current_set_id == 3 else 2.0
 		charge_time = min(charge_time + delta * charge_speed, 1.0) 
 		
-		# NEW: Long Press Detection for Gum Mask
-		if current_set_id == 3 and charge_time >= 1.0 and gum_charges > 0:
+		if current_set_id == 3 and charge_time >= 1.0 and ability_charges >= 1.0:
 			is_super_charging = true
 			# Optional: Visual indicator that Super Jump is ready (e.g., vibrating)
 			visuals.position.x = randf_range(-2, 2) 
@@ -186,8 +213,10 @@ func _physics_process(delta: float) -> void:
 	
 	elif is_charging:
 		# --- 7. PERFORM LAUNCH ---
-		# Normal jump Y is -1.4. Regular Gum jump is -1.7.
-		var launch_y = -1.7 if current_set_id == 3 else -1.4
+		# ID 2 (Feather) gets -1.6, ID 3 (Gum) gets -1.7, Default gets -1.4
+		var launch_y = -1.4
+		if current_set_id == 3: launch_y = -1.7
+		elif current_set_id == 2: launch_y = -1.6 # The "Lighter" base jump
 		
 		# If it was a long press, trigger the Super Jump
 		if is_super_charging:
@@ -222,32 +251,40 @@ func _physics_process(delta: float) -> void:
 		charge_time = 0.0
 		is_charging = false
 	
-# --- 8. NORMAL MOVEMENT ---
+# # --- 8. NORMAL MOVEMENT ---
 	if not is_charging:
 		var target_vel = input_vector * speed
+		
 		if is_top_down:
-			# TOP-DOWN MOVEMENT: Move in all directions (X and Y)
-			# We use a high lerp weight (15.0) for snappy movement on the map
+			# TOP-DOWN MOVEMENT: Snappy movement for the map
 			velocity = velocity.lerp(target_vel, 15.0 * delta)
-			
-			# Keep visuals upright on the flat map
 			visuals.rotation = lerp_angle(visuals.rotation, 0.0, 10.0 * delta)
 		else:
 			if is_on_steep_slope:
 				# Slide control on slopes
 				velocity.x = lerp(velocity.x, velocity.x + (target_vel.x * 0.1), 2 * delta)
 			else:
-				# Normal ground/air control
-				var lerp_weight = 20.0 if is_on_floor() else 3.0
-				velocity.x = lerp(velocity.x, target_vel.x, lerp_weight * delta)
+				if is_on_floor():
+					# Grounded movement
+					velocity.x = lerp(velocity.x, target_vel.x, 20.0 * delta)
+				elif is_gliding:
+					# Skip this part! Section 3 is handling velocity.x for the Feather Mask
+					pass 
+				else:
+					# Normal air control (Jump/Fall)
+					velocity.x = lerp(velocity.x, target_vel.x, 3.0 * delta)
 				
-				# Apply the "speed lean" only in platformer mode
-				visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
+				# Apply the "speed lean" ONLY if not gliding
+				if not is_gliding:
+					visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
 		
-		# Gummy scale effects based on the final velocity
-		var stretch_factor = abs(velocity.x) * 0.0001
-		visuals.scale.x = (1.0 + stretch_factor) * flip_dir
-		visuals.scale.y = lerp(visuals.scale.y, 1.0 - stretch_factor, 10 * delta)
+		# --- SCALE LOGIC ---
+		# We check 'is_gliding' here so our "flap" squash-and-stretch in Section 3 
+		# doesn't get instantly overwritten by the running stretch.
+		if not is_gliding:
+			var stretch_factor = abs(velocity.x) * 0.0001
+			visuals.scale.x = (1.0 + stretch_factor) * flip_dir
+			visuals.scale.y = lerp(visuals.scale.y, 1.0 - (stretch_factor * 0.5), 10 * delta)
 
 	# --- 9. EXECUTE MOVEMENT & LANDING ---
 	var was_in_air = not is_on_floor()
@@ -323,16 +360,11 @@ func _input(event: InputEvent) -> void:
 			KEY_4: change_set(4)
 
 func perform_super_jump_logic():
-	gum_charges -= 1
+	ability_charges -= 1.0
 	charge_recovery_timer = 0.0
-
-	# Show the floating bar immediately upon use
 	show_ability_ui()
-
-	# Visual Feedback for the "Burst"
 	smoke.emitting = true
 	smoke.restart()
-	visuals.position.x = 0
 	
 signal masks_updated(unlocked_dict)
 
@@ -417,25 +449,13 @@ func update_ability_visuals():
 
 	for i in range(ability_icons.size()):
 		var icon = ability_icons[i]
-		
-		# Set textures from your dictionary
-		icon.texture_progress = data["p"] # Bright Pink
-		icon.texture_under = data["u"]    # Dark Pink
-		
-		# Ensure they are always visible
+		icon.texture_progress = data["p"]
+		icon.texture_under = data["u"]
 		icon.show() 
 
-		# Fill Logic
-		if i < gum_charges:
-			# Slots you HAVE (Full)
-			icon.value = 100 
-		elif i == gum_charges:
-			# Slot CURRENTLY RECHARGING
-			# This fills the specific bar from 0 to 100
-			icon.value = (charge_recovery_timer / charge_cooldown) * 100
-		else:
-			# Slots you USED (Empty)
-			icon.value = 0
+		# Calculate fill: e.g., if charges is 1.5, bar 0 is 100%, bar 1 is 50%, bar 2 is 0%
+		var fill = clamp(ability_charges - i, 0.0, 1.0)
+		icon.value = fill * 100
 
 func heal(amount: int):
 	current_health = clampi(current_health + amount, 0, max_health)
