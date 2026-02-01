@@ -230,6 +230,7 @@ shape = SubResource("RectangleShape2D_73k8k")
 
 [node name="Player" parent="." groups=["Player"] instance=ExtResource("3_lquwl")]
 position = Vector2(666, 344)
+is_top_down = true
 gravity = 0.0
 
 [node name="HUD" parent="." instance=ExtResource("4_1bvp3")]
