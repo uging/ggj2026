@@ -6,7 +6,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2ce7b"]
 size = Vector2(52, 30)
 
-[node name="MaskGumPickup" type="Area2D"]
+[node name="MaskGumPickup" type="Area2D" groups=["pickups"]]
 collision_layer = 0
 script = ExtResource("1_2ce7b")
 mask_type = "gum"

@@ -458,6 +458,7 @@ signal masks_updated(unlocked_dict)
 func collect_mask(mask_name: String):
 	if unlocked_masks.has(mask_name):
 		unlocked_masks[mask_name] = true
+		print("Global updated: ", mask_name, " is now true")
 		masks_updated.emit(unlocked_masks)
 		
 		# --- AUTO-EQUIP LOGIC ---

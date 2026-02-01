@@ -3,11 +3,8 @@
 [ext_resource type="PackedScene" uid="uid://bdewhpmq5hjkl" path="res://mask_gum_pickup.tscn" id="1_jh513"]
 [ext_resource type="Texture2D" uid="uid://bh6iahf34yc66" path="res://assets/character/mask_feather.png" id="2_h03jq"]
 
-[node name="MaskFeatherPickup" instance=ExtResource("1_jh513")]
+[node name="MaskFeatherPickup" groups=["pickups"] instance=ExtResource("1_jh513")]
 mask_type = "feather"
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_h03jq")
-
-[node name="CollisionShape2D" parent="." index="1"]
-position = Vector2(11, -15)

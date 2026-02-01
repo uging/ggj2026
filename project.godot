@@ -28,6 +28,10 @@ window/size/viewport_height=720
 
 version_control/autoload_on_startup=true
 
+[global_group]
+
+pickups=""
+
 [input]
 
 move_up={
