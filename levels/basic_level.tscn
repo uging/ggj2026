@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=4 uid="uid://cywrg0bjuyd0q"]
+[gd_scene load_steps=10 format=4 uid="uid://cywrg0bjuyd0q"]
 
 [ext_resource type="Script" path="res://levels/basic_level.gd" id="1_jxqax"]
 [ext_resource type="Texture2D" uid="uid://co4nqst4qm0h1" path="res://resources/tilesheet_complete.png" id="2_h6lqb"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://p6cwmp2367e6" path="res://player.tscn" id="3_h6lqb"]
 [ext_resource type="PackedScene" uid="uid://cqaupd1yu7des" path="res://hud.tscn" id="5_r6mkj"]
 [ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://heart_pickup.tscn" id="6_6t68p"]
+[ext_resource type="PackedScene" uid="uid://b7e4hrbvbf413" path="res://plant_trap.tscn" id="7_lc1pu"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6t68p"]
 texture = ExtResource("2_h6lqb")
@@ -308,3 +309,6 @@ position = Vector2(507, 408)
 
 [node name="HeartPickup" parent="." instance=ExtResource("6_6t68p")]
 position = Vector2(1533, 294)
+
+[node name="SpikeTrap" parent="." instance=ExtResource("7_lc1pu")]
+position = Vector2(1085, 441)
