@@ -25,6 +25,7 @@ func _on_start_button_pressed() -> void:
 	
 	add_child(Global.player)
 	Global.player.is_top_down = true
+	Global.player.gravity = 0
 	Global.player.global_position = Vector2(600, 400)
 	
 	add_child(Global.hud)

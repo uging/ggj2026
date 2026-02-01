@@ -7,7 +7,8 @@ func _ready() -> void:
 	#await get_tree().root.child_entered_tree  # Wait tree ready
 	
 	add_child(Global.player)
-	Global.player.is_top_down = false
+	Global.player.is_top_down = false	
+	Global.player.gravity = 1600
 	Global.player.global_position = Vector2(60, 480) 
 	
 	add_child(Global.hud)
