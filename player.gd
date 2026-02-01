@@ -53,7 +53,7 @@ var feather_charges := 3
 var max_feather_charges := 3
 @export var glide_gravity_mult := 0.08  # Lower = Lighter (was 0.15)
 @export var glide_max_fall_speed := 80.0 # Lower = Slower descent (was 150.0)
-@export var glide_horizontal_speed := 600.0 # Higher = More zip while gliding
+@export var glide_horizontal_speed := 300.0 # Higher = More zip while gliding
 var is_gliding := false
 
 signal health_changed(new_health)
@@ -150,7 +150,10 @@ func _physics_process(delta: float) -> void:
 			velocity.x = lerp(velocity.x, glide_input * glide_horizontal_speed, 8.0 * delta)
 			visuals.rotation = lerp_angle(visuals.rotation, glide_input * 0.2, 5.0 * delta)
 			
-			ability_charges -= delta * 0.5 
+			# ADJUST THIS LINE TO CHANGE CONSUMPTION RATE:
+			# With this "Smart Drain":
+			var drain_rate = 0.7 if glide_input == 0 else 1.3
+			ability_charges -= delta * drain_rate
 			show_ability_ui()
 		else:
 			is_gliding = false 
