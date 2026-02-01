@@ -11,12 +11,12 @@ func _ready():
 	name_label.visible = false
 
 func _on_body_entered(body):
-	if body.is_in_group("Player"):
+	if body.is_in_group("player"):
 		player_in_range = true
 		name_label.visible = true
 
 func _on_body_exited(body):
-	if body.is_in_group("Player"):
+	if body.is_in_group("player"):
 		player_in_range = false
 		name_label.visible = false
 
