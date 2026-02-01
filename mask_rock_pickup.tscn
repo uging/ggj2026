@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://dkhtf8dflwvgy"]
+
+[ext_resource type="PackedScene" uid="uid://bdewhpmq5hjkl" path="res://mask_gum_pickup.tscn" id="1_dyt4c"]
+[ext_resource type="Texture2D" uid="uid://dxaxywwcansgn" path="res://assets/character/mask_rock.png" id="2_ims02"]
+
+[node name="MaskRockPickup" instance=ExtResource("1_dyt4c")]
+mask_type = "rock"
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_ims02")

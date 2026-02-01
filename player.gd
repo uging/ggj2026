@@ -16,7 +16,8 @@ extends CharacterBody2D
 @export var slide_speed := 600.0
 @export var wall_slide_speed := 50.0
 @export var slope_limit_deg := 30.0
-
+@export var wall_stick_duration := 0.6  # How long he stays stuck (seconds)
+@export var charge_cooldown := 2.0      # Seconds to refill ONE charge
 
 signal health_changed(new_health)
 @export var max_health := 10
@@ -26,7 +27,7 @@ var charge_time := 0.0
 var is_charging := false
 var is_facing_right := false
 var current_set_id : int = 1 
-var has_mask := true 
+var has_mask := false
 
 # --- Gum Ability Stats ---
 var gum_charges := 3
@@ -35,8 +36,11 @@ var is_sticking := false
 var stick_timer := 0.0
 var charge_recovery_timer := 0.0
 
-@export var wall_stick_duration := 0.6  # How long he stays stuck (seconds)
-@export var charge_cooldown := 2.0      # Seconds to refill ONE charge
+var unlocked_masks = {
+	"feather": false,
+	"gum": false,
+	"rock": false
+}
 
 # --- Equipment Sets ---
 var equipment_sets = {
@@ -203,13 +207,30 @@ func _physics_process(delta: float) -> void:
 
 func change_set(id: int):
 	if id == current_set_id: return
-	if has_mask and equipment_sets.has(id):
+	
+	# Mapping IDs to the dictionary keys
+	var mask_names = { 2: "feather", 3: "gum", 4: "rock" }
+	
+	# Check if the mask is allowed
+	var can_change = false
+	if id == 1: 
+		can_change = true # Always allow default
+	elif mask_names.has(id):
+		var mask_key = mask_names[id]
+		if unlocked_masks[mask_key] == true:
+			can_change = true
+		else:
+			print("You haven't collected the ", mask_key, " mask yet!")
+			return # Exit the function if not unlocked
+	
+	# If we pass the check, perform the visual change
+	if can_change and equipment_sets.has(id):
 		current_set_id = id
-		var new_data = equipment_sets[id] # Fixed Shadowing
+		var new_data = equipment_sets[id]
 		
 		smoke.texture = new_data["smoke_tex"]
 		smoke.emitting = true
-		smoke.restart() #
+		smoke.restart()
 		
 		await get_tree().create_timer(0.1).timeout
 		mask.texture = new_data["mask"]
@@ -253,6 +274,13 @@ func stop_wall_stick():
 	# Return to normal scale gummy-style
 	apply_landing_squash()
 
+signal masks_updated(unlocked_dict)
+
+# Function to call when Goma picks up a mask item
+func collect_mask(mask_name: String):
+	if unlocked_masks.has(mask_name):
+		unlocked_masks[mask_name] = true
+		masks_updated.emit(unlocked_masks)
 
 # --- Health Logic ---
 
