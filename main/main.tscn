@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=4 uid="uid://dmj2qw2x7b5id"]
+[gd_scene load_steps=25 format=4 uid="uid://dmj2qw2x7b5id"]
 
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_pjrb6"]
 [ext_resource type="Texture2D" uid="uid://ck2ra00l06ruo" path="res://resources/cloud4.png" id="2_3wy1v"]
@@ -11,8 +11,10 @@
 [ext_resource type="Texture2D" uid="uid://5fxib8rqrcjj" path="res://resources/cloud7.png" id="7_grrlh"]
 [ext_resource type="Texture2D" uid="uid://ck3hq41mvst42" path="res://resources/house_grey_side.png" id="8_bsumw"]
 [ext_resource type="Texture2D" uid="uid://cvuob01xh3ln" path="res://resources/tree08.png" id="9_fwcvl"]
+[ext_resource type="Script" uid="uid://c0vmebaxo40o4" path="res://main/basic_level_area.gd" id="10_n3o0a"]
 [ext_resource type="Texture2D" uid="uid://by73abb2gxjsa" path="res://resources/castle_grey.png" id="10_na0o7"]
 [ext_resource type="Texture2D" uid="uid://bskalatk18jjp" path="res://resources/house_beige_front.png" id="11_73k8k"]
+[ext_resource type="FontFile" uid="uid://dqj3kl2spwtkw" path="res://resources/fonts/Kenney Blocks.ttf" id="11_n3o0a"]
 [ext_resource type="Texture2D" uid="uid://ckjrph8yrw7w" path="res://resources/temple.png" id="12_fwcvl"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4dugh"]
@@ -26,6 +28,15 @@ texture = ExtResource("2_xwkvk")
 [sub_resource type="TileSet" id="TileSet_3wy1v"]
 tile_size = Vector2i(70, 16)
 sources/0 = SubResource("TileSetAtlasSource_c651c")
+
+[sub_resource type="LabelSettings" id="LabelSettings_s758e"]
+font = ExtResource("11_n3o0a")
+font_size = 20
+font_color = Color(0.04917437, 0.052643955, 0, 1)
+outline_color = Color(0.20784314, 1, 1, 1)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_5xyti"]
+size = Vector2(97, 105)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_na0o7"]
 size = Vector2(48, 768)
@@ -85,17 +96,43 @@ position = Vector2(814, 366)
 scale = Vector2(0.4252875, 0.44827586)
 texture = ExtResource("8_bsumw")
 
-[node name="BasicLevel" type="Sprite2D" parent="."]
-position = Vector2(496, 494)
+[node name="BasicLevel" type="Node2D" parent="."]
+position = Vector2(449, 457)
+metadata/_edit_group_ = true
+
+[node name="Tree1" type="Sprite2D" parent="BasicLevel"]
+position = Vector2(-30, 18)
 texture = ExtResource("9_fwcvl")
 
-[node name="BasicLevel" type="Sprite2D" parent="BasicLevel"]
-position = Vector2(-50, -2)
+[node name="Tree2" type="Sprite2D" parent="BasicLevel"]
+position = Vector2(55, 21)
 texture = ExtResource("9_fwcvl")
 
-[node name="BasicLevel" type="Sprite2D" parent="BasicLevel/BasicLevel"]
-position = Vector2(-43, 4)
+[node name="Tree3" type="Sprite2D" parent="BasicLevel"]
+position = Vector2(13, 22)
 texture = ExtResource("9_fwcvl")
+
+[node name="BasicLevelArea" type="Area2D" parent="BasicLevel"]
+script = ExtResource("10_n3o0a")
+
+[node name="NameLabel" type="Label" parent="BasicLevel/BasicLevelArea"]
+offset_left = -80.0
+offset_top = -78.0
+offset_right = 105.0
+offset_bottom = 117.0
+size_flags_horizontal = 0
+text = "The Forest
+
+
+
+
+\"Press Enter\""
+label_settings = SubResource("LabelSettings_s758e")
+horizontal_alignment = 1
+
+[node name="BasicLevelCollision" type="CollisionShape2D" parent="BasicLevel/BasicLevelArea"]
+position = Vector2(9.5, 19.5)
+shape = SubResource("RectangleShape2D_5xyti")
 
 [node name="CastleLevel" type="Sprite2D" parent="."]
 position = Vector2(473, 151)
@@ -154,8 +191,8 @@ metadata/_edit_group_ = true
 position = Vector2(418, 14.5)
 shape = SubResource("RectangleShape2D_73k8k")
 
-[node name="Player" parent="." instance=ExtResource("3_lquwl")]
-position = Vector2(660, 355)
+[node name="Player" parent="." groups=["Player"] instance=ExtResource("3_lquwl")]
+position = Vector2(660, 486)
 gravity = 0.0
 
 [node name="HUD" parent="." instance=ExtResource("4_1bvp3")]
