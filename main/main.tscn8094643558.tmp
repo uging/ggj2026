@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=4 uid="uid://dmj2qw2x7b5id"]
+[gd_scene load_steps=41 format=4 uid="uid://dmj2qw2x7b5id"]
 
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_pjrb6"]
 [ext_resource type="Texture2D" uid="uid://ck2ra00l06ruo" path="res://resources/cloud4.png" id="2_3wy1v"]
@@ -21,6 +21,7 @@
 [ext_resource type="Script" uid="uid://brmx07ibt3j68" path="res://main/pyramid_area.gd" id="17_q0sk7"]
 [ext_resource type="AudioStream" uid="uid://c1wmn443t6ec0" path="res://resources/sounds/autism island.ogg" id="18_4hmqs"]
 [ext_resource type="FontFile" uid="uid://bbc5b2ody45vr" path="res://resources/fonts/KaushanScript-Regular.otf" id="21_jofbb"]
+[ext_resource type="Script" uid="uid://deiic5hbvjfje" path="res://main/title.gd" id="22_re7it"]
 [ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="23_re7it"]
 [ext_resource type="Script" uid="uid://dni3b2kj7lc1w" path="res://main/caption.gd" id="24_oagth"]
 
@@ -345,6 +346,7 @@ offset_bottom = 150.0
 grow_horizontal = 2
 text = "G.O.M.A."
 label_settings = SubResource("LabelSettings_oagth")
+script = ExtResource("22_re7it")
 metadata/_edit_group_ = true
 
 [node name="StartButton" type="Button" parent="Node2D"]
