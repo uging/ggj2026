@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var next_scene_path: String = "res://levels/tower_level.tscn"
+@export var next_scene_path: String = "res://levels/pyramid_level.tscn"
 
 var player_in_range: bool = false
 @onready var name_label: Label = $NameLabel  # Add Label child named "NameLabel"
@@ -22,5 +22,4 @@ func _on_body_exited(body):
 
 func _input(event):
 	if event.is_action_pressed("ui_accept") and player_in_range:
-		pass
-		#get_tree().change_scene_to_file(next_scene_path)
+		get_tree().change_scene_to_file(next_scene_path)
