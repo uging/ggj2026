@@ -1,13 +1,15 @@
-[gd_scene load_steps=11 format=4 uid="uid://cywrg0bjuyd0q"]
+[gd_scene load_steps=13 format=4 uid="uid://cywrg0bjuyd0q"]
 
 [ext_resource type="Script" uid="uid://d35w1jylxasvg" path="res://levels/basic_level.gd" id="1_jxqax"]
 [ext_resource type="Texture2D" uid="uid://co4nqst4qm0h1" path="res://resources/tilesheet_complete.png" id="2_h6lqb"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="2_jxqax"]
-[ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://heart_pickup.tscn" id="6_6t68p"]
-[ext_resource type="PackedScene" uid="uid://b7e4hrbvbf413" path="res://plant_trap.tscn" id="7_lc1pu"]
-[ext_resource type="PackedScene" uid="uid://bdewhpmq5hjkl" path="res://mask_gum_pickup.tscn" id="8_neare"]
-[ext_resource type="PackedScene" uid="uid://dkhtf8dflwvgy" path="res://mask_rock_pickup.tscn" id="8_tf5ar"]
-[ext_resource type="PackedScene" uid="uid://bcmevgqpoeyet" path="res://spike_trap.tscn" id="10_hu82h"]
+[ext_resource type="PackedScene" path="res://heart_pickup.tscn" id="6_6t68p"]
+[ext_resource type="PackedScene" path="res://plant_trap.tscn" id="7_lc1pu"]
+[ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="7_neare"]
+[ext_resource type="PackedScene" path="res://mask_gum_pickup.tscn" id="8_neare"]
+[ext_resource type="PackedScene" path="res://mask_rock_pickup.tscn" id="8_tf5ar"]
+[ext_resource type="AudioStream" uid="uid://bmf6nlxik00y1" path="res://resources/sounds/tropicalfantasy.ogg" id="10_gdvbf"]
+[ext_resource type="PackedScene" path="res://spike_trap.tscn" id="10_hu82h"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6t68p"]
 texture = ExtResource("2_h6lqb")
@@ -319,3 +321,10 @@ collision_layer = 1
 
 [node name="MaskRockPickup" parent="." instance=ExtResource("8_tf5ar")]
 position = Vector2(794, 497)
+
+[node name="ExitNode" parent="." instance=ExtResource("7_neare")]
+position = Vector2(2759, 345)
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_gdvbf")
+autoplay = true
