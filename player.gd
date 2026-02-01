@@ -9,6 +9,21 @@ extends CharacterBody2D
 @onready var cape = $Visuals/Cape
 @onready var smoke = $Visuals/Smoke
 
+# --- Ability UI References ---
+@onready var ability_ui = $AbilityUI
+@onready var ability_container = $AbilityUI/HBoxContainer
+var ability_icons = [] # This will hold your 3 progress bars
+
+var ability_textures = {
+	2: { "p": preload("res://assets/character/bar_feather.png"), "u": preload("res://assets/character/bar_feather_dim.png") },
+	3: { "p": preload("res://assets/character/bar_gum.png"),     "u": preload("res://assets/character/bar_gum_dim.png") },
+	4: { "p": preload("res://assets/character/bar_rock.png"),    "u": preload("res://assets/character/bar_rock_dim.png") }
+}
+
+# --- Ability UI vars ---
+var ui_fade_timer := 0.0
+@export var ui_display_time := 2.5 # How long it stays visible after use/refill
+
 # --- Movement & Gummy Stats ---
 @export var speed := 460.0
 @export var jump_force_base := 320.0
@@ -66,6 +81,10 @@ func _ready() -> void:
 	var tween = create_tween().set_loops().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(visuals, "position:y", -5.0, 0.8).as_relative()
 	tween.tween_property(visuals, "position:y", 5.0, 0.8).as_relative()
+	
+	if ability_container:
+		# This grabs TextureProgressBar, TextureProgressBar2, and TextureProgressBar3
+		ability_icons = ability_container.get_children()
 
 func _physics_process(delta: float) -> void:
 # --- 1. INPUT DETECTION ---
@@ -77,10 +96,23 @@ func _physics_process(delta: float) -> void:
 # --- 2. GUM RESOURCE MANAGEMENT (Gum Mask ID 3) ---
 	if gum_charges < max_gum_charges:
 		charge_recovery_timer += delta
+		update_ability_visuals()
+		
+		# KEEP UI VISIBLE: Prevents the bars from fading while recharging
+		ui_fade_timer = ui_display_time
+		ability_ui.modulate.a = 1.0 
+		
 		if charge_recovery_timer >= charge_cooldown:
 			gum_charges += 1
 			charge_recovery_timer = 0.0
-			# print("Gum Charge Refilled! Current: ", gum_charges)
+			update_ability_visuals()
+			# Optional: add a 'ping' or sound effect here
+			
+	# Handle the fade-out timer (only happens when NOT recharging)
+	if ui_fade_timer > 0:
+		ui_fade_timer -= delta
+		if ui_fade_timer <= 0:
+			fade_out_ui()
 
 
 # --- 3. GRAVITY & STATE HANDLING ---
@@ -283,7 +315,9 @@ func apply_landing_squash():
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
-			KEY_1: change_set(1)
+			KEY_1: 
+				change_set(1)
+				fade_out_ui() # Hide UI when taking off masks
 			KEY_2: change_set(2)
 			KEY_3: change_set(3)
 			KEY_4: change_set(4)
@@ -291,12 +325,13 @@ func _input(event: InputEvent) -> void:
 func perform_super_jump_logic():
 	gum_charges -= 1
 	charge_recovery_timer = 0.0
-	
+
+	# Show the floating bar immediately upon use
+	show_ability_ui()
+
 	# Visual Feedback for the "Burst"
 	smoke.emitting = true
 	smoke.restart()
-	
-	# Reset visual shake from the long press
 	visuals.position.x = 0
 	
 signal masks_updated(unlocked_dict)
@@ -356,6 +391,51 @@ func start_invincibility_effect():
 	# Ensure Goma isn't stuck red or transparent
 	visuals.modulate = Color.WHITE
 	visuals.modulate.a = 1.0
+	
+func show_ability_ui():
+# Only show if the current set has an ability (ID 2, 3, or 4)
+	if current_set_id == 1:
+		ability_ui.modulate.a = 0.0
+		return
+		
+	ui_fade_timer = ui_display_time
+	var tween = create_tween()
+	tween.tween_property(ability_ui, "modulate:a", 1.0, 0.2)
+	update_ability_visuals()
+
+func fade_out_ui():
+	var tween = create_tween()
+	tween.tween_property(ability_ui, "modulate:a", 0.0, 0.5)
+
+func update_ability_visuals():
+	if !ability_textures.has(current_set_id): 
+		ability_ui.hide()
+		return
+	
+	ability_ui.show()
+	var data = ability_textures[current_set_id]
+
+	for i in range(ability_icons.size()):
+		var icon = ability_icons[i]
+		
+		# Set textures from your dictionary
+		icon.texture_progress = data["p"] # Bright Pink
+		icon.texture_under = data["u"]    # Dark Pink
+		
+		# Ensure they are always visible
+		icon.show() 
+
+		# Fill Logic
+		if i < gum_charges:
+			# Slots you HAVE (Full)
+			icon.value = 100 
+		elif i == gum_charges:
+			# Slot CURRENTLY RECHARGING
+			# This fills the specific bar from 0 to 100
+			icon.value = (charge_recovery_timer / charge_cooldown) * 100
+		else:
+			# Slots you USED (Empty)
+			icon.value = 0
 
 func heal(amount: int):
 	current_health = clampi(current_health + amount, 0, max_health)

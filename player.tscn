@@ -1,10 +1,11 @@
-[gd_scene load_steps=8 format=3 uid="uid://p6cwmp2367e6"]
+[gd_scene load_steps=9 format=3 uid="uid://p6cwmp2367e6"]
 
 [ext_resource type="Script" uid="uid://b6rdjrcc6bssu" path="res://player.gd" id="1_mehiu"]
 [ext_resource type="Texture2D" uid="uid://5n84e57l8sk4" path="res://assets/character/goma.png" id="2_mehiu"]
 [ext_resource type="Texture2D" uid="uid://7nwjf0eqcdu5" path="res://assets/character/cape_default.png" id="3_i1wwn"]
 [ext_resource type="Texture2D" uid="uid://c7410lk0nipo" path="res://assets/character/mask_default.png" id="4_51p13"]
 [ext_resource type="Texture2D" uid="uid://dpqh70kurppi0" path="res://assets/character/smoke_default.png" id="5_sweqy"]
+[ext_resource type="PackedScene" uid="uid://cl65o51hn3lp3" path="res://ability_ui.tscn" id="6_2hs0m"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_i1wwn"]
 radius = 45.01111
@@ -55,3 +56,8 @@ process_material = SubResource("ParticleProcessMaterial_2hs0m")
 [node name="Camera2D" type="Camera2D" parent="."]
 limit_bottom = 648
 position_smoothing_enabled = true
+
+[node name="AbilityUI" parent="." instance=ExtResource("6_2hs0m")]
+z_index = 10
+position = Vector2(-44, -86)
+scale = Vector2(0.3, 0.4)
