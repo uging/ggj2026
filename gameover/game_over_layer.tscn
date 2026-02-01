@@ -1,0 +1,71 @@
+[gd_scene load_steps=9 format=3 uid="uid://c14jlv2q74bvr"]
+
+[ext_resource type="Script" uid="uid://ck5q4wr32isvv" path="res://gameover/game_over_layer.gd" id="1_vbipj"]
+[ext_resource type="FontFile" uid="uid://bbc5b2ody45vr" path="res://resources/fonts/KaushanScript-Regular.otf" id="2_8mo1g"]
+[ext_resource type="FontFile" uid="uid://dqj3kl2spwtkw" path="res://resources/fonts/Kenney Blocks.ttf" id="3_217rd"]
+[ext_resource type="AudioStream" uid="uid://crunbnmp7qpuu" path="res://resources/sounds/themsong.wav" id="3_m5nh7"]
+[ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="4_gc7tn"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_m5nh7"]
+font = ExtResource("2_8mo1g")
+font_size = 100
+
+[sub_resource type="LabelSettings" id="LabelSettings_gc7tn"]
+font = ExtResource("3_217rd")
+font_size = 30
+
+[sub_resource type="LabelSettings" id="LabelSettings_w4cji"]
+font = ExtResource("4_gc7tn")
+font_size = 30
+
+[node name="GameOverLayer" type="CanvasLayer"]
+script = ExtResource("1_vbipj")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(0, 0, 0, 0)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -43.5
+offset_top = -20.0
+offset_right = 43.5
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Game Over"
+label_settings = SubResource("LabelSettings_m5nh7")
+
+[node name="Label2" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Thank You for Playing"
+label_settings = SubResource("LabelSettings_gc7tn")
+
+[node name="Label3" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "
+Made by JD & AL
+
+Assets: https://kenney.nl/
+Music: opengameart.org
+Source: https://github.com/uging/ggj2026"
+label_settings = SubResource("LabelSettings_w4cji")
+horizontal_alignment = 1
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 5.0
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_m5nh7")
+autoplay = true

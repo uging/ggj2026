@@ -1,10 +1,13 @@
-[gd_scene load_steps=8 format=4 uid="uid://dhh3anway3nj4"]
+[gd_scene load_steps=11 format=4 uid="uid://dhh3anway3nj4"]
 
 [ext_resource type="Script" uid="uid://t6hlewve03qn" path="res://levels/pyramid_level.gd" id="1_1u52l"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_i7dwt"]
 [ext_resource type="TileSet" uid="uid://majylxj4tle1" path="res://levels/mainground.tres" id="2_basf6"]
 [ext_resource type="Texture2D" uid="uid://ckjrph8yrw7w" path="res://resources/temple.png" id="2_th1ye"]
 [ext_resource type="Texture2D" uid="uid://ck2ra00l06ruo" path="res://resources/cloud4.png" id="3_1u52l"]
+[ext_resource type="AudioStream" uid="uid://8b0gg43t20mt" path="res://resources/sounds/Cunning plan.ogg" id="6_7inqb"]
+[ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="7_8o7p4"]
+[ext_resource type="PackedScene" uid="uid://bga3vj4dhyg5f" path="res://common/doors/game_over.tscn" id="8_8o7p4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5kwvw"]
 size = Vector2(76.5, 1282)
@@ -65,3 +68,13 @@ shape = SubResource("RectangleShape2D_l1563")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="BottomWall"]
 position = Vector2(1506, 809)
 shape = SubResource("RectangleShape2D_l1563")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_7inqb")
+autoplay = true
+
+[node name="ExitNode" parent="." instance=ExtResource("7_8o7p4")]
+position = Vector2(-99, 453)
+
+[node name="GameOver" parent="." instance=ExtResource("8_8o7p4")]
+position = Vector2(2863, -33)
