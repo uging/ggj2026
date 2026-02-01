@@ -14,6 +14,7 @@ extends CharacterBody2D
 @onready var ability_container = $AbilityUI/HBoxContainer
 var ability_icons = [] # This will hold your 3 progress bars
 @onready var feather_particles = $Visuals/FeatherParticles
+@onready var shockwave_particles = $Visuals/ShockwaveParticles
 
 var ability_textures = {
 	2: { "p": preload("res://assets/character/bar_feather.png"), "u": preload("res://assets/character/bar_feather_dim.png") },
@@ -55,6 +56,12 @@ var max_feather_charges := 3
 @export var glide_max_fall_speed := 80.0 # Lower = Slower descent (was 150.0)
 @export var glide_horizontal_speed := 300.0 # Higher = More zip while gliding
 var is_gliding := false
+
+# --- Rock Ability Stats ---
+@export var rock_gravity_mult := 1.8     # Makes him fall faster/heavier
+@export var rock_speed_mult := 0.85       # Makes him walk slower
+@export var rock_smash_fall_speed := 1200.0 # High-speed descent
+var is_rock_smashing := false
 
 signal health_changed(new_health)
 @export var max_health := 10
@@ -108,7 +115,7 @@ func _physics_process(delta: float) -> void:
 
 # --- 2. RESOURCE MANAGEMENT ---
 	# Only recharge if we AREN'T currently using an ability
-	var is_using_ability = is_gliding or (is_charging and current_set_id == 3)
+	var is_using_ability = is_gliding or (is_charging and current_set_id == 3) or is_rock_smashing
 	
 	if ability_charges < max_ability_charges and not is_using_ability:
 		charge_recovery_timer += delta
@@ -132,6 +139,9 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		coyote_timer -= delta  # The timer counts down when in the air
 		var current_gravity = gravity
+		
+		if current_set_id == 4:
+			current_gravity *= rock_gravity_mult
 
 		# FEATHER GLIDE (ID 2)
 		if current_set_id == 2 and Input.is_action_pressed("ui_accept") and ability_charges > 0:
@@ -180,6 +190,23 @@ func _physics_process(delta: float) -> void:
 
 				# 3. Optional: Add a little "kick" to the scale for visual feedback
 				visuals.scale = Vector2(1.4 * flip_dir, 0.7)
+				
+		# ROCK SMASH (ID 4)
+		if current_set_id == 4 and Input.is_action_just_pressed("ui_accept") and not is_on_floor():
+			if ability_charges >= 1.0:
+				is_rock_smashing = true
+				ability_charges -= 1.0
+				show_ability_ui()
+
+				velocity.y = -jump_force_base * 1.3
+				visuals.modulate = Color(0.5, 0.5, 0.5) # Turn Grey
+
+				await get_tree().create_timer(0.2).timeout
+				
+				# Ensure we are still smashing (didn't land during the timer)
+				if is_rock_smashing:
+					velocity.y = rock_smash_fall_speed
+					velocity.x = 0
 	else:
 		coyote_timer = coyote_time_duration # Reset timer while touching the floor
 
@@ -189,8 +216,9 @@ func _physics_process(delta: float) -> void:
 	
 # ---5. SLOPE SLIDING CALCULATION ---
 	var is_on_steep_slope = false
-	floor_snap_length = 32.0     # Keep Goma glued to the floor
+	floor_snap_length = 12.0     # Keep Goma glued to the floor
 	floor_constant_speed = true  # Ignore jagged speed changes
+	floor_max_angle = deg_to_rad(45.0) # Ensure he can walk up 45-degree angles/stairs
 
 	if is_on_floor():
 		var floor_normal = get_floor_normal() #
@@ -212,7 +240,7 @@ func _physics_process(delta: float) -> void:
 	var is_near_wall = is_on_wall() or wall_rejump_timer > 0
 	var can_jump = (coyote_timer > 0) or is_near_wall
 
-	if Input.is_key_pressed(KEY_SPACE) and can_jump:
+	if Input.is_key_pressed(KEY_SPACE) and can_jump and not is_rock_smashing and current_set_id != 4:
 		is_charging = true
 		var charge_speed = 4.0 if current_set_id == 3 else 2.0
 		charge_time = min(charge_time + delta * charge_speed, 1.0) 
@@ -232,55 +260,74 @@ func _physics_process(delta: float) -> void:
 		velocity.x = lerp(velocity.x, 0.0, 10 * delta)
 	
 	elif is_charging:
-			# --- 7. PERFORM LAUNCH ---
+	# --- 7. PERFORM LAUNCH ---
+		# BASE HEIGHT SETTINGS (Adjust these numbers to tune height)
+		var regular_jump_height = -1.4     # Default (No Mask)
+		var gum_regular_height = -2.2      # Gum Mask (Single Tap)
+		var gum_super_height = -2.7        # Gum Mask (Long Press / Charged)
+		var feather_jump_height = -1.8    # Feather Mask
+		
+		# Determine which height to use
+		var launch_y = regular_jump_height
+		
+		var rock_jump_height = -2.0 # Lower than regular -1.4
+		if current_set_id == 4:
+			launch_y = rock_jump_height
+		
+		if current_set_id == 3: # GUM MASK
+			if is_super_charging:
+				perform_super_jump_logic() 
+				launch_y = gum_super_height
+				is_super_charging = false
+			else:
+				launch_y = gum_regular_height
+		elif current_set_id == 2: # FEATHER MASK
+			launch_y = feather_jump_height
 			
-			# BASE HEIGHT SETTINGS (Adjust these numbers to tune height)
-			var regular_jump_height = -1.4     # Default (No Mask)
-			var gum_regular_height = -2.2      # Gum Mask (Single Tap)
-			var gum_super_height = -2.7        # Gum Mask (Long Press / Charged)
-			var feather_jump_height = -1.8    # Feather Mask
+		var jump_direction = Vector2(input_vector.x, launch_y).normalized()
+		
+		# --- WALL KICK LOGIC ---
+		if is_near_wall and not is_on_floor():
+			var wall_normal = get_wall_normal() if is_on_wall() else last_wall_normal
+			wall_kick_boost_timer = wall_kick_boost_duration
 			
-			# Determine which height to use
-			var launch_y = regular_jump_height
-			
-			if current_set_id == 3: # GUM MASK
-				if is_super_charging:
-					perform_super_jump_logic() 
-					launch_y = gum_super_height
-					is_super_charging = false
-				else:
-					launch_y = gum_regular_height
-			elif current_set_id == 2: # FEATHER MASK
-				launch_y = feather_jump_height
-				
-			var jump_direction = Vector2(input_vector.x, launch_y).normalized()
-			
-			# --- WALL KICK LOGIC ---
-			if is_near_wall and not is_on_floor():
-				var wall_normal = get_wall_normal() if is_on_wall() else last_wall_normal
-				wall_kick_boost_timer = wall_kick_boost_duration
-				
-				if input_vector.x == 0 or sign(input_vector.x) == sign(-wall_normal.x):
-					jump_direction = (wall_normal * 1.2 + Vector2(0, launch_y * 1.8)).normalized()
-				else:
-					jump_direction = (wall_normal * 3.5 + Vector2(0, launch_y * 1.2)).normalized()
-				wall_rejump_timer = 0 
+			if input_vector.x == 0 or sign(input_vector.x) == sign(-wall_normal.x):
+				jump_direction = (wall_normal * 1.2 + Vector2(0, launch_y * 1.8)).normalized()
+			else:
+				jump_direction = (wall_normal * 3.5 + Vector2(0, launch_y * 1.2)).normalized()
+			wall_rejump_timer = 0 
 
-			# Calculate final force
-			var power_boost = 1.0 # We handle the boost via launch_y now
-			var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
-			
-			# Cap the speed
-			var max_cap = 1000.0 if current_set_id == 3 else 750.0
-			velocity = jump_direction * min(final_force, max_cap)
-			
-			apply_launch_stretch(flip_dir)
-			charge_time = 0.0
-			is_charging = false
+		# Calculate final force
+		var power_boost = 1.0 # We handle the boost via launch_y now
+		var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
+		
+		# Cap the speed
+		var max_cap = 1000.0 if current_set_id == 3 else 750.0
+		velocity = jump_direction * min(final_force, max_cap)
+		
+		apply_launch_stretch(flip_dir)
+		charge_time = 0.0
+		is_charging = false
+
+	if Input.is_action_just_pressed("ui_accept") and is_on_floor() and current_set_id == 4:
+		velocity.y = -jump_force_base * 2.0 # A small, heavy jump
+		# Small Forward Kick: If moving, give a little extra push to help clear the ledge
+		if input_vector.x != 0:
+			velocity.x = input_vector.x * (speed * 1.1)
+		apply_launch_stretch(flip_dir)
+		# Optional: Add a small screen shake or sound effect here!
 	
 # # --- 8. NORMAL MOVEMENT ---
 	if not is_charging:
-		var target_vel = input_vector * speed
+		# 1. Start with base speed
+		var final_speed = speed
+		
+		# 2. APPLY ROCK HEAVINESS (ID 4)
+		if current_set_id == 4:
+			final_speed *= rock_speed_mult # Goma walks slower with the heavy mask
+		
+		# 3. Calculate target velocity using our modified speed
+		var target_vel = input_vector * final_speed
 		
 		if is_top_down:
 			# TOP-DOWN MOVEMENT: Snappy movement for the map
@@ -313,22 +360,34 @@ func _physics_process(delta: float) -> void:
 			visuals.scale.x = (1.0 + stretch_factor) * flip_dir
 			visuals.scale.y = lerp(visuals.scale.y, 1.0 - (stretch_factor * 0.5), 10 * delta)
 
-	# --- 9. EXECUTE MOVEMENT & LANDING ---
+# --- 9. EXECUTE MOVEMENT & LANDING ---
 	var was_in_air = not is_on_floor()
-	if is_on_wall():
-		last_wall_normal = get_wall_normal()
-		wall_rejump_timer = wall_rejump_window
-
-	move_and_slide() #
+	move_and_slide()
 	
 	if not is_top_down:
 		if was_in_air and is_on_floor():
+			if is_rock_smashing:
+				# Call the new function we just made
+				execute_shockwave()
+				
+				# Reset states AFTER the shockwave check
+				is_rock_smashing = false
+				visuals.modulate = Color.WHITE
+				velocity.y = 0 
+				
+				show_ability_ui()
+			
 			apply_landing_squash()
-
+						
 # --- Helper Functions ---
 
 func change_set(id: int):
 	if id == current_set_id: return
+	# Reset all active states
+	is_gliding = false
+	is_rock_smashing = false
+	is_super_charging = false
+	visuals.modulate = Color.WHITE # Reset rock color
 	
 	# Mapping IDs to the dictionary keys
 	var mask_names = { 2: "feather", 3: "gum", 4: "rock" }
@@ -412,6 +471,11 @@ func collect_mask(mask_name: String):
 # --- Health Logic ---
 
 func take_damage(amount: int):
+	# ROCK RESISTANCE: Reduce damage or ignore it
+	if current_set_id == 4:
+		amount = int(amount * 0.5) # Take half damage
+		if amount < 1: return     # Or ignore small hits entirely
+		
 	if is_invincible:
 		return
 		
@@ -429,6 +493,34 @@ func take_damage(amount: int):
 	# Wait for the duration, then turn invincibility off
 	await get_tree().create_timer(invincibility_duration).timeout
 	is_invincible = false
+
+func execute_shockwave():
+	
+	# 1. Enable and Sync the zone
+	$RockBlastZone.monitoring = true
+	$RockBlastZone.force_update_transform() # Ensures physics knows our current position
+	
+	# 2. Wait for physics frames
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	
+	# 3. Check for the traps
+	var targets = $RockBlastZone.get_overlapping_areas()
+	
+	for t in targets:
+		if t.has_method("take_damage"):
+			t.take_damage(1)
+	
+	# 4. Cleanup & Visuals
+	$RockBlastZone.monitoring = false
+	
+	# Trigger your NEW shockwave particles
+	shockwave_particles.emitting = true
+	shockwave_particles.restart() 
+	
+	# (Optional) Keep the old smoke too if you want both!
+	# smoke.emitting = true
+	# smoke.restart()
 	
 func start_invincibility_effect():
 	# 1. THE RED FLASH (One time, very fast)
