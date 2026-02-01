@@ -33,6 +33,8 @@ var ui_fade_timer := 0.0
 @export var gravity := 1600.0
 @export var slide_speed := 600.0
 @export var slope_limit_deg := 30.0
+@export var coyote_time_duration := 0.15 # 0.1 to 0.2 is the "sweet spot"
+var coyote_timer := 0.0 # so jumps feel a bit more forgiving when Goma runs off a ledge
 
 # --- Wall Scaling Logic ---
 @export var wall_rejump_window := 0.20  # Time allowed to re-kick same wall
@@ -128,6 +130,7 @@ func _physics_process(delta: float) -> void:
 
 # --- 3. GRAVITY & STATE HANDLING ---
 	if not is_on_floor():
+		coyote_timer -= delta  # The timer counts down when in the air
 		var current_gravity = gravity
 
 		# FEATHER GLIDE (ID 2)
@@ -165,7 +168,17 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("ui_accept") and current_set_id == 3:
 			if ability_charges >= 1.0:
 				perform_super_jump_logic()
-				velocity.y = -jump_force_base * 1.5
+				# 1. Reset downward velocity so falling doesn't "eat" your jump height
+				if velocity.y > 0:
+					velocity.y = 0
+
+				# 2. Apply the boost (Adjust 2.0 to your liking)
+				velocity.y = -jump_force_base * 2.0 
+
+				# 3. Optional: Add a little "kick" to the scale for visual feedback
+				visuals.scale = Vector2(1.4 * flip_dir, 0.7)
+	else:
+		coyote_timer = coyote_time_duration # Reset timer while touching the floor
 
 # --- 4. SNAPPY FLIP TRACKER ---
 	if input_vector.x > 0: is_facing_right = true
@@ -194,12 +207,16 @@ func _physics_process(delta: float) -> void:
 
 # --- 6. JUMP CHARGING (Floor, Wall, or Sticky) ---
 	var is_near_wall = is_on_wall() or wall_rejump_timer > 0
-	var can_jump = is_on_floor() or is_near_wall
+	var can_jump = (coyote_timer > 0) or is_near_wall
 
 	if Input.is_key_pressed(KEY_SPACE) and can_jump:
 		is_charging = true
 		var charge_speed = 4.0 if current_set_id == 3 else 2.0
 		charge_time = min(charge_time + delta * charge_speed, 1.0) 
+		
+		# IMPORTANT: Once we start charging a jump, 
+		# kill the coyote timer so they can't double-jump
+		coyote_timer = 0
 		
 		if current_set_id == 3 and charge_time >= 1.0 and ability_charges >= 1.0:
 			is_super_charging = true
@@ -212,44 +229,51 @@ func _physics_process(delta: float) -> void:
 		velocity.x = lerp(velocity.x, 0.0, 10 * delta)
 	
 	elif is_charging:
-		# --- 7. PERFORM LAUNCH ---
-		# ID 2 (Feather) gets -1.6, ID 3 (Gum) gets -1.7, Default gets -1.4
-		var launch_y = -1.4
-		if current_set_id == 3: launch_y = -1.7
-		elif current_set_id == 2: launch_y = -1.6 # The "Lighter" base jump
-		
-		# If it was a long press, trigger the Super Jump
-		if is_super_charging:
-			perform_super_jump_logic() 
-			launch_y = -2.1 # The Super Jump height (Tuned for 20% reduction)
-			is_super_charging = false
+			# --- 7. PERFORM LAUNCH ---
 			
-		var jump_direction = Vector2(input_vector.x, launch_y).normalized()
-		
-		# WALL KICK: Only trigger if on a wall and in air
-		if is_near_wall and not is_on_floor():
-			var wall_normal = get_wall_normal() if is_on_wall() else last_wall_normal
-			wall_kick_boost_timer = wall_kick_boost_duration
+			# BASE HEIGHT SETTINGS (Adjust these numbers to tune height)
+			var regular_jump_height = -1.4     # Default (No Mask)
+			var gum_regular_height = -2.2      # Gum Mask (Single Tap)
+			var gum_super_height = -2.7        # Gum Mask (Long Press / Charged)
+			var feather_jump_height = -1.8    # Feather Mask
 			
-			# Scale UP if holding nothing or pushing INTO the wall
-			if input_vector.x == 0 or sign(input_vector.x) == sign(-wall_normal.x):
-				jump_direction = (wall_normal * 1.2 + Vector2(0, launch_y * 1.8)).normalized()
-			else:
-				# Kick AWAY if holding the direction away
-				jump_direction = (wall_normal * 3.5 + Vector2(0, launch_y * 1.2)).normalized()
+			# Determine which height to use
+			var launch_y = regular_jump_height
+			
+			if current_set_id == 3: # GUM MASK
+				if is_super_charging:
+					perform_super_jump_logic() 
+					launch_y = gum_super_height
+					is_super_charging = false
+				else:
+					launch_y = gum_regular_height
+			elif current_set_id == 2: # FEATHER MASK
+				launch_y = feather_jump_height
 				
-			wall_rejump_timer = 0 # Consume the window
+			var jump_direction = Vector2(input_vector.x, launch_y).normalized()
+			
+			# --- WALL KICK LOGIC ---
+			if is_near_wall and not is_on_floor():
+				var wall_normal = get_wall_normal() if is_on_wall() else last_wall_normal
+				wall_kick_boost_timer = wall_kick_boost_duration
+				
+				if input_vector.x == 0 or sign(input_vector.x) == sign(-wall_normal.x):
+					jump_direction = (wall_normal * 1.2 + Vector2(0, launch_y * 1.8)).normalized()
+				else:
+					jump_direction = (wall_normal * 3.5 + Vector2(0, launch_y * 1.2)).normalized()
+				wall_rejump_timer = 0 
 
-		var power_boost = 1.15 if current_set_id == 3 else 1.0
-		var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
-		
-		# Cap the speed so he doesn't break the map
-		var max_cap = 900.0 if current_set_id == 3 else 750.0
-		velocity = jump_direction * min(final_force, max_cap)
-		
-		apply_launch_stretch(flip_dir)
-		charge_time = 0.0
-		is_charging = false
+			# Calculate final force
+			var power_boost = 1.0 # We handle the boost via launch_y now
+			var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
+			
+			# Cap the speed
+			var max_cap = 1000.0 if current_set_id == 3 else 750.0
+			velocity = jump_direction * min(final_force, max_cap)
+			
+			apply_launch_stretch(flip_dir)
+			charge_time = 0.0
+			is_charging = false
 	
 # # --- 8. NORMAL MOVEMENT ---
 	if not is_charging:
