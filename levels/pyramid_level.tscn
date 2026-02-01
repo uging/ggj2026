@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=4 uid="uid://dhh3anway3nj4"]
+[gd_scene load_steps=15 format=4 uid="uid://dhh3anway3nj4"]
 
 [ext_resource type="Script" uid="uid://t6hlewve03qn" path="res://levels/pyramid_level.gd" id="1_1u52l"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_i7dwt"]
@@ -7,8 +7,10 @@
 [ext_resource type="Texture2D" uid="uid://ck2ra00l06ruo" path="res://resources/cloud4.png" id="3_1u52l"]
 [ext_resource type="AudioStream" uid="uid://8b0gg43t20mt" path="res://resources/sounds/Cunning plan.ogg" id="6_7inqb"]
 [ext_resource type="Script" uid="uid://5sutltexle6j" path="res://levels/pit.gd" id="6_7wby1"]
+[ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://snail.tscn" id="6_nvhv4"]
 [ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="7_8o7p4"]
 [ext_resource type="PackedScene" uid="uid://bga3vj4dhyg5f" path="res://common/doors/game_over.tscn" id="8_8o7p4"]
+[ext_resource type="PackedScene" uid="uid://br0e78iidqro2" path="res://lava_snake.tscn" id="10_kno24"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5kwvw"]
 size = Vector2(76.5, 1282)
@@ -43,7 +45,11 @@ position = Vector2(3192.0002, 516)
 scale = Vector2(6.8331795, 4.1300726)
 texture = ExtResource("3_1u52l")
 
+[node name="LavaSnake" parent="Node2D" instance=ExtResource("10_kno24")]
+position = Vector2(1134, 383)
+
 [node name="MainGround" type="TileMapLayer" parent="."]
+position = Vector2(1, -1)
 tile_map_data = PackedByteArray("AAD+/wgAAwADAAMAAAALAAYAAwADAAMAAAAXAAcAAwADAAMAAAAgAAMAAwADAAMAAAAlAAEAAwADAAMAAAD//wgAAwAEAAMAAAAAAAgAAwAEAAMAAAAMAAYAAwAEAAMAAAANAAYAAwAEAAMAAAAOAAYAAwAEAAMAAAAPAAYAAwAEAAMAAAAZAAcAAwAEAAMAAAAYAAcAAwAEAAMAAAAhAAMAAwAEAAMAAAAmAAEAAwAEAAMAAAAnAAEAAwAEAAMAAAAoAAEAAwAEAAMAAAApAAEAAwAEAAMAAAAqAAEAAwAEAAMAAAArAAEAAwADAAIAAAAjAAMAAwADAAIAAAAaAAcAAwADAAIAAAAQAAYAAwADAAIAAAABAAgAAwADAAIAAAAiAAMAAwAEAAMAAAA=")
 tile_set = ExtResource("2_basf6")
 
@@ -84,3 +90,6 @@ position = Vector2(-99, 453)
 
 [node name="GameOver" parent="." instance=ExtResource("8_8o7p4")]
 position = Vector2(2863, -33)
+
+[node name="Snail" parent="." instance=ExtResource("6_nvhv4")]
+position = Vector2(1805, 466)
