@@ -79,6 +79,7 @@ font_size = 17
 font_color = Color(0.043137256, 0.11764706, 0.24705882, 1)
 
 [node name="Main" type="Node2D"]
+process_mode = 3
 script = ExtResource("1_oagth")
 player_scene = ExtResource("3_lquwl")
 

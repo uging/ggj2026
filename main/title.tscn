@@ -25,12 +25,12 @@ script = ExtResource("1_32gvp")
 metadata/_edit_group_ = true
 
 [node name="Cloud1" type="Sprite2D" parent="."]
-position = Vector2(-76, 49)
+position = Vector2(-76, 38)
 scale = Vector2(1.8333334, 1.7096775)
 texture = ExtResource("1_x183l")
 
 [node name="Cloud2" type="Sprite2D" parent="."]
-position = Vector2(325, 129)
+position = Vector2(325, 117.99999)
 scale = Vector2(1.8421053, 1.7971015)
 texture = ExtResource("2_32gvp")
 
@@ -39,9 +39,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -106.0
-offset_top = -8.0
+offset_top = -19.0
 offset_right = 315.0
-offset_bottom = 150.0
+offset_bottom = 139.0
 grow_horizontal = 2
 text = "G.O.M.A."
 label_settings = SubResource("LabelSettings_oagth")
@@ -54,17 +54,37 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = 8.0
-offset_top = 279.0
+offset_top = 248.0
 offset_right = 258.0
-offset_bottom = 379.0
+offset_bottom = 318.0
 grow_horizontal = 2
 grow_vertical = 0
-pivot_offset = Vector2(125, 50)
+pivot_offset = Vector2(125, 35)
 size_flags_horizontal = 0
-focus_neighbor_bottom = NodePath("../ExitButton")
+focus_neighbor_bottom = NodePath("../LoadButton")
 theme_override_fonts/font = ExtResource("4_ps3m7")
 theme_override_font_sizes/font_size = 40
 text = "Let's Go!"
+
+[node name="LoadButton" type="Button" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 330.0
+offset_right = 259.0
+offset_bottom = 400.0
+grow_horizontal = 2
+grow_vertical = 0
+pivot_offset = Vector2(125, 35)
+size_flags_horizontal = 0
+focus_neighbor_top = NodePath("../StartButton")
+focus_neighbor_bottom = NodePath("../ExitButton")
+theme_override_fonts/font = ExtResource("4_ps3m7")
+theme_override_font_sizes/font_size = 40
+text = "Load"
 
 [node name="ExitButton" type="Button" parent="."]
 anchors_preset = 7
@@ -73,23 +93,23 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = 9.0
-offset_top = 397.0
+offset_top = 411.0
 offset_right = 259.0
-offset_bottom = 497.0
+offset_bottom = 481.0
 grow_horizontal = 2
 grow_vertical = 0
-pivot_offset = Vector2(125, 50)
+pivot_offset = Vector2(125, 35)
 size_flags_horizontal = 0
-focus_neighbor_top = NodePath("../StartButton")
+focus_neighbor_top = NodePath("../LoadButton")
 theme_override_fonts/font = ExtResource("4_ps3m7")
 theme_override_font_sizes/font_size = 40
 text = "Exit"
 
 [node name="Caption" type="Label" parent="."]
 offset_left = -163.0
-offset_top = 130.0
+offset_top = 119.0
 offset_right = 430.0
-offset_bottom = 176.0
+offset_bottom = 165.0
 text = "Guardian of Masked Artifacts"
 label_settings = SubResource("LabelSettings_re7it")
 script = ExtResource("6_hecjl")
