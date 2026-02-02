@@ -506,32 +506,50 @@ func take_damage(amount: int):
 	is_invincible = false
 
 func execute_shockwave():
-	
-	# 1. Enable and Sync the zone
+	# 1. Damage Logic
 	$RockBlastZone.monitoring = true
-	$RockBlastZone.force_update_transform() # Ensures physics knows our current position
+	$RockBlastZone.force_update_transform()
 	
-	# 2. Wait for physics frames
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	
-	# 3. Check for the traps
 	var targets = $RockBlastZone.get_overlapping_areas()
-	
 	for t in targets:
 		if t.has_method("take_damage"):
 			t.take_damage(1)
 	
-	# 4. Cleanup & Visuals
 	$RockBlastZone.monitoring = false
 	
-	# Trigger your NEW shockwave particles
-	shockwave_particles.emitting = true
-	shockwave_particles.restart() 
-	
-	# (Optional) Keep the old smoke too if you want both!
-	# smoke.emitting = true
-	# smoke.restart()
+	# 2. THE CHUNKY BROWN BURST
+	if shockwave_particles:
+		var mat = shockwave_particles.process_material
+		if mat:
+			# CHANGE COLOR: Set to a "Dirt Brown"
+			# Color(0.4, 0.25, 0.1) is a solid brown hex-style color
+			mat.color = Color(0.4, 0.25, 0.1) 
+			
+			# CHANGE SIZE: Make individual chunks much bigger
+			mat.scale_min = 4.0
+			mat.scale_max = 7.0
+			
+			# INCREASE SCATTER: Make them fly faster and further
+			mat.initial_velocity_min = 250.0
+			mat.initial_velocity_max = 500.0
+		
+		# Ensure the smoke stays OFF
+		# smoke.emitting = false  <-- We just won't call restart() on it
+		
+		shockwave_particles.emitting = true
+		shockwave_particles.restart() 
+
+	# 3. THE GROUND QUAKE (Camera Shake)
+	if has_node("Camera2D"):
+		var cam = $Camera2D
+		var shake_tween = create_tween()
+		for i in range(5):
+			var intensity = 14.0 # Slightly stronger shake for more impact
+			shake_tween.tween_property(cam, "offset", Vector2(randf_range(-intensity, intensity), randf_range(-intensity, intensity)), 0.04)
+		shake_tween.tween_property(cam, "offset", Vector2.ZERO, 0.04)
 	
 func start_invincibility_effect():
 	# 1. THE RED FLASH (One time, very fast)
