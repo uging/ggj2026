@@ -6,7 +6,7 @@
 [ext_resource type="FontFile" uid="uid://bbc5b2ody45vr" path="res://resources/fonts/KaushanScript-Regular.otf" id="3_ngr87"]
 [ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="4_ps3m7"]
 [ext_resource type="FontFile" uid="uid://dqj3kl2spwtkw" path="res://resources/fonts/Kenney Blocks.ttf" id="5_f7lo5"]
-[ext_resource type="Script" uid="uid://dni3b2kj7lc1w" path="res://main/caption.gd" id="6_hecjl"]
+[ext_resource type="Script" path="res://main/caption.gd" id="6_hecjl"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_oagth"]
 font = ExtResource("3_ngr87")
@@ -20,7 +20,7 @@ font_size = 30
 font_color = Color(0.043137256, 0.11764706, 0.24705882, 1)
 
 [node name="TitleNode" type="Node2D"]
-position = Vector2(503, 182)
+position = Vector2(533, 182)
 script = ExtResource("1_32gvp")
 metadata/_edit_group_ = true
 
@@ -59,6 +59,7 @@ offset_right = 255.0
 offset_bottom = 417.0
 grow_horizontal = 2
 grow_vertical = 0
+pivot_offset = Vector2(125, 50)
 size_flags_horizontal = 0
 theme_override_fonts/font = ExtResource("4_ps3m7")
 theme_override_font_sizes/font_size = 40
