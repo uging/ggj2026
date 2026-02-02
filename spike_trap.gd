@@ -29,12 +29,16 @@ func _on_body_entered(body: Node2D) -> void:
 
 func _physics_process(_delta: float) -> void:
 	if not monitoring: return
-	
-	# Check for both Bodies (Player) and overlapping Areas
+
 	for body in get_overlapping_bodies():
+		# CRASH SHIELD: Ensure the body hasn't been deleted by a scene reload
+		if body == null or not is_instance_valid(body):
+			continue
+
 		if body.name == "Player":
-			# If player is smashing OR falling fast enough to be a smash
-			if body.get("is_rock_smashing") == true or body.velocity.y > 700.0:
+			# Safety check for velocity
+			var player_vel = body.get("velocity") if body.get("velocity") != null else Vector2.ZERO
+			if body.get("is_rock_smashing") == true or player_vel.y > 700.0:
 				take_damage(1)
 				return
 

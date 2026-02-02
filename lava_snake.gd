@@ -27,6 +27,10 @@ func start_glow():
 	tween.tween_property(sprite, "modulate", Color(1, 1, 1), 1.2)       # Normal
 
 func _on_body_entered(body: Node2D) -> void:
+	# CRASH SHIELD: If the player is being deleted (dying), stop immediately!
+	if body == null or not body.is_inside_tree(): 
+		return
+
 	if body.name == "Player":
 		# --- YOUR SPIKE TRAP LOGIC ---
 		var is_smashing = body.get("is_rock_smashing") == true

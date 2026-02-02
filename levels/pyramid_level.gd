@@ -1,19 +1,61 @@
 extends Node2D
 
-
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	print("The Pyramid!")
-	#await get_tree().root.child_entered_tree  # Wait tree ready
+	# 1. Check if Goma is missing (happens after death reload)
+	if Global.player == null:
+		spawn_player_manually()
 	
-	add_child(Global.player)
-	Global.player.is_top_down = false	
-	Global.player.gravity = 1600
-	Global.player.global_position = Vector2(60, 480) 
+	# 2. Wait for them to be ready
+	while Global.player == null or Global.hud == null:
+		await get_tree().process_frame
 	
-	add_child(Global.hud)
+	var player = Global.player
+	var hud = Global.hud
 
+	# 3. Parent them to THIS level
+	if player.get_parent() != null:
+		player.get_parent().remove_child(player)
+	add_child(player)
+	
+	if hud.get_parent() != null:
+		hud.get_parent().remove_child(hud)
+	add_child(hud)
+	hud.show()
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+	# 4. Positioning & Camera
+	player.is_top_down = false
+	player.gravity = 1600
+	player.global_position = Vector2(60, 480) 
+	
+	if hud.has_method("setup_health"):
+		hud.setup_health(player)
+
+	_reset_camera(player)
+
+# ADD THIS FUNCTION to pyramid_level.gd
+func spawn_player_manually():
+	# Update these paths to match your actual file locations!
+	var p_scene = load("res://player.tscn") 
+	var h_scene = load("res://hud.tscn")
+	
+	Global.player = p_scene.instantiate()
+	Global.hud = h_scene.instantiate()
+
+func _reset_camera(target):
+	# 1. Find the camera
+	var camera = target.get_node_or_null("Camera2D")
+
+	if camera:
+		# 2. Make it the boss of the screen immediately
+		camera.make_current()
+
+		# 3. CRITICAL: Force the camera's position to match Goma exactly
+		# This prevents it from staying at (0,0)
+		camera.global_position = target.global_position
+
+		# 4. If you have 'Position Smoothing' on, reset it so it doesn't 
+		# take 2 seconds to slide from the center of the screen to Goma
+		if camera.has_method("reset_smoothing"):
+			camera.reset_smoothing()
+
+			print("Camera successfully snapped to Goma at: ", target.global_position)

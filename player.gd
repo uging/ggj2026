@@ -80,12 +80,7 @@ var ability_charges := 3.0
 var max_ability_charges := 3
 var charge_recovery_timer := 0.0
 
-
-var unlocked_masks = {
-	"feather": false,
-	"gum": false,
-	"rock": false
-}
+var unlocked_masks = Global.unlocked_masks
 
 # --- Equipment Sets ---
 var equipment_sets = {
@@ -96,14 +91,27 @@ var equipment_sets = {
 }
 
 func _ready() -> void:
+	# Reset status in case the engine reused memory
+	is_dying = false
+	process_mode = PROCESS_MODE_INHERIT 
+	show()
+	
 	# Idle Bobbing Logic
 	var tween = create_tween().set_loops().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(visuals, "position:y", -5.0, 0.8).as_relative()
 	tween.tween_property(visuals, "position:y", 5.0, 0.8).as_relative()
 	
+	# Update the HUD right away when Goma is born
+	health_changed.emit(current_health)
+	masks_updated.emit(unlocked_masks)
+	
 	if ability_container:
 		# This grabs TextureProgressBar, TextureProgressBar2, and TextureProgressBar3
 		ability_icons = ability_container.get_children()
+		
+	# Force the camera to be the active one as soon as Goma hits the stage
+	if has_node("Camera2D"):
+		$Camera2D.make_current()
 
 func _physics_process(delta: float) -> void:
 # --- 1. INPUT DETECTION ---
@@ -138,10 +146,12 @@ func _physics_process(delta: float) -> void:
 # --- 3. GRAVITY & STATE HANDLING ---
 	if not is_on_floor():
 		coyote_timer -= delta  # The timer counts down when in the air
-		var current_gravity = gravity
+		var current_gravity = 0.0
 		
-		if current_set_id == 4:
-			current_gravity *= rock_gravity_mult
+		if not is_top_down:
+			current_gravity = gravity
+			if current_set_id == 4:
+				current_gravity *= rock_gravity_mult
 
 		# FEATHER GLIDE (ID 2)
 		if current_set_id == 2 and Input.is_action_pressed("ui_accept") and ability_charges > 0:
@@ -581,6 +591,36 @@ func heal(amount: int):
 	current_health = clampi(current_health + amount, 0, max_health)
 	health_changed.emit(current_health) # Notify the UI to add a heart
 
+var is_dying = false 
+
 func die():
-	# For now, just reload the scene when health hits 0
+	if is_dying: return
+	is_dying = true
+	
+	# 1. Total Physics/Signal Shutdown
+	# This stops all scripts and collisions instantly
+	process_mode = PROCESS_MODE_DISABLED 
+	collision_layer = 0
+	collision_mask = 0
+	
+	# 2. Clear Global immediately
+	Global.player = null
+	
+	hide() 
+	
+	# 3. Use the SceneTree Timer directly to reload
+	# We use CONNECT_ONE_SHOT to ensure this can't trigger twice
+	var timer = get_tree().create_timer(0.1)
+	timer.timeout.connect(_on_death_timer_timeout, CONNECT_ONE_SHOT)
+
+# This separate function is safer than an anonymous 'func():'
+func _on_death_timer_timeout():
+	# Final check: only reload if the tree still exists
+	var tree = get_tree()
+	if tree:
+		# wipe this specific player instance from memory
+		self.queue_free()
+		tree.call_deferred("reload_current_scene")
+	
+func _reset_game():
 	get_tree().reload_current_scene()

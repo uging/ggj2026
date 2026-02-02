@@ -33,20 +33,24 @@ func _physics_process(delta: float) -> void:
 	if turn_cooldown > 0:
 		turn_cooldown -= delta
 
-	# 3. Edge and Wall Detection
+# 3. Edge and Wall Detection
 	if is_on_floor() and turn_cooldown <= 0:
 		# Check if we are about to fall or hit a wall
 		if not floor_ray.is_colliding() or wall_ray.is_colliding():
 			direction *= -1
 			
 			# Flip visuals
-			sprite.flip_h = (direction == 1) # Adjust based on your default face
+			sprite.flip_h = (direction == 1)
 			
-			# Move the FloorRay to the NEW front of the snail
+			# MOVE THE FLOOR RAY
 			floor_ray.position.x = 18 * direction 
 			
-			# Add a tiny cooldown (0.2 seconds) so it doesn't flip back instantly
-			turn_cooldown = 0.2 
+			# We flip the target_position so it always looks ahead of the snail
+			# If your wall_ray length is 20, we use (20 * direction)
+			wall_ray.target_position.x = abs(wall_ray.target_position.x) * direction
+			
+			# Add a tiny cooldown
+			turn_cooldown = 0.2
 
 	# 4. Apply Movement
 	velocity.x = direction * speed
@@ -60,6 +64,10 @@ func start_crawling_animation():
 
 # --- Damage & Smashing Logic ---
 func _on_hurt_box_body_entered(body: Node2D) -> void:
+	# CRASH SHIELD: If the player is being deleted (dying), stop immediately!
+	if body == null or not body.is_inside_tree(): 
+		return
+
 	if body.name == "Player":
 		# Check Goma's state
 		var is_smashing = body.get("is_rock_smashing") == true

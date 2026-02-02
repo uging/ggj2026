@@ -1,20 +1,23 @@
 extends Node
 
+# --- Persistent Data ---
+# These variables stay the same even when the scene reloads
+var isTitleShown := true
+
+# Store the unlock states here so Goma keeps his powers after dying
+var unlocked_masks = {
+	"feather": true,
+	"gum": false,
+	"rock": false
+}
+
+# --- HUD & Player References ---
+# We no longer instantiate them here. 
+# We just keep variables to track the 'active' ones if needed.
 var player = null
 var hud = null
-var isTitleShown = true
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	var player_scene = preload("res://player.tscn")
-	player = player_scene.instantiate()
-	
-	print("Global player created (persistent)!")
-	
-	var hud_scene = preload("res://hud.tscn")
-	hud = hud_scene.instantiate()
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+	# We leave this empty or just for initialization of basic data.
+	# The Main script will now handle creating the Player and HUD nodes.
+	print("Global data initialized.")

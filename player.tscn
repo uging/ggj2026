@@ -84,8 +84,10 @@ position = Vector2(-44, -86)
 scale = Vector2(0.3, 0.4)
 
 [node name="RockBlastZone" type="Area2D" parent="."]
+visible = false
 collision_layer = 0
 monitoring = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RockBlastZone"]
+visible = false
 shape = SubResource("CircleShape2D_1jxqw")

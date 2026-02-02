@@ -1,38 +1,64 @@
 extends Node2D
 
-var player: Node2D = null
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	print("The Forrest!")
+	print("The Forest!")
 	
-# 1. Safely handle moving the player and HUD to this scene
-	if Global.player.get_parent():
-		Global.player.get_parent().remove_child(Global.player)
-	add_child(Global.player)
+	# 1. RESPOND TO RESPAWN: If Goma is missing (after death reload), make him
+	if Global.player == null:
+		spawn_player_manually()
 	
-	if Global.hud.get_parent():
-		Global.hud.get_parent().remove_child(Global.hud)
-	add_child(Global.hud)
+	# 2. WAIT: Ensure they exist before we touch them
+	while Global.player == null or Global.hud == null:
+		await get_tree().process_frame
 	
-# 2. Set player state
-	Global.player.is_top_down = false
-	Global.player.gravity = 1600
-	Global.player.global_position = Vector2(600, 400)
+	var player = Global.player
+	var hud = Global.hud
+
+	# 3. RE-PARENT: Move Player and HUD into this scene safely
+	if player.get_parent() != null:
+		player.get_parent().remove_child(player)
+	add_child(player)
 	
-# 3. --- CLEANUP COLLECTED MASKS ---
-# This finds EVERY node in the scene tagged with the "pickups" group
+	if hud.get_parent() != null:
+		hud.get_parent().remove_child(hud)
+	add_child(hud)
+	hud.show()
+	
+	# 4. PLAYER STATE: Set position and physics
+	player.is_top_down = false
+	player.gravity = 1600
+	player.global_position = Vector2(600, 400)
+	
+	# 5. CAMERA & HUD: Snap camera and sync health
+	_reset_camera(player)
+	if hud.has_method("setup_health"):
+		hud.setup_health(player)
+	
+	# 6. CLEANUP COLLECTED MASKS
+	_cleanup_pickups(player)
+
+# Logic for cleaning up masks you already own
+func _cleanup_pickups(player_node):
 	for item in get_tree().get_nodes_in_group("pickups"):
-		print(item.name)
-		# Check if it's a rock mask and player has it
-		if "rock" in item.name.to_lower() and Global.player.unlocked_masks["rock"]:
+		var item_name = item.name.to_lower()
+		if "rock" in item_name and player_node.unlocked_masks["rock"]:
 			item.queue_free()
-		# Check if it's a gum mask and player has it
-		elif "gum" in item.name.to_lower() and Global.player.unlocked_masks["gum"]:
+		elif "gum" in item_name and player_node.unlocked_masks["gum"]:
 			item.queue_free()
-		# Check if it's a feather mask and player has it
-		elif "feather" in item.name.to_lower() and Global.player.unlocked_masks["feather"]:
+		elif "feather" in item_name and player_node.unlocked_masks["feather"]:
 			item.queue_free()
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+# Same helper functions we used in the Pyramid
+func spawn_player_manually():
+	var p_scene = load("res://player.tscn") # Update to your path
+	var h_scene = load("res://hud.tscn")    # Update to your path
+	Global.player = p_scene.instantiate()
+	Global.hud = h_scene.instantiate()
+
+func _reset_camera(target):
+	var camera = target.get_node_or_null("Camera2D")
+	if camera:
+		camera.make_current()
+		camera.global_position = target.global_position
+		if camera.has_method("reset_smoothing"):
+			camera.reset_smoothing()
