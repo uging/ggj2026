@@ -6,7 +6,7 @@ var isTitleShown := true
 
 # Store the unlock states here so Goma keeps his powers after dying
 var unlocked_masks = {
-	"feather": true,
+	"feather": false,
 	"gum": false,
 	"rock": false
 }
