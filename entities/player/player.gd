@@ -145,22 +145,14 @@ func _physics_process(delta: float) -> void:
 	# Do nothing if screen is paused
 	if get_tree().paused:
 		return
-		
-# --- 1. BASIC INPUT & DIRECTION ---
+
+	# --- 1. PREPARE INPUT & MOUSE DATA ---
+	var mouse_pos = get_global_mouse_position()
+	var direction_to_mouse = global_position.direction_to(mouse_pos)
+	var is_mouse_clicked = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	var input_vector = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
-# Only update facing direction if we ARE NOT rock smashing
-	if not is_rock_smashing:
-		if input_vector.x > 0: 
-			is_facing_right = true  
-		elif input_vector.x < 0: 
-			is_facing_right = false 
-
-	# Character naturally faces RIGHT. 
-	# side = 1.0 (Normal/Right), side = -1.0 (Flipped/Left)
-	var side = 1.0 if is_facing_right else -1.0
-
-# --- 2. RESOURCE REGEN ---
+	# --- 2. RESOURCE REGEN ---
 	var is_using_ability = is_gliding or is_charging or is_rock_smashing
 	if ability_charges < max_ability_charges and not is_using_ability:
 		charge_recovery_timer += delta
@@ -169,36 +161,55 @@ func _physics_process(delta: float) -> void:
 			charge_recovery_timer = 0.0
 			update_ability_visuals()
 
-# --- 3. MOVEMENT LOGIC ---
+	# --- 3. MOVEMENT & FACING LOGIC ---
 	if is_top_down:
-		velocity = velocity.lerp(input_vector * speed, 15.0 * delta)
-		visuals.rotation = lerp_angle(visuals.rotation, 0.0, 10.0 * delta)
+		# --- TOP DOWN (MAP VIEW) ---
+		var target_velocity = Vector2.ZERO
+		
+		if is_mouse_clicked:
+			# MOUSE MODE: Face and Walk toward cursor
+			if global_position.distance_to(mouse_pos) > 15:
+				target_velocity = direction_to_mouse * speed
+				is_facing_right = direction_to_mouse.x > 0
+		else:
+			# KEYBOARD MODE: Face and Walk based on keys
+			target_velocity = input_vector * speed
+			if input_vector.x != 0:
+				is_facing_right = input_vector.x > 0
+			
+		velocity = velocity.lerp(target_velocity, 15.0 * delta)
+		visuals.rotation = 0
+		
 	else:
+		# --- SIDE SCROLLER (LEVEL VIEW) ---
 		var is_near_wall = is_on_wall() or wall_rejump_timer > 0
 		var can_jump = (coyote_timer > 0) or is_near_wall
+		var is_stationary = Input.is_action_pressed("move_down") # 'S' key
+		
+		# --- FACING LOGIC ---
+		if not is_rock_smashing:
+			# Update: Only track mouse if hunkered down (S) AND clicking.
+			if is_stationary and is_on_floor() and is_mouse_clicked:
+				is_facing_right = direction_to_mouse.x > 0
+			elif input_vector.x != 0:
+				# Otherwise, follow keyboard direction
+				is_facing_right = input_vector.x > 0
 
-		# Ability Press (Single Hits)
+		# --- Ability Press Logic ---
 		if Input.is_action_just_pressed("ability"):
 			var current_time = Time.get_ticks_msec() / 1000.0
-			
-			# Rock Smash (Double Tap/Fast Press)
 			if current_set_id == 4 and not is_on_floor() and current_time - last_ability_press_time < 0.3:
 				if ability_charges >= 1.0: trigger_rock_smash()
-			
-			# --- Shared Air Jump Logic ---
 			elif (current_set_id == 3 or current_set_id == 2) and not is_on_floor() and not is_near_wall:
 				if ability_charges >= 1.0:
 					ability_charges -= 1.0
-					# Pass a multiplier: Gum (3) is 2.5, Feather (2) is 1.5
 					var jump_power = 2.5 if current_set_id == 3 else 1.5
 					perform_air_jump(jump_power)
-					
 			last_ability_press_time = current_time
 
-		# Ability Held (Charging or Gliding)
+		# --- Ability Held (Charging/Gliding) ---
 		if Input.is_action_pressed("ability"):
 			if can_jump and not is_rock_smashing:
-				# --- CHARGING LOGIC ---
 				is_charging = true
 				var charge_speed = 4.5 if current_set_id == 3 else 2.5
 				charge_time = min(charge_time + delta * charge_speed, 1.0)
@@ -208,75 +219,59 @@ func _physics_process(delta: float) -> void:
 				if charge_time > 0.7: 
 					is_super_charging = (current_set_id == 3)
 					visuals.position.x = randf_range(-1, 1)
-			
-			# --- GLIDING LOGIC ---
 			elif not is_on_floor() and current_set_id == 2 and ability_charges > 0:
-				# 1. The "Peak" check: Only allow glide if falling or at the top of a jump
 				if velocity.y > -150: 
-					# 2. The Zelda "Catch"
-					if not is_gliding:
-						velocity.y = min(velocity.y, 10.0)
-					
 					process_feather_glide(delta, input_vector)
 				else:
-					# We are still moving UP too fast from a jump, don't glide yet
 					is_gliding = false
 					feather_particles.emitting = false
 		else:
 			is_gliding = false
 			feather_particles.emitting = false
 
-		# Ability Release
 		if Input.is_action_just_released("ability"):
-			if is_charging: execute_jump_launch(side, input_vector)
+			if is_charging: execute_jump_launch(1.0 if is_facing_right else -1.0, input_vector)
 			is_gliding = false
 			feather_particles.emitting = false
 
-		# --- GRAVITY CALCULATIONS ---
+		# --- Gravity Logic ---
 		if not is_on_floor():
 			coyote_timer -= delta
 			var gravity_step = gravity
-			
-			if current_set_id == 4: # Rock logic
+			if current_set_id == 4:
 				gravity_step *= rock_gravity_mult
-			elif current_set_id == 2: # Feather logic
-				# The player only gets the gravity buff if they have charges AND are gliding
-				if is_gliding and ability_charges > 0:
-					gravity_step *= glide_gravity_mult
-				else:
-					gravity_step *= 0.7 # Normal feather weightlessness (no glide)
-
+			elif current_set_id == 2:
+				gravity_step *= glide_gravity_mult if (is_gliding and ability_charges > 0) else 0.7
 			velocity.y += gravity_step * delta
-			
 			if is_gliding and velocity.y > glide_max_fall_speed:
 				velocity.y = glide_max_fall_speed
 		else:
 			coyote_timer = coyote_time_duration
-			if velocity.y > 0:
-				velocity.y = 0
+			if velocity.y > 0: velocity.y = 0
 
-		# --- HORIZONTAL MOVEMENT ---
+		# --- Horizontal Movement ---
 		if not is_charging and not is_rock_smashing:
-			var move_speed = speed
-			if current_set_id == 4: 
-				move_speed *= rock_speed_mult
-				if is_on_floor() and input_vector.x != 0: move_speed *= 1.4 
-			
-			if is_gliding and ability_charges > 0: # Only zip if we have fuel
-				velocity.x = lerp(velocity.x, input_vector.x * glide_horizontal_speed, 8.0 * delta)
+			if is_stationary and is_on_floor():
+				velocity.x = move_toward(velocity.x, 0, speed * 0.2)
 			else:
-				velocity.x = lerp(velocity.x, input_vector.x * move_speed, 15.0 * delta)
+				var move_speed = speed
+				if current_set_id == 4: 
+					move_speed *= rock_speed_mult
+					if is_on_floor() and input_vector.x != 0: move_speed *= 1.4 
+				
+				if is_gliding and ability_charges > 0:
+					velocity.x = lerp(velocity.x, input_vector.x * glide_horizontal_speed, 8.0 * delta)
+				else:
+					velocity.x = lerp(velocity.x, input_vector.x * move_speed, 15.0 * delta)
 
-# --- 4. EXECUTION & VISUALS ---
-	if is_rock_smashing:
-		velocity.x = 0
-
+	# --- 4. FINAL EXECUTION & VISUALS ---
+	var side = 1.0 if is_facing_right else -1.0
+	if is_rock_smashing: velocity.x = 0
+	
 	move_and_slide()
 
 	if not is_top_down:
 		handle_landing_logic()
-		
-# VISUAL OVERRIDE
 		if is_rock_smashing:
 			visuals.scale.x = side * 0.8
 			visuals.scale.y = lerp(visuals.scale.y, 1.4, 15 * delta)
@@ -288,11 +283,9 @@ func _physics_process(delta: float) -> void:
 			visuals.scale.y = lerp(visuals.scale.y, 0.6, 10 * delta)
 			visuals.scale.x = side 
 		else:
-			# Normal movement juice
 			var stretch_factor = abs(velocity.x) * 0.0001
 			visuals.scale.y = lerp(visuals.scale.y, 1.0 - (stretch_factor * 0.5), 10 * delta)
 			visuals.scale.x = side * (1.0 + stretch_factor)
-			# Rotation: Now naturally tilts forward based on velocity without extra side-inversion
 			visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
 	else:
 		visuals.scale.x = side
