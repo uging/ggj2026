@@ -5,11 +5,11 @@
 [ext_resource type="Texture2D" uid="uid://ch537l21ahu2k" path="res://resources/building.png" id="2_35uxj"]
 [ext_resource type="PackedScene" uid="uid://ch78g7lbwgpoq" path="res://levels/main_ground.tscn" id="2_on3hq"]
 [ext_resource type="TileSet" uid="uid://majylxj4tle1" path="res://levels/mainground.tres" id="3_a8dg0"]
-[ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://heart_pickup.tscn" id="5_32ucf"]
-[ext_resource type="PackedScene" uid="uid://dn4teulm8by8r" path="res://mask_feather_pickup.tscn" id="8_a8dg0"]
+[ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://entities/player/interactables/pickups/heart_pickup.tscn" id="5_32ucf"]
+[ext_resource type="PackedScene" uid="uid://dn4teulm8by8r" path="res://entities/player/interactables/pickups/mask_feather_pickup.tscn" id="8_a8dg0"]
 [ext_resource type="AudioStream" uid="uid://dpggf5xckot1n" path="res://resources/sounds/Exploring Town.ogg" id="8_nhahx"]
 [ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="9_jdkyd"]
-[ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://snail.tscn" id="10_jdkyd"]
+[ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://entities/enemies/snail/snail.tscn" id="10_jdkyd"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_35uxj"]
 texture = ExtResource("2_35uxj")

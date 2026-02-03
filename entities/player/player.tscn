@@ -1,0 +1,93 @@
+[gd_scene load_steps=12 format=3 uid="uid://p6cwmp2367e6"]
+
+[ext_resource type="Script" uid="uid://b6rdjrcc6bssu" path="res://entities/player/player.gd" id="1_mehiu"]
+[ext_resource type="Texture2D" uid="uid://5n84e57l8sk4" path="res://entities/player/assets/goma.png" id="2_mehiu"]
+[ext_resource type="Texture2D" uid="uid://7nwjf0eqcdu5" path="res://entities/player/assets/cape_default.png" id="3_i1wwn"]
+[ext_resource type="Texture2D" uid="uid://c7410lk0nipo" path="res://entities/player/assets/mask_default.png" id="4_51p13"]
+[ext_resource type="Texture2D" uid="uid://dpqh70kurppi0" path="res://entities/player/assets/smoke_default.png" id="5_sweqy"]
+[ext_resource type="PackedScene" uid="uid://c4vikthgmocq2" path="res://entities/player/feather_particles.tscn" id="6_1jxqw"]
+[ext_resource type="PackedScene" uid="uid://cl65o51hn3lp3" path="res://entities/player/ui/ability_ui.tscn" id="6_2hs0m"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_i1wwn"]
+radius = 45.01111
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_2hs0m"]
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 80.0
+initial_velocity_max = 120.0
+gravity = Vector3(0, -10, 0)
+scale_min = 0.099999994
+scale_max = 0.19999999
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1jxqw"]
+particle_flag_disable_z = true
+spread = 180.0
+radial_velocity_min = 299.99997
+radial_velocity_max = 299.99997
+gravity = Vector3(0, 0, 0)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1jxqw"]
+radius = 100.0
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+script = ExtResource("1_mehiu")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(-1, 1)
+shape = SubResource("CircleShape2D_i1wwn")
+
+[node name="Visuals" type="Node2D" parent="."]
+
+[node name="Goma" type="Sprite2D" parent="Visuals"]
+position = Vector2(0.9999995, 1.1368684e-13)
+scale = Vector2(0.16635859, 0.17357141)
+texture = ExtResource("2_mehiu")
+
+[node name="Cape" type="Sprite2D" parent="Visuals"]
+position = Vector2(-19.625011, 6.124999)
+scale = Vector2(0.17177723, 0.19474393)
+texture = ExtResource("3_i1wwn")
+
+[node name="Mask" type="Sprite2D" parent="Visuals"]
+position = Vector2(7.000002, -17)
+scale = Vector2(0.11363637, 0.12228259)
+texture = ExtResource("4_51p13")
+
+[node name="Smoke" type="GPUParticles2D" parent="Visuals"]
+emitting = false
+amount = 12
+texture = ExtResource("5_sweqy")
+lifetime = 0.6
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_2hs0m")
+
+[node name="FeatherParticles" parent="Visuals" instance=ExtResource("6_1jxqw")]
+
+[node name="ShockwaveParticles" type="GPUParticles2D" parent="Visuals"]
+emitting = false
+amount = 20
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_1jxqw")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+limit_bottom = 648
+position_smoothing_enabled = true
+
+[node name="AbilityUI" parent="." instance=ExtResource("6_2hs0m")]
+z_index = 10
+position = Vector2(-44, -86)
+scale = Vector2(0.3, 0.4)
+
+[node name="RockBlastZone" type="Area2D" parent="."]
+visible = false
+collision_layer = 0
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RockBlastZone"]
+visible = false
+shape = SubResource("CircleShape2D_1jxqw")

@@ -7,10 +7,10 @@
 [ext_resource type="Texture2D" uid="uid://ck2ra00l06ruo" path="res://resources/cloud4.png" id="3_1u52l"]
 [ext_resource type="AudioStream" uid="uid://8b0gg43t20mt" path="res://resources/sounds/Cunning plan.ogg" id="6_7inqb"]
 [ext_resource type="Script" uid="uid://5sutltexle6j" path="res://levels/pit.gd" id="6_7wby1"]
-[ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://snail.tscn" id="6_nvhv4"]
+[ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://entities/enemies/snail/snail.tscn" id="6_nvhv4"]
 [ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="7_8o7p4"]
 [ext_resource type="PackedScene" uid="uid://bga3vj4dhyg5f" path="res://common/doors/game_over.tscn" id="8_8o7p4"]
-[ext_resource type="PackedScene" uid="uid://br0e78iidqro2" path="res://lava_snake.tscn" id="10_kno24"]
+[ext_resource type="PackedScene" uid="uid://br0e78iidqro2" path="res://entities/enemies/lava_snake/lava_snake.tscn" id="10_kno24"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5kwvw"]
 size = Vector2(76.5, 1282)

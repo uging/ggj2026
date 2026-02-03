@@ -35,7 +35,7 @@ func _on_start_button_pressed() -> void:
 	if has_node("KeyLabel"):
 		$KeyLabel.show()
 	
-	var hud_scene = preload("res://hud.tscn")
+	var hud_scene = preload("res://ui/hud.tscn")
 	var new_hud = hud_scene.instantiate()
 	add_child(new_hud)
 	Global.hud = new_hud

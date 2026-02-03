@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://dn4teulm8by8r"]
+
+[ext_resource type="PackedScene" uid="uid://bdewhpmq5hjkl" path="res://entities/player/interactables/pickups/mask_gum_pickup.tscn" id="1_jh513"]
+[ext_resource type="Texture2D" uid="uid://bh6iahf34yc66" path="res://entities/player/assets/mask_feather.png" id="2_h03jq"]
+
+[node name="MaskFeatherPickup" groups=["pickups"] instance=ExtResource("1_jh513")]
+mask_type = "feather"
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_h03jq")
