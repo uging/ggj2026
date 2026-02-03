@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://p6cwmp2367e6"]
+[gd_scene load_steps=16 format=3 uid="uid://p6cwmp2367e6"]
 
 [ext_resource type="Script" uid="uid://b6rdjrcc6bssu" path="res://entities/player/player.gd" id="1_mehiu"]
 [ext_resource type="Texture2D" uid="uid://5n84e57l8sk4" path="res://entities/player/assets/goma.png" id="2_mehiu"]
@@ -11,14 +11,31 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_i1wwn"]
 radius = 45.01111
 
+[sub_resource type="Curve" id="Curve_qiwj3"]
+_data = [Vector2(0.012048192, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_26q78"]
+curve = SubResource("Curve_qiwj3")
+
+[sub_resource type="Curve" id="Curve_bectd"]
+_data = [Vector2(0, 0.42460614), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_wvtmh"]
+curve = SubResource("Curve_bectd")
+
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_2hs0m"]
 particle_flag_disable_z = true
 spread = 180.0
 initial_velocity_min = 80.0
 initial_velocity_max = 120.0
 gravity = Vector3(0, -10, 0)
+damping_max = 20.0
 scale_min = 0.099999994
 scale_max = 0.19999999
+scale_curve = SubResource("CurveTexture_wvtmh")
+alpha_curve = SubResource("CurveTexture_26q78")
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1jxqw"]
 particle_flag_disable_z = true

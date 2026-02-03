@@ -89,29 +89,25 @@ var equipment_sets = {
 		"mask": preload("res://entities/player/assets/mask_default.png"), 
 		"cape": preload("res://entities/player/assets/cape_default.png"), 
 		"mask_pos": Vector2(7, -17),
-		"mask_scale": Vector2(0.114, 0.122),
-		"smoke_tex": preload("res://entities/player/assets/smoke_default.png") 
+		"mask_scale": Vector2(0.114, 0.122)
 	},
 	2: { 
 		"mask": preload("res://entities/player/assets/mask_feather.png"), 
 		"cape": preload("res://entities/player/assets/cape_feather.png"), 
 		"mask_pos": Vector2(6, -20),
-		"mask_scale": Vector2(0.214, 0.239),
-		"smoke_tex": preload("res://entities/player/assets/smoke_feather.png") 
+		"mask_scale": Vector2(0.214, 0.239)
 	},
 	3: { 
 		"mask": preload("res://entities/player/assets/mask_gum.png"), 
 		"cape": preload("res://entities/player/assets/cape_gum.png"), 
 		"mask_pos": Vector2(10.56, -12.632),
-		"mask_scale": Vector2(0.14, 0.151),
-		"smoke_tex": preload("res://entities/player/assets/smoke_gum.png") 
+		"mask_scale": Vector2(0.14, 0.151)
 	},
 	4: { 
 		"mask": preload("res://entities/player/assets/mask_rock.png"), 
 		"cape": preload("res://entities/player/assets/cape_rock.png"), 
 		"mask_pos": Vector2(10, -16),
-		"mask_scale": Vector2(0.16, 0.135),
-		"smoke_tex": preload("res://entities/player/assets/smoke_rock.png") 
+		"mask_scale": Vector2(0.16, 0.135)
 	}
 }
 
@@ -293,46 +289,59 @@ func _physics_process(delta: float) -> void:
 	
 # --- HELPER FUNCTIONS ---
 func execute_jump_launch(f_dir: float, input_vec: Vector2):
-	# Calculate Jump Height
+	# 1. Calculate Jump Height & Power
 	var base_power = 1.2 + (charge_time * 1.0) 
 	
-	# MASK BONUSES 
 	var mask_mult = 1.0
-	if current_set_id == 3: mask_mult = 1.3 # Gum Super Jump
-	if current_set_id == 4: mask_mult = 1.1 # Rock (Weighty but powerful)
+	if current_set_id == 3: mask_mult = 1.3 # Gum
+	if current_set_id == 4: mask_mult = 1.1 # Rock
 	
-	# Stronger upward vector
 	var launch_y = -1.8 * base_power * mask_mult
 	var jump_dir = Vector2(input_vec.x * 0.4, launch_y).normalized()
 
+	# 2. Wall Jump Adjustment
 	if (is_on_wall() or wall_rejump_timer > 0) and not is_on_floor():
 		var wall_norm = get_wall_normal() if is_on_wall() else last_wall_normal
 		jump_dir = (wall_norm * 1.6 + Vector2(0, launch_y)).normalized()
 
 	velocity = jump_dir * (jump_force_base * base_power * mask_mult)
-	
-	if current_set_id == 3 and charge_time > 0.6:
-		perform_super_jump_logic() 
 
+	# 3. --- SMOKE LOGIC ---
+	# Increased threshold to 0.25 to catch quick taps
+	if charge_time > 0.25: 
+		play_smoke_effect(Color.WHITE)
+	else:
+		# Explicitly kill smoke on tap jumps
+		smoke.emitting = false
+
+	# 4. Cleanup States
 	is_charging = false
 	charge_time = 0.0
 	apply_launch_stretch(f_dir)
 
 func perform_air_jump(power_mult: float):
-	velocity.y = 0 # Reset downward momentum first
+	if is_charging: return # Prevent double-triggering if charging on a platform
+	
+	velocity.y = 0 
 	velocity.y = -jump_force_base * power_mult 
 	
 	show_ability_ui()
 	
-	# Visuals: Smoke for Gum, Feathers for Feather
+	
+	# Match Color to Mask
+	var jump_color = Color.WHITE 
+	match current_set_id:
+		2: jump_color = Color(0.0, 0.681, 0.252, 1.0) # Light Blue Feather
+		3: jump_color = Color(1.0, 0.5, 0.8)  # Pink Gum
+		4: jump_color = Color(0.5, 0.5, 0.5)  # Grey Rock
+
+	play_smoke_effect(jump_color)
+	
 	if current_set_id == 2:
 		feather_particles.emitting = true
 		feather_particles.restart()
-	else:
-		smoke.emitting = true
-		smoke.restart()
 	
-	# Visual "Pop" (Squash and Stretch)
+	# Juice
 	var tween = create_tween()
 	var flip_mult = 1.0 if is_facing_right else -1.0
 	tween.tween_property(visuals, "scale", Vector2(0.7 * flip_mult, 1.4), 0.1)
@@ -392,37 +401,38 @@ func handle_landing_logic():
 
 func change_set(id: int):
 	if id == current_set_id: return
-	# Reset all active states
+	
 	is_gliding = false
 	is_rock_smashing = false
-	is_super_charging = false
-	visuals.modulate = Color.WHITE # Reset rock color
+	is_charging = false # Reset charging state on swap
+	charge_time = 0.0
+	visuals.modulate = Color.WHITE 
 	
-	# Mapping IDs to the dictionary keys
 	var mask_names = { 2: "feather", 3: "gum", 4: "rock" }
-	
-	# Check if the mask is allowed
 	var can_change = false
+	
 	if id == 1: 
-		can_change = true # Always allow default
+		can_change = true 
 	elif mask_names.has(id):
-		var mask_key = mask_names[id]
-		if unlocked_masks[mask_key] == true:
+		if unlocked_masks.get(mask_names[id], false):
 			can_change = true
 		else:
-			print("You haven't collected the ", mask_key, " mask yet!")
-			return # Exit the function if not unlocked
+			return 
 	
-	# If we pass the check, perform the visual change
 	if can_change and equipment_sets.has(id):
 		current_set_id = id
 		var new_data = equipment_sets[id]
 		
-		smoke.texture = new_data["smoke_tex"]
-		smoke.emitting = true
-		smoke.restart()
+		# --- SWAP POOF ---
+			# 2. Match Color to Mask
+		var swap_color = Color.WHITE 
+		match current_set_id:
+			2: swap_color = Color(0.0, 0.729, 0.388, 0.906) # Light Blue Feather
+			3: swap_color = Color(1.0, 0.5, 0.8)  # Pink Gum
+			4: swap_color = Color(0.5, 0.5, 0.5)  # Grey Rock
+		play_smoke_effect(swap_color)
 		
-		await get_tree().create_timer(0.1).timeout
+		await get_tree().create_timer(0.05).timeout
 		mask.texture = new_data["mask"]
 		mask.position = new_data["mask_pos"]
 		mask.scale = new_data["mask_scale"]
@@ -477,8 +487,12 @@ func collect_mask(mask_name: String):
 		if name_to_id.has(mask_name):
 			var new_id = name_to_id[mask_name]
 			change_set(new_id) # This triggers the smoke and visual swap automatically
-
-# --- Health Logic ---
+			
+func play_smoke_effect(color: Color = Color.WHITE):
+	if smoke:
+		smoke.self_modulate = color
+		smoke.emitting = true
+		smoke.restart()
 
 func take_damage(amount: int):
 	# ROCK RESISTANCE: Reduce damage or ignore it
@@ -604,6 +618,7 @@ func update_ability_visuals():
 		var fill = clamp(ability_charges - i, 0.0, 1.0)
 		icon.value = fill * 100
 
+# --- Health Logic ---
 func heal(amount: int):
 	current_health = clampi(current_health + amount, 0, max_health)
 	health_changed.emit(current_health) # Notify the UI to add a heart
