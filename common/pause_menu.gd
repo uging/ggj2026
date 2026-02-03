@@ -28,6 +28,17 @@ func toggle_pause():
 		show()
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		
+		# SYNC SLIDER POSITION
+		var bus_index = AudioServer.get_bus_index("Master")
+		var current_db = AudioServer.get_bus_volume_db(bus_index)
+		# Convert decibels back to 0.0 - 1.0 for the slider
+		$CenterContainer/VBoxContainer/VolumeSlider.value = db_to_linear(current_db)
+
+		# SYNC MUTE BUTTON STATE
+		$CenterContainer/VBoxContainer/MuteButton.button_pressed = AudioServer.is_bus_mute(bus_index)
+		$CenterContainer/VBoxContainer/VolumeSlider.focus_neighbor_top = $CenterContainer/VBoxContainer/ResumeButton.get_path()
+		$CenterContainer/VBoxContainer/VolumeSlider.focus_neighbor_bottom = $CenterContainer/VBoxContainer/MuteButton.get_path()
+
 		# 1. First, handle the visibility of buttons
 		var is_on_map = get_tree().current_scene.name == "Main"
 		
@@ -68,6 +79,20 @@ func _on_save_button_pressed() -> void:
 
 func _on_end_button_pressed() -> void:
 	get_tree().quit()
+
+# This handles the slider movement
+func _on_volume_slider_value_changed(value: float) -> void:
+	# Use the global function we created earlier
+	Global.set_volume(value)
+
+# This handles the mute checkbox
+func _on_mute_button_toggled(toggled_on: bool) -> void:
+	Global.toggle_mute(toggled_on)
+
+# Your existing resume logic
+func _on_resume_pressed() -> void:
+	get_tree().paused = false
+	hide()
 
 # --- VISUAL FEEDBACK ---
 

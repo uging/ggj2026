@@ -52,6 +52,23 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "QUIT"
 
+[node name="VolumeLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_jibdd")
+text = "VOLUME"
+horizontal_alignment = 1
+
+[node name="VolumeSlider" type="HSlider" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.1
+
+[node name="MuteButton" type="CheckButton" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_jibdd")
+text = "MUTE SOUND"
+
 [node name="SaveLabel" type="Label" parent="."]
 visible = false
 offset_left = 546.0
@@ -68,3 +85,5 @@ text = "Game Saved!"
 [connection signal="pressed" from="CenterContainer/VBoxContainer/MapButton" to="." method="_on_map_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/EndButton" to="." method="_on_end_button_pressed"]
+[connection signal="value_changed" from="CenterContainer/VBoxContainer/VolumeSlider" to="." method="_on_volume_slider_value_changed"]
+[connection signal="toggled" from="CenterContainer/VBoxContainer/MuteButton" to="." method="_on_mute_button_toggled"]
