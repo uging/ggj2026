@@ -89,7 +89,7 @@ var equipment_sets = {
 		"mask": preload("res://assets/character/mask_default.png"), 
 		"cape": preload("res://assets/character/cape_default.png"), 
 		"mask_pos": Vector2(10, -15),
-		"mask_scale": Vector2(0.16, 0.13),
+		"mask_scale": Vector2(0.0, 0.0),
 		"smoke_tex": preload("res://assets/character/smoke_default.png") 
 	},
 	2: { 
