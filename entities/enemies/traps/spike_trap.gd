@@ -2,26 +2,33 @@ extends Area2D
 
 @export var damage_amount := 1
 @export var knockback_force := 500.0
-@export var trap_health := 1 # Plants/Spikes only need 1 hit to break
+@export var trap_health := 1 
 
 func _ready() -> void:
+	# 1. GENERATE UNIQUE KEY
+	# Uses the Level Name (BasicLevel) + the Node Name (SpikeTrap/PlantTrap)
+	var level_name = get_tree().current_scene.name
+	var trap_key = level_name + "_" + name
+	
+	# 2. CHECK IF DEAD
+	# If this specific trap is in Global.destroyed_traps, delete it immediately
+	if Global.destroyed_traps.has(trap_key):
+		queue_free()
+		return 
+
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node2D) -> void:
 	if body.name == "Player":
-		# 1. Declare the check: is he smashing OR falling very fast (the smash speed)?
 		var is_smashing = body.get("is_rock_smashing") == true
-		var is_falling_fast = body.velocity.y > 700.0 # Smash fall speed is 1200, so 700 is a safe "landing" threshold
+		var is_falling_fast = body.velocity.y > 700.0 
 
-		# 2. If either is true, the trap should NOT hurt Goma
 		if is_smashing or is_falling_fast:
 			return 
 			
-		# 3. If he is already invincible (blinking), let him pass through.
 		if body.get("is_invincible") == true:
 			return
 
-		# 4. Otherwise, do the normal damage logic
 		if body.has_method("take_damage"):
 			body.take_damage(damage_amount)
 			var push_dir = (body.global_position - global_position).normalized()
@@ -31,12 +38,10 @@ func _physics_process(_delta: float) -> void:
 	if not monitoring: return
 
 	for body in get_overlapping_bodies():
-		# CRASH SHIELD: Ensure the body hasn't been deleted by a scene reload
 		if body == null or not is_instance_valid(body):
 			continue
 
 		if body.name == "Player":
-			# Safety check for velocity
 			var player_vel = body.get("velocity") if body.get("velocity") != null else Vector2.ZERO
 			if body.get("is_rock_smashing") == true or player_vel.y > 700.0:
 				take_damage(1)
@@ -48,14 +53,17 @@ func take_damage(amount: int):
 		break_trap()
 
 func break_trap():
-	# Disable collisions immediately so he doesn't hit it twice
+	# 3. RECORD THE DEATH
+	# This ensures the trap 'Self-Destructs' next time the level loads
+	var level_name = get_tree().current_scene.name
+	Global.destroyed_traps[level_name + "_" + name] = true
+	
 	monitoring = false 
 	monitorable = false
 	
-	# Create a quick "shatter" scale effect
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.1) # Quick swell
-	tween.tween_property(self, "modulate:a", 0.0, 0.1)          # Fade out
+	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.1)
+	tween.tween_property(self, "modulate:a", 0.0, 0.1)
 	
 	await tween.finished
 	queue_free()

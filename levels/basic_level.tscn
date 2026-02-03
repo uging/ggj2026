@@ -308,14 +308,14 @@ tile_set = SubResource("TileSet_lc1pu")
 [node name="HeartPickup" parent="." instance=ExtResource("6_6t68p")]
 position = Vector2(1533, 294)
 
-[node name="SpikeTrap" parent="." instance=ExtResource("7_lc1pu")]
+[node name="PlantTrap" parent="." instance=ExtResource("7_lc1pu")]
 position = Vector2(1085, 441)
 collision_layer = 1
 
 [node name="MaskGumPickup" parent="." instance=ExtResource("8_neare")]
 position = Vector2(2262, 173)
 
-[node name="SpikeTrap2" parent="." instance=ExtResource("10_hu82h")]
+[node name="SpikeTrap" parent="." instance=ExtResource("10_hu82h")]
 position = Vector2(1556, 557)
 collision_layer = 1
 
