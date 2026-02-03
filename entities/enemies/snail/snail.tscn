@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://cbi5nmj310fsq"]
 
-[ext_resource type="Texture2D" uid="uid://dv81qjv2p8tdx" path="res://assets/enemies/snail.png" id="1_03g26"]
-[ext_resource type="Script" uid="uid://bmtcaj01pkwwu" path="res://snail.gd" id="2_kwcx3"]
+[ext_resource type="Texture2D" uid="uid://lfgnll83otbe" path="res://entities/enemies/snail/assets/snail.png" id="1_03g26"]
+[ext_resource type="Script" uid="uid://t6cdgwd1m2jm" path="res://entities/enemies/snail/snail.gd" id="2_kwcx3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_03g26"]
 radius = 18.681541

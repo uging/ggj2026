@@ -51,7 +51,7 @@ func _cleanup_pickups(player_node):
 # Same helper functions we used in the Pyramid
 func spawn_player_manually():
 	var p_scene = load("res://entities/player/player.tscn") # Update to your path
-	var h_scene = load("res://hud.tscn")    # Update to your path
+	var h_scene = load("res://ui/hud.tscn")    # Update to your path
 	Global.player = p_scene.instantiate()
 	Global.hud = h_scene.instantiate()
 

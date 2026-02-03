@@ -52,7 +52,7 @@ var wall_kick_boost_timer := 0.0
 # --- Feather Ability Stats ---
 var feather_charges := 3
 var max_feather_charges := 3
-@export var glide_gravity_mult := 0.08  # Lower = Lighter (was 0.15)
+@export var glide_gravity_mult := 0.03  # Lower = Lighter (was 0.15)
 @export var glide_max_fall_speed := 80.0 # Lower = Slower descent (was 150.0)
 @export var glide_horizontal_speed := 300.0 # Higher = More zip while gliding
 var is_gliding := false
@@ -170,18 +170,28 @@ func _physics_process(delta: float) -> void:
 		var is_near_wall = is_on_wall() or wall_rejump_timer > 0
 		var can_jump = (coyote_timer > 0) or is_near_wall
 
+		# Ability Press (Single Hits)
 		if Input.is_action_just_pressed("ability"):
 			var current_time = Time.get_ticks_msec() / 1000.0
+			
+			# Rock Smash (Double Tap/Fast Press)
 			if current_set_id == 4 and not is_on_floor() and current_time - last_ability_press_time < 0.3:
 				if ability_charges >= 1.0: trigger_rock_smash()
-			elif current_set_id == 3 and not is_on_floor() and not is_near_wall:
+			
+			# --- Shared Air Jump Logic ---
+			elif (current_set_id == 3 or current_set_id == 2) and not is_on_floor() and not is_near_wall:
 				if ability_charges >= 1.0:
 					ability_charges -= 1.0
-					perform_gum_air_jump()
+					# Pass a multiplier: Gum (3) is 2.5, Feather (2) is 1.5
+					var jump_power = 2.5 if current_set_id == 3 else 1.5
+					perform_air_jump(jump_power)
+					
 			last_ability_press_time = current_time
 
+		# Ability Held (Charging or Gliding)
 		if Input.is_action_pressed("ability"):
 			if can_jump and not is_rock_smashing:
+				# --- CHARGING LOGIC ---
 				is_charging = true
 				var charge_speed = 4.5 if current_set_id == 3 else 2.5
 				charge_time = min(charge_time + delta * charge_speed, 1.0)
@@ -191,30 +201,61 @@ func _physics_process(delta: float) -> void:
 				if charge_time > 0.7: 
 					is_super_charging = (current_set_id == 3)
 					visuals.position.x = randf_range(-1, 1)
+			
+			# --- GLIDING LOGIC ---
 			elif not is_on_floor() and current_set_id == 2 and ability_charges > 0:
-				process_feather_glide(delta, input_vector)
+				# 1. The "Peak" check: Only allow glide if falling or at the top of a jump
+				if velocity.y > -150: 
+					# 2. The Zelda "Catch"
+					if not is_gliding:
+						velocity.y = min(velocity.y, 10.0)
+					
+					process_feather_glide(delta, input_vector)
+				else:
+					# We are still moving UP too fast from a jump, don't glide yet
+					is_gliding = false
+					feather_particles.emitting = false
+		else:
+			is_gliding = false
+			feather_particles.emitting = false
 
+		# Ability Release
 		if Input.is_action_just_released("ability"):
-			# Pass the calculated side to the jump launch
 			if is_charging: execute_jump_launch(side, input_vector)
 			is_gliding = false
 			feather_particles.emitting = false
 
+		# --- GRAVITY CALCULATIONS ---
 		if not is_on_floor():
 			coyote_timer -= delta
 			var gravity_step = gravity
-			if current_set_id == 4: gravity_step *= rock_gravity_mult
-			if is_gliding: gravity_step *= glide_gravity_mult
+			
+			if current_set_id == 4: # Rock logic
+				gravity_step *= rock_gravity_mult
+			elif current_set_id == 2: # Feather logic
+				# The player only gets the gravity buff if they have charges AND are gliding
+				if is_gliding and ability_charges > 0:
+					gravity_step *= glide_gravity_mult
+				else:
+					gravity_step *= 0.7 # Normal feather weightlessness (no glide)
+
 			velocity.y += gravity_step * delta
+			
+			if is_gliding and velocity.y > glide_max_fall_speed:
+				velocity.y = glide_max_fall_speed
 		else:
 			coyote_timer = coyote_time_duration
+			if velocity.y > 0:
+				velocity.y = 0
 
+		# --- HORIZONTAL MOVEMENT ---
 		if not is_charging and not is_rock_smashing:
 			var move_speed = speed
 			if current_set_id == 4: 
 				move_speed *= rock_speed_mult
 				if is_on_floor() and input_vector.x != 0: move_speed *= 1.4 
-			if is_gliding:
+			
+			if is_gliding and ability_charges > 0: # Only zip if we have fuel
 				velocity.x = lerp(velocity.x, input_vector.x * glide_horizontal_speed, 8.0 * delta)
 			else:
 				velocity.x = lerp(velocity.x, input_vector.x * move_speed, 15.0 * delta)
@@ -277,27 +318,54 @@ func execute_jump_launch(f_dir: float, input_vec: Vector2):
 	charge_time = 0.0
 	apply_launch_stretch(f_dir)
 
-func perform_gum_air_jump():
-	velocity.y = 0
-	velocity.y = -jump_force_base * 2.5 
+func perform_air_jump(power_mult: float):
+	velocity.y = 0 # Reset downward momentum first
+	velocity.y = -jump_force_base * power_mult 
 	
 	show_ability_ui()
-	smoke.emitting = true
-	smoke.restart()
 	
-	# Visual "Pop"
+	# Visuals: Smoke for Gum, Feathers for Feather
+	if current_set_id == 2:
+		feather_particles.emitting = true
+		feather_particles.restart()
+	else:
+		smoke.emitting = true
+		smoke.restart()
+	
+	# Visual "Pop" (Squash and Stretch)
 	var tween = create_tween()
 	var flip_mult = 1.0 if is_facing_right else -1.0
 	tween.tween_property(visuals, "scale", Vector2(0.7 * flip_mult, 1.4), 0.1)
 	tween.tween_property(visuals, "scale", Vector2(1.0 * flip_mult, 1.0), 0.3).set_trans(Tween.TRANS_ELASTIC)
-
+	
 func process_feather_glide(delta, input_vec):
 	is_gliding = true
-	feather_particles.emitting = true
-	var drain_rate = 0.7 if input_vec.x == 0 else 1.3
+	
+	# Particles: Force them on
+	if not feather_particles.emitting:
+		feather_particles.emitting = true
+		
+	# Position the particles below Goma
+	feather_particles.position.y = 50.0
+	
+	# Resource Drain
+	var drain_rate = 0.5 if input_vec.x == 0 else 0.9
 	ability_charges -= delta * drain_rate
 	show_ability_ui()
-	visuals.rotation = lerp_angle(visuals.rotation, input_vec.x * 0.2, 5.0 * delta)
+
+	# Wind resistance & Momentum
+	if input_vec.x != 0:
+		# Gliding speed - using move_toward for a more "physical" feel than lerp
+		velocity.x = move_toward(velocity.x, input_vec.x * glide_horizontal_speed, 15.0)
+	else:
+		# Drifting to a stop horizontally
+		velocity.x = move_toward(velocity.x, 0, 5.0)
+
+	# Aerodynamic Tilt
+	visuals.rotation = lerp_angle(visuals.rotation, input_vec.x * 0.3, 4.0 * delta)
+	
+	# Subtle "Lift" bobbing while gliding
+	visuals.position.y += sin(Time.get_ticks_msec() * 0.01) * 0.2
 
 func trigger_rock_smash():
 	is_rock_smashing = true

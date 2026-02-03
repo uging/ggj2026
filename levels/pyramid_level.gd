@@ -35,8 +35,8 @@ func _ready() -> void:
 # ADD THIS FUNCTION to pyramid_level.gd
 func spawn_player_manually():
 	# Update these paths to match your actual file locations!
-	var p_scene = load("res://player.tscn") 
-	var h_scene = load("res://hud.tscn")
+	var p_scene = load("res://entities/player/player.tscn") 
+	var h_scene = load("res://ui/hud.tscn")
 	
 	Global.player = p_scene.instantiate()
 	Global.hud = h_scene.instantiate()
