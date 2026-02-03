@@ -71,13 +71,25 @@ func _on_end_button_pressed() -> void:
 # --- VISUAL FEEDBACK ---
 
 func _show_save_notification():
-	# If you add a Label to your PauseMenu tree called 'SaveLabel'
 	if has_node("SaveLabel"):
 		var label = $SaveLabel
 		label.show()
 		label.text = "Game Saved!"
-		label.modulate.a = 1.0
-		
-		var tween = create_tween()
+		label.modulate.a = 1.0 # Reset opacity
+
+		# Position Reset (Optional: starts slightly lower and floats up)
+		var original_pos = label.position
+
+		var tween = create_tween().set_parallel(true) # Run fade and move together
+
+		# 1. Fade out after a 1 second delay
 		tween.tween_property(label, "modulate:a", 0.0, 1.0).set_delay(1.0)
-		tween.finished.connect(label.hide)
+
+		# 2. Subtle float upward
+		tween.tween_property(label, "position:y", original_pos.y - 20, 1.0).set_delay(1.0)
+
+		# 3. Cleanup: Reset position and hide when finished
+		tween.chain().finished.connect(func(): 
+			label.hide()
+			label.position = original_pos
+		)

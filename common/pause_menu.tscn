@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dcenmv4de8uq3"]
 
-[ext_resource type="Script" uid="uid://lvd6vpe67xn2" path="res://common/pause_menu.gd" id="1_hhokr"]
+[ext_resource type="Script" uid="uid://demd5wpkolu7r" path="res://common/pause_menu.gd" id="1_hhokr"]
 [ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="2_jibdd"]
 
 [node name="PauseMenu" type="CanvasLayer"]
@@ -51,6 +51,17 @@ text = "SAVE"
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "QUIT"
+
+[node name="SaveLabel" type="Label" parent="."]
+visible = false
+offset_left = 546.0
+offset_top = 183.0
+offset_right = 726.0
+offset_bottom = 219.0
+theme_override_colors/font_color = Color(0.98188454, 0.7986246, 0.60310006, 1)
+theme_override_fonts/font = ExtResource("2_jibdd")
+theme_override_font_sizes/font_size = 24
+text = "Game Saved!"
 
 [connection signal="pressed" from="CenterContainer/VBoxContainer/ResumeButton" to="." method="toggle_pause"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/RestartButton" to="." method="_on_restart_button_pressed"]
