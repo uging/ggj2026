@@ -22,6 +22,8 @@ func toggle_pause():
 	var new_pause_state = !get_tree().paused
 	get_tree().paused = new_pause_state
 	
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	
 	if new_pause_state:
 		show()
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
@@ -46,8 +48,7 @@ func toggle_pause():
 		
 	else:
 		hide()
-		# Important: This returns control to Goma's movement
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 # --- BUTTON CONNECTIONS ---
 # Make sure these are connected to the "pressed()" signal in the Node tab!
