@@ -3,20 +3,33 @@ extends Area2D
 @export var heal_amount := 1
 
 func _ready() -> void:
-	# Connect the signal for when Goma enters the heart
-	body_entered.connect(_on_body_entered)
+	# Wait for the level script to finish setting up Global.player
+	await get_tree().process_frame
 	
-	# Visual: Make it bob gently
-	var tween = create_tween().set_loops().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(self, "position:y", -10.0, 1.2).as_relative()
-	tween.tween_property(self, "position:y", 10.0, 1.2).as_relative()
+	# We need to check Global.player because it holds the health stats
+	# between level transitions.
+	if Global.player != null:
+		if Global.player.current_health >= 10:
+			queue_free()
+			return
+
+	# Standard setup if player needs health
+	body_entered.connect(_on_body_entered)
+
+	# Visual: Gentle Bobbing
+	var tween = create_tween().set_loops()
+	tween.tween_property(self, "position:y", -10.0, 1.2).as_relative().set_trans(Tween.TRANS_SINE)
+	tween.tween_property(self, "position:y", 10.0, 1.2).as_relative().set_trans(Tween.TRANS_SINE)
 
 func _on_body_entered(body: Node2D) -> void:
+	print("Heart touched by: ", body.name)
 	# Check if the body has our 'heal' function
 	if body.has_method("heal"):
 		# Only pick up if health is less than the max (10)
 		if body.current_health < body.max_health:
 			body.heal(heal_amount)
+			# Disable collisions immediately so it can't be picked up twice
+			set_deferred("monitoring", false)
 			play_collect_animation()
 
 func play_collect_animation():

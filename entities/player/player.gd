@@ -64,8 +64,8 @@ var is_gliding := false
 var is_rock_smashing := false
 
 signal health_changed(new_health)
-@export var max_health := 10
-var current_health := 3  # Starts at 3
+var max_health: int = 10
+var current_health: int = 3
 var is_invincible := false
 @export var invincibility_duration := 1.5 # Seconds of safety
 
@@ -112,6 +112,13 @@ var equipment_sets = {
 }
 
 func _ready() -> void:
+	current_health = Global.current_health 
+	max_health = Global.max_health_limit
+	
+	# Check if we should be wearing a specific mask
+	if Global.current_equipped_set != 1:
+		change_set(Global.current_equipped_set)
+		
 	# Reset status in case the engine reused memory
 	is_dying = false
 	process_mode = PROCESS_MODE_INHERIT 
@@ -421,6 +428,7 @@ func change_set(id: int):
 	
 	if can_change and equipment_sets.has(id):
 		current_set_id = id
+		Global.current_equipped_set = id
 		var new_data = equipment_sets[id]
 		
 		# --- SWAP POOF ---
@@ -494,30 +502,6 @@ func play_smoke_effect(color: Color = Color.WHITE, offset: Vector2 = Vector2.ZER
 		smoke.self_modulate = color
 		smoke.emitting = true
 		smoke.restart()
-
-func take_damage(amount: int):
-	# ROCK RESISTANCE: Reduce damage or ignore it
-	if current_set_id == 4:
-		amount = int(amount * 0.5) # Take half damage
-		if amount < 1: return     # Or ignore small hits entirely
-		
-	if is_invincible:
-		return
-		
-	current_health = clampi(current_health - amount, 0, max_health)
-	health_changed.emit(current_health) # Notify the UI to remove a heart
-	
-	if current_health <= 0:
-		die()
-		return # Exit early if dead
-		
-	# Start Invincibility
-	is_invincible = true
-	start_invincibility_effect() # Start visual feedback
-	
-	# Wait for the duration, then turn invincibility off
-	await get_tree().create_timer(invincibility_duration).timeout
-	is_invincible = false
 
 func execute_shockwave():
 	# 1. Damage Logic
@@ -622,7 +606,36 @@ func update_ability_visuals():
 # --- Health Logic ---
 func heal(amount: int):
 	current_health = clampi(current_health + amount, 0, max_health)
-	health_changed.emit(current_health) # Notify the UI to add a heart
+	
+	# Update Global so the next level remembers this!
+	Global.current_health = current_health
+	
+	health_changed.emit(current_health)
+
+func take_damage(amount: int):
+	# ROCK RESISTANCE: Reduce damage or ignore it
+	if current_set_id == 4:
+		amount = int(amount * 0.5) # Take half damage
+		if amount < 1: return     # Or ignore small hits entirely
+		
+	if is_invincible:
+		return
+		
+	current_health = clampi(current_health - amount, 0, max_health)
+	Global.current_health = current_health
+	health_changed.emit(current_health) # Notify the UI to remove a heart
+	
+	if current_health <= 0:
+		die()
+		return # Exit early if dead
+		
+	# Start Invincibility
+	is_invincible = true
+	start_invincibility_effect() # Start visual feedback
+	
+	# Wait for the duration, then turn invincibility off
+	await get_tree().create_timer(invincibility_duration).timeout
+	is_invincible = false
 
 var is_dying = false 
 

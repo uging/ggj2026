@@ -6,7 +6,7 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_3u1mg"]
 radius = 16.27882
 
-[node name="HeartPickup" type="Area2D"]
+[node name="HeartPickup" type="Area2D" groups=["pickups"]]
 collision_layer = 0
 script = ExtResource("1_3u1mg")
 

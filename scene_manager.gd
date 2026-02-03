@@ -10,11 +10,13 @@ func goto_scene(path: String):
 
 func _deferred_goto_scene(path: String):
 	if player and player.get_parent():
-		player.get_parent().remove_child(player)  # Detach from old scene
+		player.get_parent().remove_child(player)
+	
 	current_scene.free()
-	var new_scene = load(path).instantiate()
-	get_tree().root.add_child(new_scene)
-	current_scene = new_scene
+	var s = load(path)
+	current_scene = s.instantiate()
+	get_tree().root.add_child(current_scene)
+
 	if player:
-		current_scene.add_child(player)  # Reattach to new scene
-		player.global_position = Vector2(50, 50)  # Enter position
+		current_scene.add_child(player)
+		player.global_position = Vector2(50, 50)

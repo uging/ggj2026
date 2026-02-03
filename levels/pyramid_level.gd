@@ -25,7 +25,13 @@ func _ready() -> void:
 	# 4. Positioning & Camera
 	player.is_top_down = false
 	player.gravity = 1600
-	player.global_position = Vector2(60, 480) 
+	
+	# SAFETY: Check if SpawnPoint exists before using it
+	if has_node("SpawnPoint"):
+		player.global_position = $SpawnPoint.global_position
+	else:
+		print("Warning: SpawnPoint node missing in this level!")
+		player.global_position = Vector2(100, 100) # Backup position
 	
 	if hud.has_method("setup_health"):
 		hud.setup_health(player)
