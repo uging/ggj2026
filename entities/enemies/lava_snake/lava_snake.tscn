@@ -7,7 +7,6 @@
 size = Vector2(12, 62.25)
 
 [node name="LavaSnake" type="Area2D"]
-collision_layer = 0
 script = ExtResource("1_aaad7")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

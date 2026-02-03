@@ -510,9 +510,13 @@ func execute_shockwave():
 	
 	var targets = $RockBlastZone.get_overlapping_areas()
 	for t in targets:
-		if t.has_method("take_damage"):
-			t.take_damage(1)
-	
+			# Check the Area itself first
+			if t.has_method("take_damage"):
+				t.take_damage(1)
+			# Then check the parent
+			elif t.get_parent() != null and t.get_parent().has_method("take_damage"):
+				t.get_parent().take_damage(1)
+				
 	$RockBlastZone.monitoring = false
 	
 	# 2. THE CHUNKY BROWN BURST
@@ -633,7 +637,12 @@ func take_damage(amount: int):
 	# Wait for the duration, then turn invincibility off
 	await get_tree().create_timer(invincibility_duration).timeout
 	is_invincible = false
-
+	
+func bounce_off_enemy():
+	velocity.y = -500 # Adjust this for a higher or lower bounce
+	is_rock_smashing = false 
+	visuals.modulate = Color.WHITE # Reset the rock smash color
+	
 var is_dying = false 
 
 func die():

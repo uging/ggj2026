@@ -8,11 +8,11 @@ func _ready() -> void:
 	# 1. GENERATE UNIQUE KEY
 	# Uses the Level Name (BasicLevel) + the Node Name (SpikeTrap/PlantTrap)
 	var level_name = get_tree().current_scene.name
-	var trap_key = level_name + "_" + name
+	var enemy_key = level_name + "_" + name
 	
 	# 2. CHECK IF DEAD
-	# If this specific trap is in Global.destroyed_traps, delete it immediately
-	if Global.destroyed_traps.has(trap_key):
+	# If this specific enemy is in Global.destroyed_enemies, delete it immediately
+	if Global.destroyed_enemies.has(enemy_key):
 		queue_free()
 		return 
 
@@ -56,7 +56,7 @@ func break_trap():
 	# 3. RECORD THE DEATH
 	# This ensures the trap 'Self-Destructs' next time the level loads
 	var level_name = get_tree().current_scene.name
-	Global.destroyed_traps[level_name + "_" + name] = true
+	Global.destroyed_enemies[level_name + "_" + name] = true
 	
 	monitoring = false 
 	monitorable = false

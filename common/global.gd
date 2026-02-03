@@ -8,7 +8,7 @@ var current_equipped_set : int = 1 # is default
 var isTitleShown := true
 
 # traps and enemies storage so they don't reappear
-var destroyed_traps = {}
+var destroyed_enemies = {}
 
 # Store the unlock states here so Goma keeps his powers after dying
 var unlocked_masks = {

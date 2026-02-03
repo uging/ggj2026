@@ -14,7 +14,7 @@ func save_game():
 		"health": Global.current_health,
 		"world": get_tree().current_scene.scene_file_path,
 		"unlocked_masks": Global.unlocked_masks,
-		"destroyed_traps": Global.destroyed_traps,
+		"destroyed_enemies": Global.destroyed_enemies,
 		"equipped_set": Global.current_equipped_set
 	}
 	
