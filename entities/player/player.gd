@@ -142,6 +142,10 @@ func _ready() -> void:
 		$Camera2D.make_current()
 
 func _physics_process(delta: float) -> void:
+	# Do nothing if screen is paused
+	if get_tree().paused:
+		return
+		
 # --- 1. BASIC INPUT & DIRECTION ---
 	var input_vector = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
