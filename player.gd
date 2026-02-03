@@ -71,23 +71,48 @@ var is_invincible := false
 
 var charge_time := 0.0
 var is_charging := false
-var is_facing_right := false
+var is_facing_right := true
 var current_set_id : int = 1 
 var has_mask := false
+var last_ability_press_time := 0.0
 
 # --- Active Ability Resources (Generic) ---
-var ability_charges := 3.0 
-var max_ability_charges := 3
+var ability_charges := 3.0
+var max_ability_charges := 3.0
 var charge_recovery_timer := 0.0
 
 var unlocked_masks = Global.unlocked_masks
 
 # --- Equipment Sets ---
 var equipment_sets = {
-	1: { "mask": preload("res://assets/character/mask_default.png"), "cape": preload("res://assets/character/cape_default.png"), "mask_pos": Vector2(-6, -17), "mask_scale": Vector2(0.114, 0.122), "smoke_tex": preload("res://assets/character/smoke_default.png") },
-	2: { "mask": preload("res://assets/character/mask_feather.png"), "cape": preload("res://assets/character/cape_feather.png"), "mask_pos": Vector2(-2, -22), "mask_scale": Vector2(0.216, 0.208), "smoke_tex": preload("res://assets/character/smoke_feather.png") },
-	3: { "mask": preload("res://assets/character/mask_gum.png"), "cape": preload("res://assets/character/cape_gum.png"), "mask_pos": Vector2(-7, -13), "mask_scale": Vector2(0.134, 0.165), "smoke_tex": preload("res://assets/character/smoke_gum.png") },
-	4: { "mask": preload("res://assets/character/mask_rock.png"), "cape": preload("res://assets/character/cape_rock.png"), "mask_pos": Vector2(-7, -14), "mask_scale": Vector2(0.151, 0.132), "smoke_tex": preload("res://assets/character/smoke_rock.png") }
+	1: { 
+		"mask": preload("res://assets/character/mask_default.png"), 
+		"cape": preload("res://assets/character/cape_default.png"), 
+		"mask_pos": Vector2(10, -15),
+		"mask_scale": Vector2(0.16, 0.13),
+		"smoke_tex": preload("res://assets/character/smoke_default.png") 
+	},
+	2: { 
+		"mask": preload("res://assets/character/mask_feather.png"), 
+		"cape": preload("res://assets/character/cape_feather.png"), 
+		"mask_pos": Vector2(6, -20),
+		"mask_scale": Vector2(0.214, 0.239),
+		"smoke_tex": preload("res://assets/character/smoke_feather.png") 
+	},
+	3: { 
+		"mask": preload("res://assets/character/mask_gum.png"), 
+		"cape": preload("res://assets/character/cape_gum.png"), 
+		"mask_pos": Vector2(10.56, -12.632),
+		"mask_scale": Vector2(0.14, 0.151),
+		"smoke_tex": preload("res://assets/character/smoke_gum.png") 
+	},
+	4: { 
+		"mask": preload("res://assets/character/mask_rock.png"), 
+		"cape": preload("res://assets/character/cape_rock.png"), 
+		"mask_pos": Vector2(10, -16),
+		"mask_scale": Vector2(0.16, 0.135),
+		"smoke_tex": preload("res://assets/character/smoke_rock.png") 
+	}
 }
 
 func _ready() -> void:
@@ -114,282 +139,188 @@ func _ready() -> void:
 		$Camera2D.make_current()
 
 func _physics_process(delta: float) -> void:
-# --- 1. INPUT DETECTION ---
-	var input_vector := Vector2(
-		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
-		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
-	)
-	var flip_dir = -1.0 if is_facing_right else 1.0
+# --- 1. BASIC INPUT & DIRECTION ---
+	var input_vector = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 
-# --- 2. RESOURCE MANAGEMENT ---
-	# Only recharge if we AREN'T currently using an ability
-	var is_using_ability = is_gliding or (is_charging and current_set_id == 3) or is_rock_smashing
-	
+# Only update facing direction if we ARE NOT rock smashing
+	if not is_rock_smashing:
+		if input_vector.x > 0: 
+			is_facing_right = true  
+		elif input_vector.x < 0: 
+			is_facing_right = false 
+
+	# Character naturally faces RIGHT. 
+	# side = 1.0 (Normal/Right), side = -1.0 (Flipped/Left)
+	var side = 1.0 if is_facing_right else -1.0
+
+# --- 2. RESOURCE REGEN ---
+	var is_using_ability = is_gliding or is_charging or is_rock_smashing
 	if ability_charges < max_ability_charges and not is_using_ability:
 		charge_recovery_timer += delta
-		update_ability_visuals()
-		
-		ui_fade_timer = ui_display_time
-		ability_ui.modulate.a = 1.0 
-		
 		if charge_recovery_timer >= charge_cooldown:
 			ability_charges = min(ability_charges + 1, max_ability_charges)
 			charge_recovery_timer = 0.0
 			update_ability_visuals()
-			
-	# Handle the fade-out timer
-	if ui_fade_timer > 0 and not is_using_ability:
-		ui_fade_timer -= delta
-		if ui_fade_timer <= 0:
-			fade_out_ui()
 
-# --- 3. GRAVITY & STATE HANDLING ---
-	if not is_on_floor():
-		coyote_timer -= delta  # The timer counts down when in the air
-		var current_gravity = 0.0
-		
-		if not is_top_down:
-			current_gravity = gravity
-			if current_set_id == 4:
-				current_gravity *= rock_gravity_mult
-
-		# FEATHER GLIDE (ID 2)
-		if current_set_id == 2 and Input.is_action_pressed("ui_accept") and ability_charges > 0:
-			is_gliding = true 
-			feather_particles.emitting = true
-
-			if Input.is_action_just_pressed("ui_accept"): 
-				velocity.y = -250.0
-				var flap_tween = create_tween()
-				flap_tween.tween_property(visuals, "scale", Vector2(1.3 * flip_dir, 0.8), 0.1)
-				flap_tween.tween_property(visuals, "scale", Vector2(1.0 * flip_dir, 1.0), 0.3)
-			
-			current_gravity *= glide_gravity_mult
-			velocity.y = min(velocity.y, glide_max_fall_speed)
-			var glide_input = Input.get_axis("move_left", "move_right")
-			velocity.x = lerp(velocity.x, glide_input * glide_horizontal_speed, 8.0 * delta)
-			visuals.rotation = lerp_angle(visuals.rotation, glide_input * 0.2, 5.0 * delta)
-			
-			# ADJUST THIS LINE TO CHANGE CONSUMPTION RATE:
-			# With this "Smart Drain":
-			var drain_rate = 0.7 if glide_input == 0 else 1.3
-			ability_charges -= delta * drain_rate
-			show_ability_ui()
-		else:
-			is_gliding = false 
-			feather_particles.emitting = false
-			visuals.rotation = lerp_angle(visuals.rotation, 0, 5.0 * delta)
-			
-			if wall_kick_boost_timer > 0:
-				current_gravity *= 0.3
-				wall_kick_boost_timer -= delta
-			
-		velocity.y += current_gravity * delta
-		if wall_rejump_timer > 0: wall_rejump_timer -= delta
-
-		# GUM AERIAL JUMP (ID 3)
-		if Input.is_action_just_pressed("ui_accept") and current_set_id == 3:
-			if ability_charges >= 1.0:
-				perform_super_jump_logic()
-				# 1. Reset downward velocity so falling doesn't "eat" your jump height
-				if velocity.y > 0:
-					velocity.y = 0
-
-				# 2. Apply the boost (Adjust 2.0 to your liking)
-				velocity.y = -jump_force_base * 2.0 
-
-				# 3. Optional: Add a little "kick" to the scale for visual feedback
-				visuals.scale = Vector2(1.4 * flip_dir, 0.7)
-				
-		# ROCK SMASH (ID 4)
-		if current_set_id == 4 and Input.is_action_just_pressed("ui_accept") and not is_on_floor():
-			if ability_charges >= 1.0:
-				is_rock_smashing = true
-				ability_charges -= 1.0
-				show_ability_ui()
-
-				velocity.y = -jump_force_base * 1.3
-				visuals.modulate = Color(0.5, 0.5, 0.5) # Turn Grey
-
-				await get_tree().create_timer(0.2).timeout
-				
-				# Ensure we are still smashing (didn't land during the timer)
-				if is_rock_smashing:
-					velocity.y = rock_smash_fall_speed
-					velocity.x = 0
+# --- 3. MOVEMENT LOGIC ---
+	if is_top_down:
+		velocity = velocity.lerp(input_vector * speed, 15.0 * delta)
+		visuals.rotation = lerp_angle(visuals.rotation, 0.0, 10.0 * delta)
 	else:
-		coyote_timer = coyote_time_duration # Reset timer while touching the floor
+		var is_near_wall = is_on_wall() or wall_rejump_timer > 0
+		var can_jump = (coyote_timer > 0) or is_near_wall
 
-# --- 4. SNAPPY FLIP TRACKER ---
-	if input_vector.x > 0: is_facing_right = true
-	elif input_vector.x < 0: is_facing_right = false
-	
-# ---5. SLOPE SLIDING CALCULATION ---
-	var is_on_steep_slope = false
-	floor_snap_length = 12.0     # Keep Goma glued to the floor
-	floor_constant_speed = true  # Ignore jagged speed changes
-	floor_max_angle = deg_to_rad(45.0) # Ensure he can walk up 45-degree angles/stairs
+		if Input.is_action_just_pressed("ability"):
+			var current_time = Time.get_ticks_msec() / 1000.0
+			if current_set_id == 4 and not is_on_floor() and current_time - last_ability_press_time < 0.3:
+				if ability_charges >= 1.0: trigger_rock_smash()
+			elif current_set_id == 3 and not is_on_floor() and not is_near_wall:
+				if ability_charges >= 1.0:
+					ability_charges -= 1.0
+					perform_gum_air_jump()
+			last_ability_press_time = current_time
 
-	if is_on_floor():
-		var floor_normal = get_floor_normal() #
-		var floor_angle = rad_to_deg(acos(floor_normal.dot(Vector2.UP))) #
-		
-		if floor_angle > slope_limit_deg:
-			var gum_can_resist = (current_set_id == 3 and ability_charges >= 1.0)
-			if not gum_can_resist:
-				is_on_steep_slope = true
-				
-				# Set velocity based on slope direction for a smoother ride
-				# We use the X component of the normal to determine direction
-				velocity.x = lerp(velocity.x, floor_normal.x * slide_speed, 5 * delta)
-				
-				# Visual: Match the slope angle smoothly
-				visuals.rotation = lerp_angle(visuals.rotation, floor_normal.angle() + PI/2, 10 * delta)
+		if Input.is_action_pressed("ability"):
+			if can_jump and not is_rock_smashing:
+				is_charging = true
+				var charge_speed = 4.5 if current_set_id == 3 else 2.5
+				charge_time = min(charge_time + delta * charge_speed, 1.0)
+				coyote_timer = 0
+				visuals.scale.y = lerp(visuals.scale.y, 0.6, 10 * delta)
+				velocity.x = lerp(velocity.x, 0.0, 10 * delta)
+				if charge_time > 0.7: 
+					is_super_charging = (current_set_id == 3)
+					visuals.position.x = randf_range(-1, 1)
+			elif not is_on_floor() and current_set_id == 2 and ability_charges > 0:
+				process_feather_glide(delta, input_vector)
 
-# --- 6. JUMP CHARGING (Floor, Wall, or Sticky) ---
-	var is_near_wall = is_on_wall() or wall_rejump_timer > 0
-	var can_jump = (coyote_timer > 0) or is_near_wall
+		if Input.is_action_just_released("ability"):
+			# Pass the calculated side to the jump launch
+			if is_charging: execute_jump_launch(side, input_vector)
+			is_gliding = false
+			feather_particles.emitting = false
 
-	if Input.is_key_pressed(KEY_SPACE) and can_jump and not is_rock_smashing and current_set_id != 4:
-		is_charging = true
-		var charge_speed = 4.0 if current_set_id == 3 else 2.0
-		charge_time = min(charge_time + delta * charge_speed, 1.0) 
-		
-		# IMPORTANT: Once we start charging a jump, 
-		# kill the coyote timer so they can't double-jump
-		coyote_timer = 0
-		
-		if current_set_id == 3 and charge_time >= 1.0 and ability_charges >= 1.0:
-			is_super_charging = true
-			# Optional: Visual indicator that Super Jump is ready (e.g., vibrating)
-			visuals.position.x = randf_range(-2, 2) 
-		
-		# Visual Squish
-		visuals.scale.y = lerp(visuals.scale.y, 0.6, 10 * delta) # Deeper squish for long press
-		visuals.scale.x = 1.35 * flip_dir 
-		velocity.x = lerp(velocity.x, 0.0, 10 * delta)
-	
-	elif is_charging:
-	# --- 7. PERFORM LAUNCH ---
-		# BASE HEIGHT SETTINGS (Adjust these numbers to tune height)
-		var regular_jump_height = -1.4     # Default (No Mask)
-		var gum_regular_height = -2.2      # Gum Mask (Single Tap)
-		var gum_super_height = -2.7        # Gum Mask (Long Press / Charged)
-		var feather_jump_height = -1.8    # Feather Mask
-		
-		# Determine which height to use
-		var launch_y = regular_jump_height
-		
-		var rock_jump_height = -2.0 # Lower than regular -1.4
-		if current_set_id == 4:
-			launch_y = rock_jump_height
-		
-		if current_set_id == 3: # GUM MASK
-			if is_super_charging:
-				perform_super_jump_logic() 
-				launch_y = gum_super_height
-				is_super_charging = false
-			else:
-				launch_y = gum_regular_height
-		elif current_set_id == 2: # FEATHER MASK
-			launch_y = feather_jump_height
-			
-		var jump_direction = Vector2(input_vector.x, launch_y).normalized()
-		
-		# --- WALL KICK LOGIC ---
-		if is_near_wall and not is_on_floor():
-			var wall_normal = get_wall_normal() if is_on_wall() else last_wall_normal
-			wall_kick_boost_timer = wall_kick_boost_duration
-			
-			if input_vector.x == 0 or sign(input_vector.x) == sign(-wall_normal.x):
-				jump_direction = (wall_normal * 1.2 + Vector2(0, launch_y * 1.8)).normalized()
-			else:
-				jump_direction = (wall_normal * 3.5 + Vector2(0, launch_y * 1.2)).normalized()
-			wall_rejump_timer = 0 
-
-		# Calculate final force
-		var power_boost = 1.0 # We handle the boost via launch_y now
-		var final_force = (jump_force_base * (1.0 + charge_time * max_jump_multiplier)) * power_boost
-		
-		# Cap the speed
-		var max_cap = 1000.0 if current_set_id == 3 else 750.0
-		velocity = jump_direction * min(final_force, max_cap)
-		
-		apply_launch_stretch(flip_dir)
-		charge_time = 0.0
-		is_charging = false
-
-	if Input.is_action_just_pressed("ui_accept") and is_on_floor() and current_set_id == 4:
-		velocity.y = -jump_force_base * 2.0 # A small, heavy jump
-		# Small Forward Kick: If moving, give a little extra push to help clear the ledge
-		if input_vector.x != 0:
-			velocity.x = input_vector.x * (speed * 1.1)
-		apply_launch_stretch(flip_dir)
-		# Optional: Add a small screen shake or sound effect here!
-	
-# # --- 8. NORMAL MOVEMENT ---
-	if not is_charging:
-		# 1. Start with base speed
-		var final_speed = speed
-		
-		# 2. APPLY ROCK HEAVINESS (ID 4)
-		if current_set_id == 4:
-			final_speed *= rock_speed_mult # Goma walks slower with the heavy mask
-		
-		# 3. Calculate target velocity using our modified speed
-		var target_vel = input_vector * final_speed
-		
-		if is_top_down:
-			# TOP-DOWN MOVEMENT: Snappy movement for the map
-			velocity = velocity.lerp(target_vel, 15.0 * delta)
-			visuals.rotation = lerp_angle(visuals.rotation, 0.0, 10.0 * delta)
+		if not is_on_floor():
+			coyote_timer -= delta
+			var gravity_step = gravity
+			if current_set_id == 4: gravity_step *= rock_gravity_mult
+			if is_gliding: gravity_step *= glide_gravity_mult
+			velocity.y += gravity_step * delta
 		else:
-			if is_on_steep_slope:
-				# Slide control on slopes
-				velocity.x = lerp(velocity.x, velocity.x + (target_vel.x * 0.1), 2 * delta)
-			else:
-				if is_on_floor():
-					# Grounded movement
-					velocity.x = lerp(velocity.x, target_vel.x, 20.0 * delta)
-				elif is_gliding:
-					# Skip this part! Section 3 is handling velocity.x for the Feather Mask
-					pass 
-				else:
-					# Normal air control (Jump/Fall)
-					velocity.x = lerp(velocity.x, target_vel.x, 3.0 * delta)
-				
-				# Apply the "speed lean" ONLY if not gliding
-				if not is_gliding:
-					visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
-		
-		# --- SCALE LOGIC ---
-		# We check 'is_gliding' here so our "flap" squash-and-stretch in Section 3 
-		# doesn't get instantly overwritten by the running stretch.
-		if not is_gliding:
-			var stretch_factor = abs(velocity.x) * 0.0001
-			visuals.scale.x = (1.0 + stretch_factor) * flip_dir
-			visuals.scale.y = lerp(visuals.scale.y, 1.0 - (stretch_factor * 0.5), 10 * delta)
+			coyote_timer = coyote_time_duration
 
-# --- 9. EXECUTE MOVEMENT & LANDING ---
-	var was_in_air = not is_on_floor()
+		if not is_charging and not is_rock_smashing:
+			var move_speed = speed
+			if current_set_id == 4: 
+				move_speed *= rock_speed_mult
+				if is_on_floor() and input_vector.x != 0: move_speed *= 1.4 
+			if is_gliding:
+				velocity.x = lerp(velocity.x, input_vector.x * glide_horizontal_speed, 8.0 * delta)
+			else:
+				velocity.x = lerp(velocity.x, input_vector.x * move_speed, 15.0 * delta)
+
+# --- 4. EXECUTION & VISUALS ---
+	if is_rock_smashing:
+		velocity.x = 0
+
 	move_and_slide()
-	
+
 	if not is_top_down:
-		if was_in_air and is_on_floor():
-			if is_rock_smashing:
-				# Call the new function we just made
-				execute_shockwave()
-				
-				# Reset states AFTER the shockwave check
-				is_rock_smashing = false
-				visuals.modulate = Color.WHITE
-				velocity.y = 0 
-				
-				show_ability_ui()
-			
-			apply_landing_squash()
-						
-# --- Helper Functions ---
+		handle_landing_logic()
+		
+# VISUAL OVERRIDE
+		if is_rock_smashing:
+			visuals.scale.x = side * 0.8
+			visuals.scale.y = lerp(visuals.scale.y, 1.4, 15 * delta)
+			visuals.rotation = 0 
+		elif is_gliding:
+			visuals.scale.x = side
+			visuals.scale.y = 1.0
+		elif is_charging:
+			visuals.scale.y = lerp(visuals.scale.y, 0.6, 10 * delta)
+			visuals.scale.x = side 
+		else:
+			# Normal movement juice
+			var stretch_factor = abs(velocity.x) * 0.0001
+			visuals.scale.y = lerp(visuals.scale.y, 1.0 - (stretch_factor * 0.5), 10 * delta)
+			visuals.scale.x = side * (1.0 + stretch_factor)
+			# Rotation: Now naturally tilts forward based on velocity without extra side-inversion
+			visuals.rotation = lerp(visuals.rotation, velocity.x * 0.0004, 5 * delta)
+	else:
+		visuals.scale.x = side
+		visuals.scale.y = 1.0
+	
+# --- HELPER FUNCTIONS ---
+func execute_jump_launch(f_dir: float, input_vec: Vector2):
+	# Calculate Jump Height
+	var base_power = 1.2 + (charge_time * 1.0) 
+	
+	# MASK BONUSES 
+	var mask_mult = 1.0
+	if current_set_id == 3: mask_mult = 1.3 # Gum Super Jump
+	if current_set_id == 4: mask_mult = 1.1 # Rock (Weighty but powerful)
+	
+	# Stronger upward vector
+	var launch_y = -1.8 * base_power * mask_mult
+	var jump_dir = Vector2(input_vec.x * 0.4, launch_y).normalized()
+
+	if (is_on_wall() or wall_rejump_timer > 0) and not is_on_floor():
+		var wall_norm = get_wall_normal() if is_on_wall() else last_wall_normal
+		jump_dir = (wall_norm * 1.6 + Vector2(0, launch_y)).normalized()
+
+	velocity = jump_dir * (jump_force_base * base_power * mask_mult)
+	
+	if current_set_id == 3 and charge_time > 0.6:
+		perform_super_jump_logic() 
+
+	is_charging = false
+	charge_time = 0.0
+	apply_launch_stretch(f_dir)
+
+func perform_gum_air_jump():
+	velocity.y = 0
+	velocity.y = -jump_force_base * 2.5 
+	
+	show_ability_ui()
+	smoke.emitting = true
+	smoke.restart()
+	
+	# Visual "Pop"
+	var tween = create_tween()
+	var flip_mult = 1.0 if is_facing_right else -1.0
+	tween.tween_property(visuals, "scale", Vector2(0.7 * flip_mult, 1.4), 0.1)
+	tween.tween_property(visuals, "scale", Vector2(1.0 * flip_mult, 1.0), 0.3).set_trans(Tween.TRANS_ELASTIC)
+
+func process_feather_glide(delta, input_vec):
+	is_gliding = true
+	feather_particles.emitting = true
+	var drain_rate = 0.7 if input_vec.x == 0 else 1.3
+	ability_charges -= delta * drain_rate
+	show_ability_ui()
+	visuals.rotation = lerp_angle(visuals.rotation, input_vec.x * 0.2, 5.0 * delta)
+
+func trigger_rock_smash():
+	is_rock_smashing = true
+	velocity.x = 0
+	ability_charges -= 1.0
+	show_ability_ui()
+	
+	# 1. The "Forceful Jump" - Give him a little lift first
+	velocity.y = -jump_force_base * 0.8 
+	visuals.modulate = Color(0.5, 0.5, 0.5)
+
+	# Wait briefly while he's in the "upward" part of the jump
+	await get_tree().create_timer(0.15).timeout
+
+	if is_rock_smashing:
+		velocity.y = rock_smash_fall_speed
+
+func handle_landing_logic():
+	if is_on_floor() and is_rock_smashing:
+		execute_shockwave()
+		is_rock_smashing = false
+		visuals.modulate = Color.WHITE
+		apply_landing_squash()
 
 func change_set(id: int):
 	if id == current_set_id: return
@@ -437,12 +368,12 @@ func apply_launch_stretch(f_dir: float):
 	
 func apply_landing_squash():
 	var tween = create_tween()
-	var flip_mult = -1.0 if is_facing_right else 1.0
+	var flip_mult = 1.0 if is_facing_right else -1.0
 	
-	# 1. Squash down (wider and shorter)
+	# 1. Squash down
 	tween.tween_property(visuals, "scale", Vector2(1.2 * flip_mult, 0.8), 0.1)
 	
-	# 2. Bounce back to normal size with an elastic "boing"
+	# 2. Bounce back
 	tween.tween_property(visuals, "scale", Vector2(1.0 * flip_mult, 1.0), 0.4).set_trans(Tween.TRANS_ELASTIC)
 
 func _input(event: InputEvent) -> void:

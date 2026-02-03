@@ -46,12 +46,12 @@ scale = Vector2(0.16635859, 0.17357141)
 texture = ExtResource("2_mehiu")
 
 [node name="Cape" type="Sprite2D" parent="Visuals"]
-position = Vector2(21.374989, 6.124999)
+position = Vector2(-19.625011, 6.124999)
 scale = Vector2(0.17177723, 0.19474393)
 texture = ExtResource("3_i1wwn")
 
 [node name="Mask" type="Sprite2D" parent="Visuals"]
-position = Vector2(-6, -17)
+position = Vector2(7.000002, -17)
 scale = Vector2(0.11363637, 0.12228259)
 texture = ExtResource("4_51p13")
 
