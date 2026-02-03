@@ -309,7 +309,7 @@ func execute_jump_launch(f_dir: float, input_vec: Vector2):
 	# 3. --- SMOKE LOGIC ---
 	# Increased threshold to 0.25 to catch quick taps
 	if charge_time > 0.25: 
-		play_smoke_effect(Color.WHITE)
+		play_smoke_effect(Color.WHITE, Vector2(0, 50))
 	else:
 		# Explicitly kill smoke on tap jumps
 		smoke.emitting = false
@@ -335,7 +335,7 @@ func perform_air_jump(power_mult: float):
 		3: jump_color = Color(1.0, 0.5, 0.8)  # Pink Gum
 		4: jump_color = Color(0.5, 0.5, 0.5)  # Grey Rock
 
-	play_smoke_effect(jump_color)
+	play_smoke_effect(jump_color, Vector2(0, 50))
 	
 	if current_set_id == 2:
 		feather_particles.emitting = true
@@ -430,7 +430,7 @@ func change_set(id: int):
 			2: swap_color = Color(0.0, 0.729, 0.388, 0.906) # Light Blue Feather
 			3: swap_color = Color(1.0, 0.5, 0.8)  # Pink Gum
 			4: swap_color = Color(0.5, 0.5, 0.5)  # Grey Rock
-		play_smoke_effect(swap_color)
+		play_smoke_effect(swap_color, Vector2.ZERO)
 		
 		await get_tree().create_timer(0.05).timeout
 		mask.texture = new_data["mask"]
@@ -488,8 +488,9 @@ func collect_mask(mask_name: String):
 			var new_id = name_to_id[mask_name]
 			change_set(new_id) # This triggers the smoke and visual swap automatically
 			
-func play_smoke_effect(color: Color = Color.WHITE):
+func play_smoke_effect(color: Color = Color.WHITE, offset: Vector2 = Vector2.ZERO):
 	if smoke:
+		smoke.position = offset # Move the poof to the feet or center
 		smoke.self_modulate = color
 		smoke.emitting = true
 		smoke.restart()
