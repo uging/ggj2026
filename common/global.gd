@@ -28,17 +28,17 @@ func _ready() -> void:
 	# The Main script will now handle creating the Player and HUD nodes.
 	print("Global data initialized.")
 	
-
 func set_volume(percentage: float):
-	# Percentage should be 0.0 to 1.0
-	# We convert linear volume (0-1) to Decibels, which Godot uses
-	var db_volume = linear_to_db(percentage)
 	var bus_index = AudioServer.get_bus_index("Master")
+	var db_volume = linear_to_db(percentage)
 	
 	AudioServer.set_bus_volume_db(bus_index, db_volume)
 	
-	# Mute automatically if volume is 0
-	AudioServer.set_bus_mute(bus_index, percentage <= 0)
+	# If volume is moved above 0, unmute. If at 0, mute.
+	if percentage > 0:
+		AudioServer.set_bus_mute(bus_index, false)
+	else:
+		AudioServer.set_bus_mute(bus_index, true)
 
 func toggle_mute(is_muted: bool):
 	var bus_index = AudioServer.get_bus_index("Master")

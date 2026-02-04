@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+var pre_mute_volume : float = 1.0 # Stores volume level before muting
+
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide()
@@ -31,8 +33,14 @@ func toggle_pause():
 		# SYNC SLIDER POSITION
 		var bus_index = AudioServer.get_bus_index("Master")
 		var current_db = AudioServer.get_bus_volume_db(bus_index)
-		# Convert decibels back to 0.0 - 1.0 for the slider
-		$CenterContainer/VBoxContainer/VolumeSlider.value = db_to_linear(current_db)
+		var linear_val = db_to_linear(current_db)
+		
+		$CenterContainer/VBoxContainer/VolumeSlider.value = linear_val
+		
+		# --- THE FIX: Store the current volume in memory when opening ---
+		# Only update memory if the volume is actually above zero
+		if linear_val > 0:
+			pre_mute_volume = linear_val
 
 		# SYNC MUTE BUTTON STATE
 		$CenterContainer/VBoxContainer/MuteButton.button_pressed = AudioServer.is_bus_mute(bus_index)
@@ -49,12 +57,7 @@ func toggle_pause():
 			$CenterContainer/VBoxContainer/MapButton.show()
 			$CenterContainer/VBoxContainer/RestartButton.show()
 		
-		# 2. Reset the Menu Containers (if you added the Settings page)
-		# main_container.show()
-		# settings_container.hide()
-
 		# 3. FINALLY, grab focus on the Resume button 
-		# This must be the LAST focus command in this function
 		$CenterContainer/VBoxContainer/ResumeButton.grab_focus()
 		
 	else:
@@ -82,13 +85,34 @@ func _on_end_button_pressed() -> void:
 
 # This handles the slider movement
 func _on_volume_slider_value_changed(value: float) -> void:
-	# Use the global function we created earlier
 	Global.set_volume(value)
+	
+	# Update the mute button checkbox visually if we hit 0
+	$CenterContainer/VBoxContainer/MuteButton.button_pressed = (value <= 0)
+	
+	# IMPORTANT: If the user moves the slider manually while NOT muted,
+	# update the memory so unmuting later feels natural.
+	if value > 0:
+		pre_mute_volume = value
 
 # This handles the mute checkbox
 func _on_mute_button_toggled(toggled_on: bool) -> void:
-	Global.toggle_mute(toggled_on)
-
+	var slider = $CenterContainer/VBoxContainer/VolumeSlider
+	
+	if toggled_on:
+		# 1. SAVE the current volume before zeroing out
+		pre_mute_volume = slider.value
+		# 2. Update the Bus through Global
+		Global.toggle_mute(true)
+		# 3. Visually move the slider
+		slider.value = 0
+	else:
+		# 1. RESTORE the volume from memory
+		Global.toggle_mute(false)
+		slider.value = pre_mute_volume
+		# 2. Ensure the Bus volume is actually set back to the old value
+		Global.set_volume(pre_mute_volume)
+		
 # Your existing resume logic
 func _on_resume_pressed() -> void:
 	get_tree().paused = false
