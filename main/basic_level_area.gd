@@ -21,7 +21,7 @@ func _on_body_exited(body):
 		name_label.visible = false
 
 func _input(event):
-	if event.is_action_pressed("ui_accept") and player_in_range:
+	if event.is_action_pressed("interact") and player_in_range:
 		# 1. Detach player from old scene FIRST
 		if Global.player and Global.player.get_parent():
 			Global.player.get_parent().remove_child(Global.player)

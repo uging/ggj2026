@@ -21,6 +21,6 @@ func _on_body_exited(body):
 		name_label.visible = false
 
 func _input(event):
-	if event.is_action_pressed("ui_accept") and player_in_range:
+	if event.is_action_pressed("interact") and player_in_range:
 		pass
 		#get_tree().change_scene_to_file(next_scene_path)
