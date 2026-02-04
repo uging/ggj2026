@@ -12,9 +12,9 @@ var destroyed_enemies = {}
 
 # Store the unlock states here so Goma keeps his powers after dying
 var unlocked_masks = {
-	"feather": false,
-	"gum": false,
-	"rock": false
+	"feather": true,
+	"gum": true,
+	"rock": true
 }
 
 # --- HUD & Player References ---

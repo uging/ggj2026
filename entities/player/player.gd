@@ -26,11 +26,11 @@ const CHARGE_THRESHOLD := 0.15
 @export_group("General")
 @export var is_top_down := false
 @export var speed := 460.0
-@export var gravity := 1600.0
+@export var gravity := 1500.0
 @export var ui_display_time := 2.5
 
 @export_group("Platforming")
-@export var jump_force_base := 500.0
+@export var jump_force_base := 450.0
 @export var coyote_time_duration := 0.15
 @export var wall_rejump_window := 0.20
 
@@ -44,6 +44,17 @@ const CHARGE_THRESHOLD := 0.15
 @export var rock_smash_fall_speed := 1200.0
 @export var invincibility_duration := 1.5
 @export var aura_max_duration := 4.0
+
+# --- Jump Height Multipliers ---
+@export_subgroup("Jump Multipliers")
+@export var jump_mult_default := 1.0
+@export var jump_mult_feather := 1.0
+@export var jump_mult_gum := 1.2
+@export var jump_mult_rock := 0.85
+
+@export_subgroup("Air Jump Multipliers")
+@export var air_jump_feather := 1.3
+@export var air_jump_gum := 1.2
 
 # --- State Variables ---
 var ability_charges := 3.0
@@ -169,11 +180,16 @@ func _process_top_down_movement(delta: float) -> void:
 	velocity = velocity.lerp(target_velocity, 15.0 * delta)
 	visuals.rotation = 0
 
+# --- Movement Logic ---
 func _process_platformer_movement(delta: float) -> void:
 	var input_vector = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var is_near_wall = is_on_wall() or wall_rejump_timer > 0
 	
-	if is_on_wall():
+	# IMPROVED WALL DETECTION: 
+	# Only consider it a "wall" if we aren't moving upwards quickly (like on stairs)
+	# or if we are actively pushing into the wall.
+	var is_near_wall = (is_on_wall() or wall_rejump_timer > 0) and velocity.y >= -50
+	
+	if is_on_wall() and velocity.y >= -50:
 		wall_rejump_timer = wall_rejump_duration
 		last_wall_normal = get_wall_normal()
 	else:
@@ -183,10 +199,10 @@ func _process_platformer_movement(delta: float) -> void:
 	if not is_rock_smashing and input_vector.x != 0:
 		is_facing_right = input_vector.x > 0
 
-	# Call the updated ability logic
+	# Call ability logic
 	_handle_ability_logic(delta, input_vector, is_on_floor(), is_near_wall)
 
-	# Gravity Logic (Synced with old version)
+	# Gravity Logic
 	if not is_on_floor():
 		coyote_timer -= delta
 		var gravity_step = gravity
@@ -194,12 +210,14 @@ func _process_platformer_movement(delta: float) -> void:
 		if current_set_id == Set.ROCK:
 			gravity_step *= rock_gravity_mult
 		elif current_set_id == Set.FEATHER:
-			# Use low gravity only when gliding and has charges
 			gravity_step *= glide_gravity_mult if (is_gliding and ability_charges > 0) else 0.7
+		
+		# WALL SLIDE for Default/Ninja: Slow down fall when hugging wall
+		if is_on_wall() and input_vector.x != 0 and velocity.y > 0:
+			gravity_step *= 0.5
 			
 		velocity.y += gravity_step * delta
 		
-		# Final Vertical Clamp
 		if is_gliding and velocity.y > glide_max_fall_speed:
 			velocity.y = glide_max_fall_speed
 	else:
@@ -217,88 +235,78 @@ func _process_platformer_movement(delta: float) -> void:
 		var accel = 8.0 if is_gliding else 15.0
 		velocity.x = lerp(velocity.x, target_x, accel * delta)
 
-# --- Ability Core Logic ---
+# ---  Ability Core Logic ---
 func _handle_ability_logic(delta: float, input_vector: Vector2, can_jump: bool, is_near_wall: bool) -> void:
 	if not input_enabled: return
 	var current_time = Time.get_ticks_msec() / 1000.0
 	
-	# --- 1. INITIAL TAP & DOUBLE TAP ---
+	# 1. INITIAL PRESS - Detects Double Tap & Starts Charge State
 	if Input.is_action_just_pressed("ability"):
-		# DOUBLE TAP CHECK (Priority: Rock Smash/Aura)
 		if current_time - last_ability_press_time < DOUBLE_TAP_WINDOW:
 			if current_set_id == Set.ROCK and ability_charges >= 1.0:
-				# Trigger Smash if in air
-				if not can_jump:
-					trigger_rock_smash()
-				
-				# Always ensure Aura is active on double-tap
-				if not is_rock_aura_active:
-					_activate_rock_aura()
-					
-			last_ability_press_time = 0 # Consume the tap to prevent triple-taps
-			
-		# SINGLE TAP LOGIC
+				if not can_jump: trigger_rock_smash()
+				if not is_rock_aura_active: _activate_rock_aura()
+			last_ability_press_time = 0 
 		else:
 			last_ability_press_time = current_time
-			
-			if can_jump:
-				# Regular jump now clears stairs (Force handled in perform_regular_jump)
+			# If it's Feather, jump instantly to levitate. Otherwise, just start the charge.
+			if current_set_id == Set.FEATHER and can_jump:
 				perform_regular_jump()
-			
-			# Air Jump Logic (Feather/Gum) - Only if not hugging a wall
-			elif not is_near_wall:
-				if current_set_id == Set.FEATHER and ability_charges >= 0.2:
-					ability_charges -= 0.2 
-					perform_air_jump(1.5)
-				elif current_set_id == Set.GUM and ability_charges >= 1.0:
-					ability_charges -= 1.0
-					perform_air_jump(2.5)
+			elif can_jump or is_near_wall:
+				is_charging = true
+				charge_time = 0.0
 
-	# --- 2. HELD STATE (Charging & Gliding) ---
+	# 2. WHILE HOLDING - Charging or Gliding
 	if Input.is_action_pressed("ability"):
-		# Jump Charging: Ground/Wall, not currently slamming, not using aura
-		# Note: If you want to charge jump WHILE aura is on, remove 'not is_rock_aura_active'
 		if (can_jump or is_near_wall) and not is_rock_smashing:
 			_process_jump_charge(delta)
 			is_gliding = false
-		
-		# Feather Glide: Air only
 		elif not can_jump and current_set_id == Set.FEATHER and ability_charges > 0:
-			# Safety: Prevents gliding if moving upward too fast
 			if velocity.y > -150: 
 				_process_feather_glide(delta, input_vector)
-			else:
-				is_gliding = false
-				feather_particles.emitting = false
 	else:
-		# Stop gliding effects if button released
 		is_gliding = false
 		feather_particles.emitting = false
 
-	# --- 3. RELEASE ---
+	# 3. UPON RELEASE - Deciding between Launch, Jump, or Air-Jump
 	if Input.is_action_just_released("ability"):
-		# Only launch if we were actually charging and passed the tap threshold
-		if is_charging and can_execute_launch and charge_time > CHARGE_THRESHOLD: 
-			execute_jump_launch(1.0 if is_facing_right else -1.0, input_vector)
-		
+		if is_charging:
+			if charge_time > CHARGE_THRESHOLD:
+				# It was a held charge
+				execute_jump_launch(1.0 if is_facing_right else -1.0, input_vector)
+			elif can_jump or is_near_wall:
+				# It was a tap on ground/wall
+				perform_regular_jump()
+		else:
+			# If we weren't charging (meaning we are mid-air), check for Air Jumps
+			if not can_jump and not is_near_wall:
+				if current_set_id == Set.FEATHER and ability_charges >= 0.33:
+					ability_charges -= 0.33
+					perform_air_jump()
+				elif current_set_id == Set.GUM and ability_charges >= 1.0:
+					ability_charges -= 1.0
+					perform_air_jump()
+					
 		_reset_temp_ability_states()
 
 # --- Ability Actions ---
 
-func _try_air_jump() -> void:
-	if current_set_id in [Set.GUM, Set.FEATHER] and ability_charges >= 0.5:
-		var cost = 1.0 if current_set_id == Set.GUM else 0.2
-		if ability_charges >= cost:
-			ability_charges -= cost
-			perform_air_jump(2.5 if current_set_id == Set.GUM else 1.5)
+func perform_air_jump() -> void:
+	var final_mult := 1.0
+	if current_set_id == Set.FEATHER:
+		final_mult = air_jump_feather
+	elif current_set_id == Set.GUM:
+		final_mult = air_jump_gum
 
-func perform_air_jump(power_mult: float) -> void:
-	velocity.y = -jump_force_base * power_mult 
+	velocity.y = -jump_force_base * final_mult 
+	
 	show_ability_ui()
 	play_smoke_effect(set_data[current_set_id]["color"], Vector2(0, 50))
+	
 	if current_set_id == Set.FEATHER:
 		feather_particles.emitting = true
 		feather_particles.restart()
+		
 	apply_launch_stretch(1.0 if is_facing_right else -1.0)
 
 func _process_feather_glide(delta: float, input_vec: Vector2) -> void:
@@ -473,7 +481,14 @@ func _reset_temp_ability_states() -> void:
 	is_charging = false
 	charge_time = 0.0
 	feather_particles.emitting = false
-
+	
+func _get_current_jump_mult() -> float:
+	match current_set_id:
+		Set.FEATHER: return jump_mult_feather
+		Set.GUM:     return jump_mult_gum
+		Set.ROCK:    return jump_mult_rock
+		_:           return jump_mult_default
+		
 func die() -> void:
 	if is_dying: return
 	is_dying = true
@@ -532,19 +547,7 @@ func _handle_landing_logic() -> void:
 		visuals.modulate = Color.WHITE
 
 func perform_regular_jump() -> void:
-	var multiplier := 1.0
-	
-	# Determine multiplier based on current mask
-	match current_set_id:
-		Set.GUM:
-			multiplier = 1.5
-		Set.ROCK:
-			multiplier = 0.85
-		_: # Default and Feather
-			multiplier = 1.0
-			
-	velocity.y = -jump_force_base * multiplier
-	
+	velocity.y = -jump_force_base * _get_current_jump_mult()
 	# Visual feedback
 	apply_launch_stretch(1.0 if is_facing_right else -1.0)
 
@@ -562,9 +565,11 @@ func _process_jump_charge(delta: float) -> void:
 
 func execute_jump_launch(f_dir: float, input_vec: Vector2) -> void:
 	var base_power = 1.2 + (charge_time * 1.0)
-	var mask_mult = 1.3 if current_set_id == Set.GUM else 1.0
-	velocity.y = -jump_force_base * base_power * mask_mult
-	if input_vec.x != 0: velocity.x = input_vec.x * speed * base_power
+	var multiplier = _get_current_jump_mult()
+				
+	velocity.y = -jump_force_base * base_power * multiplier
+	if input_vec.x != 0: 
+		velocity.x = input_vec.x * speed * base_power
 	apply_launch_stretch(f_dir)
 
 func apply_launch_stretch(f_dir: float) -> void:
