@@ -5,11 +5,16 @@
 
 [node name="FlyingBee" instance=ExtResource("1_58oxv")]
 modulate = Color(1, 1, 1, 0.5882353)
-speed = 80.0
-chase_speed = 150.0
+speed = 100.0
+chase_speed = 160.0
 damage_amount = 2
-max_health = 4
-required_mask_id = 2
+max_health = 5
+persistence_enabled = true
+wave_frequency = 0.002
+wave_amplitude = 60.0
+detection_radius = 160.0
+leash_distance = 500.0
+required_mask_id = 4
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_t5v7w")

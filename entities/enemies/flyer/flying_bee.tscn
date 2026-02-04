@@ -4,12 +4,13 @@
 [ext_resource type="Texture2D" uid="uid://m2b7hgqkugkx" path="res://entities/enemies/flyer/assets/bee.png" id="1_etcgh"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_5quwy"]
-radius = 18.027756
+radius = 31.016125
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_17djv"]
-radius = 26.24881
+radius = 37.01351
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_xd02h"]
+resource_local_to_scene = true
 radius = 300.0
 
 [node name="FlyingBee" type="CharacterBody2D"]

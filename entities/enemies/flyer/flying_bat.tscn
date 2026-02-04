@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://ktoolncvo1a4"]
+
+[ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="1_pvcj8"]
+[ext_resource type="Texture2D" uid="uid://ciyc1p0q34yhy" path="res://entities/enemies/flyer/assets/bat.png" id="2_lrtyv"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_lrtyv"]
+resource_local_to_scene = true
+radius = 300.0
+
+[node name="FlyingBee" instance=ExtResource("1_pvcj8")]
+speed = 150.0
+chase_speed = 200.0
+damage_amount = 2
+max_health = 3
+knockback_force = 600.0
+wave_frequency = 0.008
+wave_amplitude = 15.0
+detection_radius = 350.0
+leash_distance = 600.0
+required_mask_id = 2
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_lrtyv")
+
+[node name="CollisionShape2D" parent="DetectionArea" index="0"]
+shape = SubResource("CircleShape2D_lrtyv")

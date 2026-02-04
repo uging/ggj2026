@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=4 uid="uid://bgh77nwtdn33x"]
+[gd_scene load_steps=16 format=4 uid="uid://bgh77nwtdn33x"]
 
 [ext_resource type="Script" uid="uid://cqwsgmf7gyux6" path="res://levels/tower_level.gd" id="1_a8dg0"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_hr45r"]
@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="9_jdkyd"]
 [ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://entities/enemies/snail/snail.tscn" id="10_jdkyd"]
 [ext_resource type="PackedScene" uid="uid://7eobpmdypy84" path="res://entities/enemies/flyer/flying_ghost.tscn" id="11_uin8l"]
+[ext_resource type="PackedScene" uid="uid://dis0d7tfpkpli" path="res://entities/enemies/flyer/flying_fly.tscn" id="12_qxwb5"]
+[ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="13_f363n"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_35uxj"]
 texture = ExtResource("2_35uxj")
@@ -244,7 +246,16 @@ position = Vector2(88, -1713)
 position = Vector2(856, 465)
 
 [node name="FlyingBee" parent="." instance=ExtResource("11_uin8l")]
-position = Vector2(740, -494)
+position = Vector2(1046, -1801)
 
-[node name="FlyingBee2" parent="." instance=ExtResource("11_uin8l")]
-position = Vector2(926, -1799)
+[node name="FlyingBee2" parent="." instance=ExtResource("12_qxwb5")]
+position = Vector2(638, 64)
+
+[node name="FlyingBee3" parent="." instance=ExtResource("12_qxwb5")]
+position = Vector2(839, -1124)
+
+[node name="FlyingBee4" parent="." instance=ExtResource("13_f363n")]
+position = Vector2(707, -520)
+
+[node name="FlyingBee5" parent="." instance=ExtResource("13_f363n")]
+position = Vector2(607, -1662)
