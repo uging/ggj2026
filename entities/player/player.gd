@@ -30,7 +30,7 @@ const CHARGE_THRESHOLD := 0.15
 @export var ui_display_time := 2.5
 
 @export_group("Platforming")
-@export var jump_force_base := 450.0
+@export var jump_force_base := 500.0
 @export var coyote_time_duration := 0.15
 @export var wall_rejump_window := 0.20
 
@@ -39,7 +39,7 @@ const CHARGE_THRESHOLD := 0.15
 @export var glide_gravity_mult := 0.03
 @export var glide_max_fall_speed := 80.0
 @export var glide_horizontal_speed := 300.0
-@export var rock_gravity_mult := 1.8
+@export var rock_gravity_mult := 1.2
 @export var rock_speed_mult := 0.85
 @export var rock_smash_fall_speed := 1200.0
 @export var invincibility_duration := 1.5
@@ -532,11 +532,20 @@ func _handle_landing_logic() -> void:
 		visuals.modulate = Color.WHITE
 
 func perform_regular_jump() -> void:
-	var final_jump_force = jump_force_base
-	if current_set_id == Set.ROCK:
-		final_jump_force += 80.0 # Compensation boost
-		
-	velocity.y = -final_jump_force
+	var multiplier := 1.0
+	
+	# Determine multiplier based on current mask
+	match current_set_id:
+		Set.GUM:
+			multiplier = 1.5
+		Set.ROCK:
+			multiplier = 0.85
+		_: # Default and Feather
+			multiplier = 1.0
+			
+	velocity.y = -jump_force_base * multiplier
+	
+	# Visual feedback
 	apply_launch_stretch(1.0 if is_facing_right else -1.0)
 
 func _process_jump_charge(delta: float) -> void:
