@@ -43,3 +43,12 @@ func set_volume(percentage: float):
 func toggle_mute(is_muted: bool):
 	var bus_index = AudioServer.get_bus_index("Master")
 	AudioServer.set_bus_mute(bus_index, is_muted)
+
+func is_mask_unlocked(mask_name: String) -> bool:
+	return unlocked_masks.get(mask_name, false)
+
+func unlock_mask(mask_name: String):
+	if unlocked_masks.has(mask_name):
+		unlocked_masks[mask_name] = true
+		if player and player.has_signal("masks_updated"):
+			player.masks_updated.emit(unlocked_masks)

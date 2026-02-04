@@ -19,11 +19,18 @@ func _ready() -> void:
 	tween.tween_property(self, "position:y", 5.0, 0.8).as_relative()
 
 func _on_body_entered(body: Node2D) -> void:
-	# Check if the body is Goma and has our collection function
-	if body.has_method("collect_mask"):
-		# Update the global state through the player's collection method
-		body.collect_mask(mask_type)
+	# 1. Verify it's the player
+	if body.is_in_group("player"):
+		# 2. Update Global data and trigger signals automatically
+		Global.unlock_mask(mask_type)
+		
+		# 3. Tell the player to physically swap to the new mask
+		if body.has_method("collect_mask"):
+			body.collect_mask(mask_type)
+		
+		# 4. Visual/Sound feedback
 		play_collect_effect()
+		queue_free()
 
 func play_collect_effect() -> void:
 	# Simple 'pop' animation before deleting
