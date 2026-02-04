@@ -55,6 +55,7 @@ var ui_fade_timer := 0.0
 var coyote_timer := 0.0
 var wall_rejump_timer := 0.0
 var last_ability_press_time := 0.0
+var input_enabled := false
 
 var current_set_id: int = Set.DEFAULT
 var is_facing_right := true
@@ -113,13 +114,13 @@ var equipment_sets = {
 }
 
 # --- Initialization ---
-
 func _ready() -> void:
 	current_health = Global.current_health 
 	max_health = Global.max_health_limit
 	
+	# Pass 'true' as the second argument to skip the smoke effect on load
 	if Global.current_equipped_set != Set.DEFAULT:
-		change_set(Global.current_equipped_set)
+		change_set(Global.current_equipped_set, true)
 		
 	# Reset status
 	is_dying = false
@@ -142,6 +143,8 @@ func _ready() -> void:
 		
 	if has_node("Camera2D"):
 		$Camera2D.make_current()
+		
+	get_tree().create_timer(0.1).timeout.connect(func(): input_enabled = true)
 
 # --- Main Physics Loop ---
 
@@ -151,10 +154,7 @@ func _physics_process(delta: float) -> void:
 
 	_handle_resource_regen(delta)
 	
-	if ui_fade_timer > 0:
-		ui_fade_timer -= delta
-		if ui_fade_timer <= 0:
-			fade_out_ui()
+	# NOTE: The ui_fade_timer block has been removed from here!
 
 	if is_top_down:
 		_process_top_down_movement(delta)
@@ -245,6 +245,8 @@ func _handle_resource_regen(delta: float) -> void:
 # --- Ability Input Coordinator ---
 
 func _handle_ability_logic(delta: float, input_vector: Vector2, can_jump: bool, is_near_wall: bool) -> void:
+	if not input_enabled: return
+	
 	# 1. Tap / Double-Tap Logic
 	if Input.is_action_just_pressed("ability"):
 		var current_time = Time.get_ticks_msec() / 1000.0
@@ -414,11 +416,11 @@ func bounce_off_enemy() -> void:
 	visuals.modulate = Color.WHITE
 
 # --- Equipment & Set Systems ---
-
-func change_set(id: int) -> void:
+func change_set(id: int, silent: bool = false) -> void:
+	# If we are already wearing this set, do nothing
 	if id == current_set_id or not equipment_sets.has(id): return
 	
-	# Verify Unlock
+	# Verify Unlock status from Global
 	var mask_names = { Set.FEATHER: "feather", Set.GUM: "gum", Set.ROCK: "rock" }
 	if id != Set.DEFAULT and not unlocked_masks.get(mask_names[id], false):
 		return 
@@ -435,8 +437,11 @@ func change_set(id: int) -> void:
 		Set.ROCK:    Color(0.5, 0.5, 0.5)
 	}.get(id, Color.WHITE)
 	
-	play_smoke_effect(swap_color, Vector2.ZERO)
+	# LOGIC FIX: Only trigger the smoke/juice if we aren't in 'silent' mode
+	if not silent:
+		play_smoke_effect(swap_color, Vector2.ZERO)
 	
+	# Brief delay to ensure textures swap cleanly
 	await get_tree().create_timer(0.05).timeout
 	mask.texture = new_data["mask"]
 	mask.position = new_data["mask_pos"]
@@ -521,12 +526,24 @@ func update_ability_visuals() -> void:
 
 func show_ability_ui() -> void:
 	if current_set_id == Set.DEFAULT: return
-	ui_fade_timer = ui_display_time
-	create_tween().tween_property(ability_ui, "modulate:a", 1.0, 0.2)
+	
+	# 1. Update the icons/bars
 	update_ability_visuals()
+	
+	# 2. Make it appear instantly (No tween needed here)
+	ability_ui.show()
+	ability_ui.modulate.a = 1.0
+	
+	# 3. Start the "countdown" timer
+	# When the time runs out, it calls the OTHER function which HAS the tween
+	get_tree().create_timer(ui_display_time).timeout.connect(fade_out_ui)
 
 func fade_out_ui() -> void:
-	create_tween().tween_property(ability_ui, "modulate:a", 0.0, 0.5)
+	# Check if the UI is already hidden to avoid unnecessary tweens
+	if ability_ui.modulate.a == 0: return
+	
+	var tween = create_tween()
+	tween.tween_property(ability_ui, "modulate:a", 0.0, 0.5)
 
 # --- Internal Helpers ---
 
