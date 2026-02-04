@@ -15,6 +15,7 @@ enum Set { DEFAULT = 1, FEATHER = 2, GUM = 3, ROCK = 4 }
 @onready var smoke = $Visuals/Smoke
 @onready var feather_particles = $Visuals/FeatherParticles
 @onready var shockwave_particles = $Visuals/ShockwaveParticles
+@onready var rock_aura_visual: Sprite2D = $Visuals/RockAuraVisual
 @onready var ability_ui = $AbilityUI
 @onready var ability_container = $AbilityUI/HBoxContainer
 
@@ -55,12 +56,13 @@ var ui_fade_timer := 0.0
 var coyote_timer := 0.0
 var wall_rejump_timer := 0.0
 var last_ability_press_time := 0.0
-var input_enabled := false
 
+var input_enabled := false
 var current_set_id: int = Set.DEFAULT
 var is_facing_right := true
 var is_charging := false
 var is_gliding := false
+var is_rock_aura_active := false
 var is_rock_smashing := false
 var is_super_charging := false
 var is_invincible := false
@@ -154,7 +156,8 @@ func _physics_process(delta: float) -> void:
 
 	_handle_resource_regen(delta)
 	
-	# NOTE: The ui_fade_timer block has been removed from here!
+	if is_rock_aura_active:
+		_handle_aura_damage()
 
 	if is_top_down:
 		_process_top_down_movement(delta)
@@ -234,7 +237,15 @@ func _process_platformer_movement(delta: float) -> void:
 # --- Resource Regen ---
 
 func _handle_resource_regen(delta: float) -> void:
-	var is_using_ability = is_gliding or is_charging or is_rock_smashing
+	var is_using_ability = is_gliding or is_charging or is_rock_smashing or is_rock_aura_active
+	
+	# Handle Rock Aura Drain
+	if is_rock_aura_active:
+		ability_charges -= delta * 0.8 # Adjust speed of drain here
+		show_ability_ui()
+		if ability_charges <= 0:
+			_deactivate_rock_aura()
+			
 	if ability_charges < max_ability_charges and not is_using_ability:
 		charge_recovery_timer += delta
 		if charge_recovery_timer >= charge_cooldown:
@@ -392,7 +403,7 @@ func heal(amount: int) -> void:
 	health_changed.emit(current_health)
 
 func take_damage(amount: int) -> void:
-	if is_invincible or is_dying: return
+	if is_invincible or is_dying or is_rock_aura_active: return
 	
 	# Rock Resistance: Half damage
 	if current_set_id == Set.ROCK:
@@ -511,6 +522,47 @@ func execute_shockwave() -> void:
 			shake_tween.tween_property($Camera2D, "offset", Vector2(randf_range(-14, 14), randf_range(-14, 14)), 0.04)
 		shake_tween.tween_property($Camera2D, "offset", Vector2.ZERO, 0.04)
 
+func _activate_rock_aura() -> void:
+	is_rock_aura_active = true
+	is_invincible = true
+	
+	# 1. Get the radius of your collision shape (100)
+	var col_shape = $RockBlastZone/CollisionShape2D.shape
+	if col_shape is CircleShape2D:
+		var target_radius = col_shape.radius
+		
+		# 2. Match the sprite scale to the radius
+		# Diameter (200) divided by Image Width (681)
+		var texture_width = rock_aura_visual.texture.get_size().x
+		var final_scale = (target_radius * 2.0) / texture_width
+		rock_aura_visual.scale = Vector2(final_scale, final_scale)
+	
+	rock_aura_visual.show()
+	
+	# 3. Pulsing animation (starts from our calculated base scale)
+	var base_scale = rock_aura_visual.scale
+	var pulse = create_tween().set_loops()
+	pulse.tween_property(rock_aura_visual, "scale", base_scale * 1.1, 0.6)
+	pulse.tween_property(rock_aura_visual, "scale", base_scale, 0.6)
+
+func _deactivate_rock_aura() -> void:
+	is_rock_aura_active = false
+	is_invincible = false
+	if is_instance_valid(rock_aura_visual):
+		rock_aura_visual.hide()
+	visuals.modulate = Color.WHITE
+	
+func _handle_aura_damage() -> void:
+	if not is_rock_aura_active: return
+	
+	# Reuse your RockBlastZone for the aura contact damage
+	$RockBlastZone.monitoring = true
+	for area in $RockBlastZone.get_overlapping_areas():
+		if area.has_method("take_damage"):
+			area.take_damage(1)
+		elif area.get_parent().has_method("take_damage"):
+			area.get_parent().take_damage(1)
+			
 func update_ability_visuals() -> void:
 	if !ability_textures.has(current_set_id): 
 		ability_ui.modulate.a = 0.0
@@ -604,6 +656,10 @@ func _handle_landing_logic() -> void:
 		execute_shockwave()
 		is_rock_smashing = false
 		visuals.modulate = Color.WHITE
+		if ability_charges > 0:
+			_activate_rock_aura()
+		else:
+			visuals.modulate = Color.WHITE
 		apply_landing_squash()
 
 func apply_landing_squash() -> void:

@@ -68,9 +68,10 @@ func _on_hurt_box_body_entered(body: Node2D) -> void:
 		var is_smashing = body.get("is_rock_smashing") == true
 		var is_rock_mask = body.get("current_set_id") == 4
 		var is_falling_fast = body.velocity.y > 700.0
+		var is_aura_active = body.get("is_rock_aura_active") == true
 
 		# Updated: Deal 1 damage instead of instant death
-		if is_smashing or (is_rock_mask and is_falling_fast):
+		if is_smashing or is_aura_active or (is_rock_mask and is_falling_fast):
 			take_damage(1)
 			if body.has_method("bounce_off_enemy"):
 				body.bounce_off_enemy()
@@ -87,8 +88,12 @@ func _on_hurt_box_body_entered(body: Node2D) -> void:
 			body.velocity = push_dir * knockback_force
 
 # Added take_damage to handle the 2-hit health pool
+var hit_cooldown := 0.0
 func take_damage(amount: int):
+	if hit_cooldown > 0: return # Skip if recently hit
+	
 	current_health -= amount
+	hit_cooldown = 0.4 # Wait 0.4s before taking damage again
 	
 	# Visual Hit Flash
 	var flash = create_tween()
@@ -97,7 +102,11 @@ func take_damage(amount: int):
 	
 	if current_health <= 0:
 		die()
-
+		
+func _process(delta: float):
+	if hit_cooldown > 0:
+		hit_cooldown -= delta
+		
 func die():
 	# save to global list
 	var level_name = get_tree().current_scene.name

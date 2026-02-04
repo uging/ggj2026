@@ -46,9 +46,10 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.name == "Player":
 		var is_smashing = body.get("is_rock_smashing") == true
 		var is_rock_mask = body.get("current_set_id") == 4 
+		var is_aura_active = body.get("is_rock_aura_active") == true
 
 		# Updated Logic: Use take_damage(1) instead of die()
-		if is_smashing or (is_rock_mask and body.velocity.y > 700.0):
+		if is_smashing or is_aura_active or (is_rock_mask and body.velocity.y > 700.0):
 			take_damage(1) 
 			# Bounce Goma up so he doesn't stay inside the lava
 			body.velocity.y = -400
@@ -62,9 +63,12 @@ func _on_body_entered(body: Node2D) -> void:
 			var push_dir = (body.global_position - global_position).normalized()
 			body.velocity = push_dir * knockback_force
 
-# NEW: Function to handle health subtraction and visual hits
+# Function to handle health subtraction and visual hits
+var hit_cooldown := 0.0
 func take_damage(amount: int):
+	if hit_cooldown > 0: return # Skip if recently hit
 	current_health -= amount
+	hit_cooldown = 0.4 # wait 0.4s before taking damage again
 	
 	# Visual Feedback: Quick red flash
 	var flash = create_tween()
@@ -73,7 +77,11 @@ func take_damage(amount: int):
 	
 	if current_health <= 0:
 		die()
-
+		
+func _process(delta: float):
+	if hit_cooldown > 0:
+		hit_cooldown -= delta
+		
 func die():
 	# save to global list
 	var level_name = get_tree().current_scene.name

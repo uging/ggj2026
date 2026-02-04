@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://p6cwmp2367e6"]
+[gd_scene load_steps=17 format=3 uid="uid://p6cwmp2367e6"]
 
 [ext_resource type="Script" uid="uid://b6rdjrcc6bssu" path="res://entities/player/player.gd" id="1_mehiu"]
 [ext_resource type="Texture2D" uid="uid://5n84e57l8sk4" path="res://entities/player/assets/goma.png" id="2_mehiu"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://dpqh70kurppi0" path="res://entities/player/assets/smoke_default.png" id="5_sweqy"]
 [ext_resource type="PackedScene" uid="uid://c4vikthgmocq2" path="res://entities/player/feather_particles.tscn" id="6_1jxqw"]
 [ext_resource type="PackedScene" uid="uid://cl65o51hn3lp3" path="res://entities/player/ui/ability_ui.tscn" id="6_2hs0m"]
+[ext_resource type="Texture2D" uid="uid://bdv6425h3nsjk" path="res://entities/player/assets/aura_circle.png" id="7_26q78"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_i1wwn"]
 radius = 45.01111
@@ -91,6 +92,12 @@ one_shot = true
 explosiveness = 1.0
 process_material = SubResource("ParticleProcessMaterial_1jxqw")
 
+[node name="RockAuraVisual" type="Sprite2D" parent="Visuals"]
+visible = false
+modulate = Color(0.54509807, 0.3529412, 0.16862746, 0.39215687)
+scale = Vector2(0.294, 0.294)
+texture = ExtResource("7_26q78")
+
 [node name="Camera2D" type="Camera2D" parent="."]
 limit_bottom = 648
 position_smoothing_enabled = true
@@ -106,5 +113,4 @@ collision_layer = 0
 monitoring = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RockBlastZone"]
-visible = false
 shape = SubResource("CircleShape2D_1jxqw")

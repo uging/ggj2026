@@ -21,9 +21,10 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.name == "Player":
 		var is_smashing = body.get("is_rock_smashing") == true
-		var is_falling_fast = body.velocity.y > 700.0 
+		var is_falling_fast = body.velocity.y > 700.0
+		var is_aura_active = body.get("is_rock_aura_active") == true
 
-		if is_smashing or is_falling_fast:
+		if is_smashing or is_falling_fast or is_aura_active:
 			return 
 			
 		if body.get("is_invincible") == true:
@@ -43,7 +44,7 @@ func _physics_process(_delta: float) -> void:
 
 		if body.name == "Player":
 			var player_vel = body.get("velocity") if body.get("velocity") != null else Vector2.ZERO
-			if body.get("is_rock_smashing") == true or player_vel.y > 700.0:
+			if body.get("is_rock_smashing") == true or body.get("is_rock_aura_active") or player_vel.y > 700.0:
 				take_damage(1)
 				return
 
