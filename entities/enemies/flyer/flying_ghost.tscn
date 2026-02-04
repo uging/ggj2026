@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://7eobpmdypy84"]
+
+[ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="1_58oxv"]
+[ext_resource type="Texture2D" uid="uid://d1kihuccgc4bb" path="res://entities/enemies/flyer/assets/ghost.png" id="2_t5v7w"]
+
+[node name="FlyingBee" instance=ExtResource("1_58oxv")]
+modulate = Color(1, 1, 1, 0.5882353)
+speed = 80.0
+chase_speed = 150.0
+damage_amount = 2
+max_health = 4
+required_mask_id = 2
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_t5v7w")

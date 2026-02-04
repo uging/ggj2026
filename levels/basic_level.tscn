@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=4 uid="uid://cywrg0bjuyd0q"]
+[gd_scene load_steps=14 format=4 uid="uid://cywrg0bjuyd0q"]
 
 [ext_resource type="Script" uid="uid://d35w1jylxasvg" path="res://levels/basic_level.gd" id="1_jxqax"]
 [ext_resource type="Texture2D" uid="uid://co4nqst4qm0h1" path="res://resources/tilesheet_complete.png" id="2_h6lqb"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://dkhtf8dflwvgy" path="res://entities/player/interactables/pickups/mask_rock_pickup.tscn" id="8_tf5ar"]
 [ext_resource type="AudioStream" uid="uid://bmf6nlxik00y1" path="res://resources/sounds/tropicalfantasy.ogg" id="10_gdvbf"]
 [ext_resource type="PackedScene" uid="uid://bcmevgqpoeyet" path="res://entities/enemies/traps/spike_trap.tscn" id="10_hu82h"]
+[ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="11_gdvbf"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6t68p"]
 texture = ExtResource("2_h6lqb")
@@ -322,9 +323,15 @@ collision_layer = 1
 [node name="MaskRockPickup" parent="." instance=ExtResource("8_tf5ar")]
 position = Vector2(794, 497)
 
+[node name="FlyingEnemy" parent="." instance=ExtResource("11_gdvbf")]
+position = Vector2(1499, 226)
+
 [node name="ExitNode" parent="." instance=ExtResource("7_neare")]
 position = Vector2(2759, 345)
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("10_gdvbf")
 autoplay = true
+
+[node name="FlyingBee" parent="." instance=ExtResource("11_gdvbf")]
+position = Vector2(774, 180)

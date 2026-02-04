@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3 uid="uid://6t54oy8ccwbe"]
+
+[ext_resource type="Script" uid="uid://sehkrk547mkb" path="res://entities/enemies/flyer/flying_bee.gd" id="1_5quwy"]
+[ext_resource type="Texture2D" uid="uid://m2b7hgqkugkx" path="res://entities/enemies/flyer/assets/bee.png" id="1_etcgh"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_5quwy"]
+radius = 18.027756
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_17djv"]
+radius = 26.24881
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xd02h"]
+radius = 300.0
+
+[node name="FlyingBee" type="CharacterBody2D"]
+script = ExtResource("1_5quwy")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_etcgh")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_5quwy")
+
+[node name="HurtBox" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
+shape = SubResource("CircleShape2D_17djv")
+
+[node name="WallRay" type="RayCast2D" parent="."]
+target_position = Vector2(50, 0)
+
+[node name="DetectionArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_xd02h")
+
+[node name="LOSRay" type="RayCast2D" parent="."]
