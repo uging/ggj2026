@@ -21,13 +21,10 @@ func _on_body_exited(body):
 		name_label.visible = false
 
 func _input(event):
-	if event.is_action_pressed("interact") and player_in_range:
-		# 1. Detach player from old scene FIRST
-		if Global.player and Global.player.get_parent():
-			Global.player.get_parent().remove_child(Global.player)
-			
-		if Global.hud and Global.hud.get_parent():
-			Global.hud.get_parent().remove_child(Global.hud)
-		
-		# 2. Safe scene change
-		get_tree().call_deferred("change_scene_to_file", next_scene_path)
+	if event.is_action_pressed("ui_accept"):
+		# Check if Goma is standing inside this Area2D
+		if overlaps_body(Global.player):
+			# 'owner' refers to the WorldMap root
+			# We tell the world map to tell 'Main' to load the level
+			if owner.has_method("enter_level"):
+				owner.enter_level("res://levels/tower_level.tscn", Vector2(700, 450))

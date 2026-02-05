@@ -123,18 +123,35 @@ var set_data = {
 }
 
 # --- Initialization ---
+# player.gd
 
 func _ready() -> void:
+	# 1. Immediate sync from Global
 	current_health = Global.current_health 
 	max_health = Global.max_health_limit
 	
-	if Global.current_equipped_set != Set.DEFAULT:
-		change_set(Global.current_equipped_set, true)
-		
+	# 2. Force HUD to show 3 hearts immediately
+	# We do this before the 'await' to ensure the UI is correct on frame 1.
+	health_changed.emit(current_health) 
+	
+	# 3. Apply 4-second "Ghost Mode"
+	is_invincible = true 
+	start_invincibility_effect() 
+	
+	var original_mask = collision_mask
+	collision_mask = 1 # Only collide with the world layer
+	
+	get_tree().create_timer(4.0).timeout.connect(func():
+		is_invincible = false
+		collision_mask = original_mask
+	)
+
+	# 4. Standard Setup
 	_reset_states()
 	_setup_idle_animation()
 	
-	health_changed.emit(current_health)
+	# Wait for HUD to be fully ready for secondary syncs
+	await get_tree().process_frame
 	masks_updated.emit(unlocked_masks)
 	
 	if ability_container:
@@ -382,19 +399,33 @@ func _handle_resource_regen(delta: float) -> void:
 # --- Health System ---
 
 func take_damage(amount: int) -> void:
-	if is_invincible or is_dying or is_rock_aura_active: return
-	if current_set_id == Set.ROCK: amount = maxi(1, int(amount * 0.5))
+	if Global.is_restarting or is_invincible or is_dying or is_rock_aura_active: 
+		return
+		
+	if current_set_id == Set.ROCK: 
+		amount = maxi(1, int(amount * 0.5))
 	
 	current_health = clampi(current_health - amount, 0, max_health)
 	Global.current_health = current_health
 	health_changed.emit(current_health)
 	
-	if current_health <= 0: die()
+	if current_health <= 0: 
+		die()
 	else:
 		is_invincible = true
 		start_invincibility_effect()
+		# Use the exported duration for mid-game hits
 		await get_tree().create_timer(invincibility_duration).timeout
+		
+		# Only turn it off if we aren't STILL in the 4-second start-of-level window
+		# (The _ready timer and this timer won't conflict if we check current state)
 		is_invincible = false
+
+func update_health(value):
+	Global.current_health = clamp(value, 0, Global.max_health_limit)
+	health_changed.emit(Global.current_health)
+	if Global.current_health <= 0:
+		trigger_game_over()
 		
 func heal(amount: int) -> void:
 	current_health = clampi(current_health + amount, 0, max_health)
@@ -406,19 +437,25 @@ func heal(amount: int) -> void:
 func execute_shockwave() -> void:
 	blast_zone.monitoring = true
 	await get_tree().physics_frame
+	
 	for area in blast_zone.get_overlapping_areas():
 		var target = area if area.has_method("take_damage") else area.get_parent()
-		if target.has_method("take_damage"): target.take_damage(1)
+		if target.has_method("take_damage"): 
+			target.take_damage(1)
+			
 	blast_zone.monitoring = false
 	
 	if shockwave_particles:
 		shockwave_particles.emitting = true
 		shockwave_particles.restart()
 
-	if has_node("Camera2D"):
+	# Find the camera that is a CHILD of Goma
+	var cam = get_node_or_null("Camera2D")
+	if cam:
 		var shake = create_tween()
-		for i in 5: shake.tween_property($Camera2D, "offset", Vector2(randf_range(-10,10), randf_range(-10,10)), 0.04)
-		shake.tween_property($Camera2D, "offset", Vector2.ZERO, 0.04)
+		for i in 5: 
+			shake.tween_property(cam, "offset", Vector2(randf_range(-10,10), randf_range(-10,10)), 0.04)
+		shake.tween_property(cam, "offset", Vector2.ZERO, 0.04)
 
 # --- Set / Mask System ---
 
@@ -493,14 +530,28 @@ func die() -> void:
 	if is_dying: return
 	is_dying = true
 
-	# Stop the player movement so they don't keep sliding
-	set_physics_process(false) 
-	hide()
+	# 1. Stop Goma's physics and input
+	set_physics_process(false)
+	set_process_input(false)
+	
+	# 2. Freeze the game world (enemies, traps, etc.)
+	get_tree().paused = true
 
-	# Create a 0.5 second timer, then reload
-	await get_tree().create_timer(0.5).timeout
-	get_tree().reload_current_scene() 
-	# (Await naturally waits for a safe frame, so call_deferred isn't needed here)
+	# 3. Visual Death Flair (Optional: Tilt Goma)
+	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(visuals, "rotation_degrees", 90, 0.5)
+	tween.tween_property(visuals, "modulate", Color.DARK_SLATE_GRAY, 0.5)
+
+	# 4. Trigger the UI through the Manager
+	# This ensures the Game Over screen is added to the UILayer in Main
+	Global.trigger_game_over_ui()
+
+func trigger_game_over():
+	# Stop the game
+	get_tree().paused = true 
+	# Load and add the Game Over screen
+	var go_scene = load("res://gameover/game_over.tscn").instantiate()
+	get_tree().root.add_child(go_scene)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:

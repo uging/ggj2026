@@ -12,9 +12,14 @@ func _ready():
 
 func _input(event):
 	if event.is_action_pressed("pause"):
-		# If the player isn't in the Global script yet, we aren't in a level!
+		# 1. Don't pause if we aren't in a level
 		if Global.player == null:
-			print("Ignoring pause: No player found in Global.")
+			return
+
+		# 2. NEW: Don't pause if the Game Over screen is already open!
+		# This assumes your Game Over scene is named "GameOver" when added to the tree
+		if get_tree().root.find_child("GameOver", true, false):
+			print("Game Over is active. Ignoring pause.")
 			return
 
 		print("ESC pressed! Pausing game...")
@@ -48,8 +53,14 @@ func toggle_pause():
 		$CenterContainer/VBoxContainer/VolumeSlider.focus_neighbor_bottom = $CenterContainer/VBoxContainer/MuteButton.get_path()
 
 		# 1. First, handle the visibility of buttons
-		var is_on_map = get_tree().current_scene.name == "Main"
-		
+		# Check if the currently loaded level is the world map
+		var level_container = get_tree().root.find_child("LevelContainer", true, false)
+		var current_level = level_container.get_child(0) if level_container and level_container.get_child_count() > 0 else null
+
+		var is_on_map = false
+		if current_level:
+			is_on_map = current_level.scene_file_path.contains("world_map")
+
 		if is_on_map:
 			$CenterContainer/VBoxContainer/MapButton.hide()
 			$CenterContainer/VBoxContainer/RestartButton.hide()
@@ -68,13 +79,34 @@ func toggle_pause():
 # Make sure these are connected to the "pressed()" signal in the Node tab!
 
 func _on_restart_button_pressed() -> void:
+	# 1. Unpause the game and hide the menu
 	toggle_pause()
-	get_tree().reload_current_scene()
+	
+	# 2. Find the Main manager shell
+	var main = get_tree().root.get_node_or_null("Main")
+	
+	# 3. Use the "Bookmarks" we just added to Global.gd
+	if main and main.has_method("load_level"):
+		if Global.last_level_path != "":
+			print("Restarting level: ", Global.last_level_path)
+			main.load_level(Global.last_level_path, Global.last_spawn_pos)
+		else:
+			push_error("PauseMenu: No last_level_path found in Global!")
 
 func _on_map_button_pressed() -> void:
-	toggle_pause()
-	Global.isTitleShown = false
-	get_tree().change_scene_to_file("res://main/main.tscn")
+	# 1. Close the menu and unpause first
+	toggle_pause() 
+	
+	# 2. Find the Main shell (the manager)
+	var main = get_tree().root.get_node_or_null("Main")
+	
+	if main and main.has_method("load_level"):
+		# 3. Use the manager's load_level function. 
+		# This keeps Main (and Goma/HUD) alive!
+		main.load_level("res://levels/world_map.tscn", Vector2(656, 318))
+	else:
+		# Fallback if Main isn't found
+		get_tree().change_scene_to_file("res://levels/world_map.tscn")
 	
 func _on_save_button_pressed() -> void:
 	SaveManager.save_game()

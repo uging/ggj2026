@@ -9,18 +9,20 @@
 [ext_resource type="Script" uid="uid://5sutltexle6j" path="res://levels/pit.gd" id="6_7wby1"]
 [ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://entities/enemies/snail/snail.tscn" id="6_nvhv4"]
 [ext_resource type="PackedScene" uid="uid://ktoolncvo1a4" path="res://entities/enemies/flyer/flying_bat.tscn" id="7_01nkt"]
-[ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="7_8o7p4"]
-[ext_resource type="PackedScene" uid="uid://bga3vj4dhyg5f" path="res://common/doors/game_over.tscn" id="8_8o7p4"]
 [ext_resource type="PackedScene" uid="uid://br0e78iidqro2" path="res://entities/enemies/lava_snake/lava_snake.tscn" id="10_kno24"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_5kwvw"]
-size = Vector2(76.5, 1282)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_l1563"]
-size = Vector2(3347, 37)
+[ext_resource type="PackedScene" uid="uid://bugywcndydomy" path="res://common/doors/vortex_portal.tscn" id="11_nvhv4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8o7p4"]
-size = Vector2(3387, 20)
+size = Vector2(3703, 20)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_01nkt"]
+normal = Vector2(1, 0)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_joxsq"]
+normal = Vector2(-1, 0)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_i5c24"]
+normal = Vector2(0, 1)
 
 [node name="PyramidLevel" type="Node2D"]
 script = ExtResource("1_1u52l")
@@ -68,38 +70,36 @@ tile_set = ExtResource("2_basf6")
 
 [node name="Foreground" type="TileMapLayer" parent="."]
 
-[node name="LeftWall" type="StaticBody2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
-position = Vector2(-205.25, 319)
-shape = SubResource("RectangleShape2D_5kwvw")
-
-[node name="RightWall" type="StaticBody2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
-position = Vector2(3226, 311)
-shape = SubResource("RectangleShape2D_5kwvw")
-
-[node name="TopWall" type="StaticBody2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="TopWall"]
-position = Vector2(1516.5, -297)
-shape = SubResource("RectangleShape2D_l1563")
-
 [node name="Pit" type="Area2D" parent="."]
-position = Vector2(-184, 772)
+position = Vector2(-430, 878)
 script = ExtResource("6_7wby1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Pit"]
-position = Vector2(1683.5, 0)
+position = Vector2(1841.5, 0)
 shape = SubResource("RectangleShape2D_8o7p4")
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("6_7inqb")
 autoplay = true
 
-[node name="ExitNode" parent="." instance=ExtResource("7_8o7p4")]
-position = Vector2(-99, 453)
+[node name="WorldBoundaries" type="StaticBody2D" parent="."]
 
-[node name="GameOver" parent="." instance=ExtResource("8_8o7p4")]
-position = Vector2(2863, -33)
+[node name="LeftBoundary" type="CollisionShape2D" parent="WorldBoundaries"]
+position = Vector2(-457, -4)
+shape = SubResource("WorldBoundaryShape2D_01nkt")
+
+[node name="RightBoundary" type="CollisionShape2D" parent="WorldBoundaries"]
+position = Vector2(3231, -1)
+shape = SubResource("WorldBoundaryShape2D_joxsq")
+
+[node name="TopBoundary" type="CollisionShape2D" parent="WorldBoundaries"]
+position = Vector2(-2, -304)
+shape = SubResource("WorldBoundaryShape2D_i5c24")
+
+[node name="StartPortal" parent="." instance=ExtResource("11_nvhv4")]
+position = Vector2(-182, 509)
+
+[node name="EndPortal" parent="." instance=ExtResource("11_nvhv4")]
+position = Vector2(2860, 9)
+next_scene_path = "res://gameover/credits.tscn"
+is_credits_portal = true

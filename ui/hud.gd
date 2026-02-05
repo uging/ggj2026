@@ -11,6 +11,8 @@ var mask_textures = {
 }
 
 func _ready() -> void:
+	# CRITICAL: Register this HUD instance with Global
+	Global.hud = self
 	# Sync with Global data immediately on spawn
 	update_hearts(Global.current_health)
 	update_masks(Global.unlocked_masks)

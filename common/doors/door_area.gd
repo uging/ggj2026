@@ -1,31 +1,16 @@
 extends Area2D
 
-@export var next_scene_path: String = "res://main/main.tscn"
-
-var player_in_range: bool = false
-
+# This door leads back to the map
+@export var next_scene_path: String = "res://levels/world_map.tscn"
+@export var spawn_position: Vector2 = Vector2(656, 318)
 
 func _ready():
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+	if not body_entered.is_connected(_on_body_entered):
+		body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body):
-	if body.is_in_group("player"):
-		player_in_range = true
-		# 1. Detach player from old scene FIRST
-		if Global.player and Global.player.get_parent():
-			Global.player.get_parent().remove_child(Global.player)
-			
-		if Global.hud and Global.hud.get_parent():
-			Global.hud.get_parent().remove_child(Global.hud)
-		
-		# 2. Safe scene change
-		get_tree().call_deferred("change_scene_to_file", next_scene_path)
-
-func _on_body_exited(body):
-	if body.is_in_group("player"):
-		player_in_range = false
-
-func _input(event):
-	if event.is_action_pressed("ui_accept") and player_in_range:
-		pass
+	if body == Global.player:
+		var main = get_tree().root.get_node_or_null("Main")
+		if main and main.has_method("change_scene"):
+			# Standard transition back to map
+			main.change_scene(next_scene_path, spawn_position)

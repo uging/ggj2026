@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://bugywcndydomy"]
+
+[ext_resource type="Script" uid="uid://br2it2mc6ud23" path="res://common/doors/vortex_portal.gd" id="1_2cc08"]
+[ext_resource type="Texture2D" uid="uid://ccphw024lbbpp" path="res://common/doors/assets/vortex_portal.png" id="2_ef6bl"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ef6bl"]
+radius = 37.0
+
+[node name="VortexPortal" type="Node2D"]
+z_index = 5
+script = ExtResource("1_2cc08")
+activation_distance = 200.0
+max_scale = 0.4
+min_scale = 0.1
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.135, 0.135)
+texture = ExtResource("2_ef6bl")
+
+[node name="TriggerArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TriggerArea"]
+shape = SubResource("CircleShape2D_ef6bl")

@@ -1,0 +1,75 @@
+[gd_scene load_steps=6 format=3 uid="uid://ts38rj7esfmv"]
+
+[ext_resource type="Texture2D" uid="uid://5n84e57l8sk4" path="res://entities/player/assets/goma.png" id="1_ajbo4"]
+[ext_resource type="Script" uid="uid://cgk8b43cw1u4f" path="res://gameover/game_over.gd" id="1_nh01p"]
+[ext_resource type="Texture2D" uid="uid://7nwjf0eqcdu5" path="res://entities/player/assets/cape_default.png" id="2_nh01p"]
+[ext_resource type="Texture2D" uid="uid://c7410lk0nipo" path="res://entities/player/assets/mask_default.png" id="3_oiq8w"]
+[ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="4_vn20j"]
+
+[node name="GameOver" type="CanvasLayer"]
+process_mode = 3
+layer = 128
+script = ExtResource("1_nh01p")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.9411765)
+
+[node name="CenterContainer" type="CenterContainer" parent="ColorRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ColorRect/CenterContainer"]
+layout_mode = 2
+
+[node name="CharacterControl" type="Control" parent="ColorRect/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+
+[node name="CharacterAnchor" type="Node2D" parent="ColorRect/CenterContainer/VBoxContainer/CharacterControl"]
+position = Vector2(100, 140)
+
+[node name="Goma" type="Sprite2D" parent="ColorRect/CenterContainer/VBoxContainer/CharacterControl/CharacterAnchor"]
+position = Vector2(0, -8)
+scale = Vector2(0.172, 0.195)
+texture = ExtResource("1_ajbo4")
+
+[node name="Cape" type="Sprite2D" parent="ColorRect/CenterContainer/VBoxContainer/CharacterControl/CharacterAnchor"]
+position = Vector2(-21, -7)
+scale = Vector2(0.172, 0.195)
+texture = ExtResource("2_nh01p")
+
+[node name="Mask" type="Sprite2D" parent="ColorRect/CenterContainer/VBoxContainer/CharacterControl/CharacterAnchor"]
+position = Vector2(8, -27)
+scale = Vector2(0.114, 0.122)
+texture = ExtResource("3_oiq8w")
+
+[node name="GameOverLabel" type="Label" parent="ColorRect/CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_vn20j")
+text = "YOU DIED!"
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="ColorRect/CenterContainer/VBoxContainer"]
+layout_mode = 2
+focus_neighbor_bottom = NodePath("../MenuButton")
+theme_override_fonts/font = ExtResource("4_vn20j")
+text = "RESTART"
+
+[node name="MenuButton" type="Button" parent="ColorRect/CenterContainer/VBoxContainer"]
+layout_mode = 2
+focus_neighbor_top = NodePath("../RestartButton")
+theme_override_fonts/font = ExtResource("4_vn20j")
+text = "MAIN MENU"
+
+[connection signal="pressed" from="ColorRect/CenterContainer/VBoxContainer/RestartButton" to="." method="_on_restart_pressed"]
+[connection signal="pressed" from="ColorRect/CenterContainer/VBoxContainer/MenuButton" to="." method="_on_menu_pressed"]

@@ -1,54 +1,35 @@
 extends Node2D
+@export var is_top_down_level := false
+@export var level_gravity := 1600.0
 
 func _ready() -> void:
-	print("The Tower!")
+	# 1. Wait for Main.gd to finish moving Goma into position 
+	await get_tree().process_frame 
 	
-	# 1. RESPOND TO RESPAWN: If Goma is missing after a death reload, create him
-	if Global.player == null:
-		spawn_player_manually()
-	
-	# 2. WAIT: Ensure both exist before we try to parent them
-	while Global.player == null or Global.hud == null:
-		await get_tree().process_frame
-	
-	var player = Global.player
-	var hud = Global.hud
-
-	# 3. RE-PARENT: Safely move them into the Tower scene
-	if player.get_parent() != null:
-		player.get_parent().remove_child(player)
-	add_child(player)
-	
-	if hud.get_parent() != null:
-		hud.get_parent().remove_child(hud)
-	add_child(hud)
-	hud.show()
-
-	# 4. TOWER STATE: Set position and physics
-	# Note: Tower uses the same gravity as the other levels for consistency
-	player.is_top_down = false
-	player.gravity = 1600
-	player.global_position = Vector2(700, 450) 
-	
-	# 5. SYNC: Link HUD and Snap Camera
-	if hud.has_method("setup_health"):
-		hud.setup_health(player)
+	# 2. Configure environment
+	if is_instance_valid(Global.player):
+		Global.player.is_top_down = is_top_down_level
+		Global.player.gravity = level_gravity
 		
-	_reset_camera(player)
+		# 3. Handle Camera
+		var cam = Global.player.get_node_or_null("Camera2D")
+		if cam:
+			cam.make_current()
+			# Left limit stays at 0 to match the left edge of the tower
+			cam.limit_left = 0
+			# The building is tall! Set the top limit to -2200 to reach the roof
+			cam.limit_top = -2200 
+			# The building is narrow. Set right limit to ~1800
+			cam.limit_right = 1800 
+			# IMPORTANT: Set bottom limit to 950 to keep the dirt/grass visible
+			# If this is too low, Goma will fall "out" before hitting the death plane.
+			cam.limit_bottom = 950
 
-# HELPER: Spawn fresh nodes if Global is empty
-func spawn_player_manually():
-	var p_scene = load("res://entities/player/player.tscn") 
-	var h_scene = load("res://ui/hud.tscn")
-	Global.player = p_scene.instantiate()
-	Global.hud = h_scene.instantiate()
-
-# HELPER: Prevent the "looking at (0,0)" camera glitch
-func _reset_camera(target):
-	var camera = target.get_node_or_null("Camera2D")
-	if camera:
-		camera.make_current()
-		camera.global_position = target.global_position
-		if camera.has_method("reset_smoothing"):
-			camera.reset_smoothing()
-		print("Tower camera synced to Goma at: ", target.global_position)
+	# 4. HUD Sync & Signal Connection
+	if is_instance_valid(Global.hud) and is_instance_valid(Global.player):
+		# Re-connect health signal specifically for this level load
+		if not Global.player.health_changed.is_connected(Global.hud._on_health_changed):
+			Global.player.health_changed.connect(Global.hud._on_health_changed)
+		
+		if Global.hud.has_method("setup_health"):
+			Global.hud.setup_health(Global.player)

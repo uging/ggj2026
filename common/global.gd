@@ -1,16 +1,21 @@
 extends Node
 
 # --- Persistent Data ---
-# These variables stay the same even when the scene reloads
 var current_health : int = 3
 var max_health_limit := 10
-var current_equipped_set : int = 1 # is default
+var current_equipped_set : int = 1
 var isTitleShown := true
+var is_restarting := false
 
-# traps and enemies storage so they don't reappear
+# --- Level Bookmarking ---
+# These store where the player is so Restart/Map buttons work
+var last_level_path : String = ""
+var last_spawn_pos : Vector2 = Vector2.ZERO
+
+# traps and enemies storage
 var destroyed_enemies = {}
 
-# Store the unlock states here so Goma keeps his powers after dying
+# Powers unlock states
 var unlocked_masks = {
 	"feather": true,
 	"gum": true,
@@ -18,23 +23,28 @@ var unlocked_masks = {
 }
 
 # --- HUD & Player References ---
-# We no longer instantiate them here. 
-# We just keep variables to track the 'active' ones if needed.
 var player = null
 var hud = null
 
 func _ready() -> void:
-	# We leave this empty or just for initialization of basic data.
-	# The Main script will now handle creating the Player and HUD nodes.
 	print("Global data initialized.")
 	
+func trigger_game_over_ui():
+	var main = get_tree().root.get_node_or_null("Main")
+	if main:
+		var go_scene = load("res://gameover/game_over.tscn").instantiate()
+		main.get_node("UILayer").add_child(go_scene)
+	else:
+		var go_scene = load("res://gameover/game_over.tscn").instantiate()
+		get_tree().root.add_child(go_scene)
+	
+	get_tree().paused = true
+
 func set_volume(percentage: float):
 	var bus_index = AudioServer.get_bus_index("Master")
 	var db_volume = linear_to_db(percentage)
-	
 	AudioServer.set_bus_volume_db(bus_index, db_volume)
 	
-	# If volume is moved above 0, unmute. If at 0, mute.
 	if percentage > 0:
 		AudioServer.set_bus_mute(bus_index, false)
 	else:
@@ -52,3 +62,19 @@ func unlock_mask(mask_name: String):
 		unlocked_masks[mask_name] = true
 		if player and player.has_signal("masks_updated"):
 			player.masks_updated.emit(unlocked_masks)
+
+func reset_player_stats():
+	current_health = 3
+	is_restarting = true
+	destroyed_enemies.clear()
+	
+	# Ensure the player instance (if it exists) is reset too
+	if is_instance_valid(player):
+		player.current_health = 3
+		player.is_dying = false
+		player.health_changed.emit(3) # Force HUD to show 3 hearts next time it's shown
+	
+	print("Global: Player stats reset.")
+	# Unlock damage after a short delay (1 second after restart)
+	get_tree().create_timer(1.0).timeout.connect(func(): is_restarting = false)
+	print("Global: Player stats reset and damage locked.")

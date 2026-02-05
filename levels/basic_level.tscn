@@ -5,13 +5,13 @@
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="2_jxqax"]
 [ext_resource type="PackedScene" uid="uid://lpoqjqyofqgm" path="res://entities/player/interactables/pickups/heart_pickup.tscn" id="6_6t68p"]
 [ext_resource type="PackedScene" uid="uid://b7e4hrbvbf413" path="res://entities/enemies/traps/plant_trap.tscn" id="7_lc1pu"]
-[ext_resource type="PackedScene" uid="uid://ifovk18pn0rq" path="res://common/doors/exit_node.tscn" id="7_neare"]
 [ext_resource type="PackedScene" uid="uid://dis0d7tfpkpli" path="res://entities/enemies/flyer/flying_fly.tscn" id="8_gdvbf"]
 [ext_resource type="PackedScene" uid="uid://bdewhpmq5hjkl" path="res://entities/player/interactables/pickups/mask_gum_pickup.tscn" id="8_neare"]
 [ext_resource type="PackedScene" uid="uid://dkhtf8dflwvgy" path="res://entities/player/interactables/pickups/mask_rock_pickup.tscn" id="8_tf5ar"]
 [ext_resource type="AudioStream" uid="uid://bmf6nlxik00y1" path="res://resources/sounds/tropicalfantasy.ogg" id="10_gdvbf"]
 [ext_resource type="PackedScene" uid="uid://bcmevgqpoeyet" path="res://entities/enemies/traps/spike_trap.tscn" id="10_hu82h"]
 [ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="11_gdvbf"]
+[ext_resource type="PackedScene" uid="uid://bugywcndydomy" path="res://common/doors/vortex_portal.tscn" id="12_kd0wh"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6t68p"]
 texture = ExtResource("2_h6lqb")
@@ -322,23 +322,26 @@ position = Vector2(1556, 557)
 collision_layer = 1
 
 [node name="FlyingBee" parent="." instance=ExtResource("8_gdvbf")]
-position = Vector2(309, 359)
+position = Vector2(352, 82)
 
 [node name="FlyingBee2" parent="." instance=ExtResource("8_gdvbf")]
-position = Vector2(1403, 398)
+position = Vector2(1489, 224)
 
 [node name="FlyingBee3" parent="." instance=ExtResource("11_gdvbf")]
-position = Vector2(923, 220)
+position = Vector2(940, 112)
 
 [node name="FlyingBee4" parent="." instance=ExtResource("11_gdvbf")]
-position = Vector2(1712, 119)
+position = Vector2(2006, -81)
 
 [node name="MaskRockPickup" parent="." instance=ExtResource("8_tf5ar")]
 position = Vector2(794, 497)
 
-[node name="ExitNode" parent="." instance=ExtResource("7_neare")]
-position = Vector2(2759, 345)
-
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("10_gdvbf")
 autoplay = true
+
+[node name="StartPortal" parent="." instance=ExtResource("12_kd0wh")]
+position = Vector2(7, 462)
+
+[node name="EndPorta" parent="." instance=ExtResource("12_kd0wh")]
+position = Vector2(2753, 389)
