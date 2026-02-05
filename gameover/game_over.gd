@@ -6,15 +6,22 @@ extends CanvasLayer
 @onready var menu_btn = $ColorRect/CenterContainer/VBoxContainer/MenuButton
 
 func _ready():
-	# Start with the "Dead" look (tilted, dim)
+	# 1. IMPORTANT: Allow this node to run while the game is paused
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	
+	# 2. Start with the "Dead" look (tilted, dim)
 	character_anchor.rotation_degrees = 90
 	character_anchor.modulate = Color(0.5, 0.5, 0.5)
+	
+	# 3. GRAB FOCUS: This enables arrow key navigation immediately
+	# We wait one frame to ensure the UI is fully painted before grabbing focus.
+	await get_tree().process_frame
+	restart_btn.grab_focus()
 
 func _on_restart_pressed():
 	set_buttons_disabled(true)
 	
 	# 1. FORCE THE RESET IMMEDIATELY
-	# Use your existing Global function to lock health at 3
 	Global.reset_player_stats() 
 	
 	# 2. Animate Goma coming back to life
@@ -25,7 +32,6 @@ func _on_restart_pressed():
 	await tween.finished
 	
 	# 3. Load the level WHILE still paused
-	# This prevents the physics engine from "ticking" one last damage frame
 	var main = get_tree().root.get_node_or_null("Main")
 	if main and main.has_method("load_level"):
 		if Global.last_level_path != "":
@@ -38,6 +44,7 @@ func _on_restart_pressed():
 func _on_menu_pressed():
 	set_buttons_disabled(true)
 	
+	# Animate Goma falling away
 	var tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(character_anchor, "position:y", -100, 0.3).as_relative()
 	tween.tween_property(character_anchor, "position:y", 500, 0.4).as_relative()
@@ -48,7 +55,7 @@ func _on_menu_pressed():
 	Global.reset_player_stats() 
 	Global.isTitleShown = true 
 	
-	# 2. Hide the HUD so it doesn't show 0 hearts on the menu
+	# 2. Hide the HUD
 	if is_instance_valid(Global.hud):
 		Global.hud.hide()
 	

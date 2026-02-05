@@ -12,12 +12,16 @@ func _ready():
 
 func _input(event):
 	if event.is_action_pressed("pause"):
-		# 1. Don't pause if we aren't in a level
+		# 1. NEW: Don't pause if the Title Screen is active!
+		if Global.isTitleShown:
+			print("Title screen active. Ignoring pause.")
+			return
+
+		# 2. Don't pause if we aren't in a level
 		if Global.player == null:
 			return
 
-		# 2. NEW: Don't pause if the Game Over screen is already open!
-		# This assumes your Game Over scene is named "GameOver" when added to the tree
+		# 3. Don't pause if the Game Over screen is already open!
 		if get_tree().root.find_child("GameOver", true, false):
 			print("Game Over is active. Ignoring pause.")
 			return
