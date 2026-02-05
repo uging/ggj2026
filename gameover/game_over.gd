@@ -6,6 +6,7 @@ extends CanvasLayer
 @onready var menu_btn = $ColorRect/CenterContainer/VBoxContainer/MenuButton
 
 func _ready():
+	_handle_death_audio()
 	# 1. Sync Visuals: Match Goma's equipment before he is reset
 	_sync_death_visuals()
 	
@@ -19,6 +20,16 @@ func _ready():
 	# 4. GRAB FOCUS for arrow key navigation
 	await get_tree().process_frame
 	restart_btn.grab_focus()
+	
+func _handle_death_audio():
+	# 1. Stop the Music Bus
+	var bus_idx = AudioServer.get_bus_index("Music")
+	if bus_idx != -1:
+		AudioServer.set_bus_mute(bus_idx, true)
+	
+	# 2. Play the Game Over jingle/sound
+	if has_node("DeathSound"):
+		$DeathSound.play()
 
 func _sync_death_visuals():
 	# Get the real player to see what they were wearing at time of death
@@ -44,6 +55,9 @@ func _on_restart_pressed():
 	# 1. Reset health/stats
 	Global.reset_player_stats() 
 	
+	# Unmute music for the new attempt
+	_mute_music_bus(false)
+	
 	# 2. Animate Goma coming back to life
 	var tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(character_anchor, "rotation_degrees", 0, 0.5)
@@ -62,6 +76,8 @@ func _on_restart_pressed():
 
 func _on_menu_pressed():
 	set_buttons_disabled(true)
+	# Ensure music is unmuted for the title screen
+	_mute_music_bus(false)
 	
 	var tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(character_anchor, "position:y", -100, 0.3).as_relative()
@@ -83,3 +99,8 @@ func _on_menu_pressed():
 func set_buttons_disabled(state: bool):
 	restart_btn.disabled = state
 	menu_btn.disabled = state
+
+func _mute_music_bus(should_mute: bool):
+	var bus_idx = AudioServer.get_bus_index("Music")
+	if bus_idx != -1:
+		AudioServer.set_bus_mute(bus_idx, should_mute)

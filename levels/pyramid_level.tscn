@@ -81,6 +81,7 @@ shape = SubResource("RectangleShape2D_8o7p4")
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("6_7inqb")
 autoplay = true
+bus = &"Music"
 
 [node name="WorldBoundaries" type="StaticBody2D" parent="."]
 

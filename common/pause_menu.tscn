@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dcenmv4de8uq3"]
+[gd_scene load_steps=4 format=3 uid="uid://dcenmv4de8uq3"]
 
 [ext_resource type="Script" uid="uid://demd5wpkolu7r" path="res://common/pause_menu.gd" id="1_hhokr"]
 [ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="2_jibdd"]
+[ext_resource type="AudioStream" uid="uid://cdww60g3eywuj" path="res://resources/sounds/PauseSound.ogg" id="3_as8nk"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
@@ -79,6 +80,10 @@ theme_override_colors/font_color = Color(0.98188454, 0.7986246, 0.60310006, 1)
 theme_override_fonts/font = ExtResource("2_jibdd")
 theme_override_font_sizes/font_size = 24
 text = "Game Saved!"
+
+[node name="PauseSound" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("3_as8nk")
 
 [connection signal="pressed" from="CenterContainer/VBoxContainer/ResumeButton" to="." method="toggle_pause"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/RestartButton" to="." method="_on_restart_button_pressed"]

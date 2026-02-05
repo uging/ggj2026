@@ -38,6 +38,8 @@ func toggle_pause():
 	if new_pause_state:
 		show()
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		_mute_music_bus(true)
+		if has_node("PauseSound"): $PauseSound.play() # Play a brief pop sound
 		
 		# SYNC SLIDER POSITION
 		var bus_index = AudioServer.get_bus_index("Master")
@@ -77,12 +79,14 @@ func toggle_pause():
 		
 	else:
 		hide()
+		_mute_music_bus(false)
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 # --- BUTTON CONNECTIONS ---
 # Make sure these are connected to the "pressed()" signal in the Node tab!
 
 func _on_restart_button_pressed() -> void:
+	_mute_music_bus(false)
 	# 1. Unpause the game and hide the menu
 	toggle_pause()
 	
@@ -98,6 +102,7 @@ func _on_restart_button_pressed() -> void:
 			push_error("PauseMenu: No last_level_path found in Global!")
 
 func _on_map_button_pressed() -> void:
+	_mute_music_bus(false)
 	# 1. Close the menu and unpause first
 	toggle_pause() 
 	
@@ -179,3 +184,8 @@ func _show_save_notification():
 			label.hide()
 			label.position = original_pos
 		)
+		
+func _mute_music_bus(should_mute: bool):
+	var bus_idx = AudioServer.get_bus_index("Music")
+	if bus_idx != -1:
+		AudioServer.set_bus_mute(bus_idx, should_mute)
