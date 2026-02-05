@@ -28,19 +28,29 @@ func _ready() -> void:
 
 # --- Menu Logic ---
 
+# main.gd
+
 func _setup_title_screen() -> void:
-	# Clear the placeholder
+	# 1. Clear the placeholder just in case
 	for child in title_node.get_children():
 		child.queue_free()
 		
 	var title_scene = preload("res://main/title.tscn")
 	var title_instance = title_scene.instantiate()
 	
+	# 2. Add the title menu to our dedicated placeholder
 	title_node.add_child(title_instance)
 	
-	# Connect signals
-	if not title_instance.start_game.is_connected(_on_start_button_pressed):
-		title_instance.start_game.connect(_on_start_button_pressed)
+	# 3. Connect signals from the title script
+	title_instance.start_game.connect(_on_start_button_pressed)
+	
+	# --- THE FIX: RESET FOCUS ---
+	# Ensure the Start Button is the first thing Godot looks at.
+	# We use a tiny delay or process_frame to ensure the scene is ready.
+	await get_tree().process_frame
+	var start_btn = title_instance.get_node_or_null("StartButton")
+	if start_btn:
+		start_btn.grab_focus()
 
 func _on_start_button_pressed() -> void:
 	# --- CHANGE: Instead of loading level here, just hide the overlay ---

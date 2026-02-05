@@ -41,10 +41,11 @@ func _on_restart_pressed():
 	get_tree().paused = false
 	queue_free()
 	
+# game_over.gd
+
 func _on_menu_pressed():
 	set_buttons_disabled(true)
 	
-	# Animate Goma falling away
 	var tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(character_anchor, "position:y", -100, 0.3).as_relative()
 	tween.tween_property(character_anchor, "position:y", 500, 0.4).as_relative()
@@ -55,12 +56,17 @@ func _on_menu_pressed():
 	Global.reset_player_stats() 
 	Global.isTitleShown = true 
 	
-	# 2. Hide the HUD
+	# 2. Hide HUD and UNPAUSE
 	if is_instance_valid(Global.hud):
 		Global.hud.hide()
 	
-	# 3. Unpause and go to the Main shell
 	get_tree().paused = false
+	
+	# 3. Release focus so the Title Screen can take it
+	# This prevents the 'MenuButton' from keeping focus while the scene swaps.
+	menu_btn.release_focus()
+	
+	# 4. Reload Main shell
 	get_tree().change_scene_to_file("res://main/main.tscn")
 	
 	queue_free()
