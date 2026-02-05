@@ -15,6 +15,7 @@ player_scene = ExtResource("3_lquwl")
 z_index = 10
 
 [node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
 
 [node name="HUD" parent="UILayer" instance=ExtResource("3_xwkvk")]
 visible = false

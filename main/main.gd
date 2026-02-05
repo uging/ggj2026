@@ -1,7 +1,7 @@
 extends Node2D
 
 # --- References ---
-@export var player_scene: PackedScene # Linked to player.tscn in Inspector
+@export var player_scene: PackedScene 
 @onready var level_container = $LevelContainer
 @onready var player = $Player
 @onready var hud = $UILayer/HUD
@@ -9,50 +9,48 @@ extends Node2D
 @onready var ui_layer = $UILayer
 
 func _ready() -> void:
-	# 1. Manager setup: Always process so we can handle menus while paused
+	# 1. Manager setup
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
-	# 2. Initial State: Gameplay is hidden, Title is shown
-	player.hide()
-	player.set_physics_process(false)
-	hud.hide()
-	
-	# 3. Reference Sync: Let Global know where the permanent player is
+	# 2. Reference Sync
 	Global.player = player
 	Global.hud = hud
 	
-	_setup_title_screen()
+	# --- CHANGE: Load the map IMMEDIATELY behind the menu ---
+	# This populates the background so the TitleNode overlay looks layered.
+	load_level("res://levels/world_map.tscn", Vector2(656, 318))
+	
+	# --- CHANGE: Initial Visibility Logic ---
+	if Global.isTitleShown:
+		show_title_screen()
+	else:
+		hide_title_screen()
 
 # --- Menu Logic ---
 
 func _setup_title_screen() -> void:
-	# Clear the placeholder just in case
+	# Clear the placeholder
 	for child in title_node.get_children():
 		child.queue_free()
 		
 	var title_scene = preload("res://main/title.tscn")
 	var title_instance = title_scene.instantiate()
 	
-	# Add the title menu to our dedicated placeholder
 	title_node.add_child(title_instance)
 	
-	# Connect signals from the title script
-	title_instance.start_game.connect(_on_start_button_pressed)
-	# If you want to use the load button:
-	# title_instance.load_game_pressed.connect(func(): SaveManager.load_game())
+	# Connect signals
+	if not title_instance.start_game.is_connected(_on_start_button_pressed):
+		title_instance.start_game.connect(_on_start_button_pressed)
 
 func _on_start_button_pressed() -> void:
-	# 1. Clean up the Title Menu
-	title_node.hide()
-	for child in title_node.get_children():
-		child.queue_free()
+	# --- CHANGE: Instead of loading level here, just hide the overlay ---
+	hide_title_screen()
 	
-	# 2. Reset Global state for a fresh start
+	# Reset Global state for a fresh start
 	Global.current_health = 3
-	Global.isTitleShown = false
-	
-	# 3. Load the Overworld/World Map first
-	load_level("res://levels/world_map.tscn", Vector2(656, 318))
+	if is_instance_valid(player):
+		player.current_health = 3
+		player.health_changed.emit(3)
 
 # --- Level Management ---
 
@@ -70,11 +68,10 @@ func load_level(path: String, spawn_pos: Vector2):
 		var new_level = level_resource.instantiate()
 		level_container.add_child(new_level)
 
-		# 2. FORCE Goma to appear
+		# 2. Configure Player
 		player.global_position = spawn_pos
-		player.z_index = 10 # Force him in front of the tiles
+		player.z_index = 10 
 		player.show()
-		player.modulate.a = 1.0 
 		player.set_physics_process(true)
 		player.set_process_input(true)
 		player.is_dying = false
@@ -82,16 +79,47 @@ func load_level(path: String, spawn_pos: Vector2):
 		# 3. Handle Movement Mode
 		player.is_top_down = (path.contains("world_map"))
 
-		# 4. FORCE HUD visibility
-		hud.show()
-		if hud.has_method("setup_health"):
-			hud.setup_health(player)
+		# 4. HUD Logic
+		# Only show HUD if NOT on the title screen
+		if not Global.isTitleShown:
+			hud.show()
+			if hud.has_method("setup_health"):
+				hud.setup_health(player)
+		else:
+			hud.hide()
 
 		get_tree().paused = false
-		print("Main: Player active at ", spawn_pos)
+		print("Main: Level loaded at ", path)
 
 # --- Global Access ---
-# This allows any area or door to request a level change
+
 func change_scene(path: String, spawn_pos: Vector2):
-	# Using call_deferred ensures physics calculations are finished before swapping
 	call_deferred("load_level", path, spawn_pos)
+	
+func show_title_screen():
+	# 1. Logic for showing the overlay
+	title_node.show()
+	_setup_title_screen()
+	Global.isTitleShown = true
+
+	# 2. Disable Goma's input so he doesn't jump while clicking buttons
+	if is_instance_valid(player):
+		player.input_enabled = false
+		player.set_physics_process(false) # ADDED: Keep him from falling while menu is up
+
+	# 3. Hide Gameplay HUD
+	if is_instance_valid(hud):
+		hud.hide()
+
+func hide_title_screen():
+	# 1. Hide Menu
+	title_node.hide()
+	Global.isTitleShown = false
+
+	# 2. Re-enable Goma and show HUD
+	if is_instance_valid(player):
+		player.input_enabled = true
+		player.set_physics_process(true)
+
+	if is_instance_valid(hud):
+		hud.show()

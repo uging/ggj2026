@@ -20,6 +20,7 @@ font_size = 30
 font_color = Color(0.043137256, 0.11764706, 0.24705882, 1)
 
 [node name="TitleNode" type="Node2D"]
+self_modulate = Color(1, 1, 1, 0.53333336)
 position = Vector2(533, 182)
 script = ExtResource("1_32gvp")
 metadata/_edit_group_ = true
