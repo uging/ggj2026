@@ -78,25 +78,34 @@ func load_level(path: String, spawn_pos: Vector2):
 		var new_level = level_resource.instantiate()
 		level_container.add_child(new_level)
 
-		# 2. Configure Player
-		player.global_position = spawn_pos
-		player.z_index = 10 
-		player.show()
-		player.set_physics_process(true)
-		player.set_process_input(true)
-		player.is_dying = false
+		# --- THE CRITICAL UPDATE FOR CREDITS ---
+		var is_credits = path.contains("credits")
 
-		# 3. Handle Movement Mode
-		player.is_top_down = (path.contains("world_map"))
-
-		# 4. HUD Logic
-		# Only show HUD if NOT on the title screen
-		if not Global.isTitleShown:
-			hud.show()
-			if hud.has_method("setup_health"):
-				hud.setup_health(player)
-		else:
+		if is_credits:
+			# If it's the credits, keep the "Gameplay" versions invisible
+			player.hide()
+			player.set_physics_process(false)
+			player.set_process_input(false)
 			hud.hide()
+		else:
+			# Standard gameplay loading logic
+			player.global_position = spawn_pos
+			player.z_index = 10 
+			player.show()
+			player.set_physics_process(true)
+			player.set_process_input(true)
+			player.is_dying = false
+
+			# 3. Handle Movement Mode
+			player.is_top_down = (path.contains("world_map"))
+
+			# 4. HUD Logic
+			if not Global.isTitleShown:
+				hud.show()
+				if hud.has_method("setup_health"):
+					hud.setup_health(player)
+			else:
+				hud.hide()
 
 		get_tree().paused = false
 		print("Main: Level loaded at ", path)

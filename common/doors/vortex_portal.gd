@@ -38,11 +38,20 @@ func _process(delta: float) -> void:
 func _on_portal_entered(body):
 	if body == Global.player:
 		var main = get_tree().root.get_node_or_null("Main")
-		if main and main.has_method("change_scene"):
-			# If this is the end of the game, hide the HUD and Player
+		if main:
+			# If this is the end of the game, lock down gameplay elements
 			if is_credits_portal:
+				# 1. Hide HUD immediately
+				if is_instance_valid(Global.hud):
+					Global.hud.hide()
+				
+				# 2. Kill Player Physics and Visibility
+				# This stops the "Gameplay Goma" from falling or moving in the background
 				Global.player.hide()
-				Global.hud.hide()
+				Global.player.set_physics_process(false)
+				Global.player.set_process_input(false)
+				Global.player.velocity = Vector2.ZERO # Stop all momentum
 			
-			# Use the deferred manager helper to avoid physics crashes
-			main.change_scene(next_scene_path, spawn_pos)
+			# 3. Transition to the scene path set in Inspector (Credits scene)
+			if main.has_method("change_scene"):
+				main.change_scene(next_scene_path, spawn_pos)

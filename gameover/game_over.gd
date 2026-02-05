@@ -6,22 +6,42 @@ extends CanvasLayer
 @onready var menu_btn = $ColorRect/CenterContainer/VBoxContainer/MenuButton
 
 func _ready():
-	# 1. IMPORTANT: Allow this node to run while the game is paused
+	# 1. Sync Visuals: Match Goma's equipment before he is reset
+	_sync_death_visuals()
+	
+	# 2. Allow this node to run while the game is paused
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	
-	# 2. Start with the "Dead" look (tilted, dim)
+	# 3. Start with the "Dead" look (tilted, dim)
 	character_anchor.rotation_degrees = 90
 	character_anchor.modulate = Color(0.5, 0.5, 0.5)
 	
-	# 3. GRAB FOCUS: This enables arrow key navigation immediately
-	# We wait one frame to ensure the UI is fully painted before grabbing focus.
+	# 4. GRAB FOCUS for arrow key navigation
 	await get_tree().process_frame
 	restart_btn.grab_focus()
+
+func _sync_death_visuals():
+	# Get the real player to see what they were wearing at time of death
+	var real_player = Global.player
+	if not is_instance_valid(real_player): return
+	
+	# Retrieve the set data based on the current ID
+	var current_id = real_player.current_set_id
+	var data = real_player.set_data[current_id]
+	
+	# Update the decorative sprites in the GameOver UI
+	var death_mask = character_anchor.get_node("Mask")
+	var death_cape = character_anchor.get_node("Cape")
+	
+	death_mask.texture = data["mask"]
+	death_mask.position = data["mask_pos"]
+	death_mask.scale = data["mask_scale"]
+	death_cape.texture = data["cape"]
 
 func _on_restart_pressed():
 	set_buttons_disabled(true)
 	
-	# 1. FORCE THE RESET IMMEDIATELY
+	# 1. Reset health/stats
 	Global.reset_player_stats() 
 	
 	# 2. Animate Goma coming back to life
@@ -31,17 +51,14 @@ func _on_restart_pressed():
 	
 	await tween.finished
 	
-	# 3. Load the level WHILE still paused
+	# 3. Reload level
 	var main = get_tree().root.get_node_or_null("Main")
 	if main and main.has_method("load_level"):
 		if Global.last_level_path != "":
 			main.load_level(Global.last_level_path, Global.last_spawn_pos)
 	
-	# 4. FINALLY unpause and clear the overlay
 	get_tree().paused = false
 	queue_free()
-	
-# game_over.gd
 
 func _on_menu_pressed():
 	set_buttons_disabled(true)
@@ -52,23 +69,15 @@ func _on_menu_pressed():
 	
 	await tween.finished
 	
-	# 1. Reset Global data for a fresh start
-	Global.reset_player_stats() 
+	Global.reset_player_stats()
 	Global.isTitleShown = true 
 	
-	# 2. Hide HUD and UNPAUSE
 	if is_instance_valid(Global.hud):
 		Global.hud.hide()
 	
 	get_tree().paused = false
-	
-	# 3. Release focus so the Title Screen can take it
-	# This prevents the 'MenuButton' from keeping focus while the scene swaps.
 	menu_btn.release_focus()
-	
-	# 4. Reload Main shell
 	get_tree().change_scene_to_file("res://main/main.tscn")
-	
 	queue_free()
 
 func set_buttons_disabled(state: bool):
