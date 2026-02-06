@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 Global="*res://common/global.gd"
 SaveManager="*res://common/save_manager.gd"
 PauseMenu="*res://common/pause_menu.tscn"
+GlobalAudioManager="*res://common/autoloads/global_audio_manager.gd"
 
 [display]
 

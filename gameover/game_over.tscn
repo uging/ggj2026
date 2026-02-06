@@ -1,11 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://ts38rj7esfmv"]
+[gd_scene load_steps=6 format=3 uid="uid://ts38rj7esfmv"]
 
 [ext_resource type="Texture2D" uid="uid://5n84e57l8sk4" path="res://entities/player/assets/goma.png" id="1_ajbo4"]
 [ext_resource type="Script" uid="uid://cgk8b43cw1u4f" path="res://gameover/game_over.gd" id="1_nh01p"]
 [ext_resource type="Texture2D" uid="uid://7nwjf0eqcdu5" path="res://entities/player/assets/cape_default.png" id="2_nh01p"]
 [ext_resource type="Texture2D" uid="uid://c7410lk0nipo" path="res://entities/player/assets/mask_default.png" id="3_oiq8w"]
 [ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="4_vn20j"]
-[ext_resource type="AudioStream" uid="uid://ca4ixdovy00d5" path="res://resources/sounds/DeathSound.ogg" id="6_oiq8w"]
 
 [node name="GameOver" type="CanvasLayer"]
 process_mode = 3
@@ -71,10 +70,6 @@ layout_mode = 2
 focus_neighbor_top = NodePath("../RestartButton")
 theme_override_fonts/font = ExtResource("4_vn20j")
 text = "MAIN MENU"
-
-[node name="DeathSound" type="AudioStreamPlayer" parent="."]
-process_mode = 3
-stream = ExtResource("6_oiq8w")
 
 [connection signal="pressed" from="ColorRect/CenterContainer/VBoxContainer/RestartButton" to="." method="_on_restart_pressed"]
 [connection signal="pressed" from="ColorRect/CenterContainer/VBoxContainer/MenuButton" to="." method="_on_menu_pressed"]

@@ -39,7 +39,7 @@ func toggle_pause():
 		show()
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		_mute_music_bus(true)
-		if has_node("PauseSound"): $PauseSound.play() # Play a brief pop sound
+		if has_node("OpenSound"): $OpenSound.play() # Play a brief pop sound
 		
 		# SYNC SLIDER POSITION
 		var bus_index = AudioServer.get_bus_index("Master")
