@@ -6,6 +6,7 @@ var click_sfx = preload("res://resources/sounds/SelectSound.ogg")
 var open_sfx = preload("res://resources/sounds/doorOpen_1.ogg")
 var close_sfx = preload("res://resources/sounds/doorClose_4.ogg")
 var game_over_sfx = preload("res://resources/sounds/DeathSound.ogg") 
+var portal_travel_sfx = preload("res://resources/sounds/laserLarge_004.ogg")
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -29,7 +30,7 @@ func _connect_logic(node: Node):
 		if not node.pressed.is_connected(_play_sfx):
 			node.pressed.connect(_play_sfx.bind(click_sfx))
 	
-	# NEW: Immediate trigger for GameOver when it is created
+	# Immediate trigger for GameOver when it is created
 	if node.name == "GameOver":
 		_mute_music_bus(true)
 		_play_sfx(game_over_sfx)
@@ -75,3 +76,7 @@ func _play_sfx(sfx: AudioStream):
 	add_child(asp)
 	asp.play()
 	asp.finished.connect(asp.queue_free)
+	
+func _on_portal_triggered(body: Node):
+	if body == Global.player:
+		_play_sfx(portal_travel_sfx)
