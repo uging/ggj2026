@@ -1,6 +1,7 @@
 extends Area2D
 
 @export var heal_amount := 1
+signal collected
 
 func _ready() -> void:
 	# Wait for the level script to finish setting up Global.player
@@ -28,6 +29,7 @@ func _on_body_entered(body: Node2D) -> void:
 		# Only pick up if health is less than the max (10)
 		if body.current_health < body.max_health:
 			body.heal(heal_amount)
+			collected.emit()
 			# Disable collisions immediately so it can't be picked up twice
 			set_deferred("monitoring", false)
 			play_collect_animation()

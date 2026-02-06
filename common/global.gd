@@ -17,9 +17,9 @@ var destroyed_enemies = {}
 
 # Powers unlock states
 var unlocked_masks = {
-	"feather": true,
-	"gum": true,
-	"rock": true
+	"feather": false,
+	"gum": false,
+	"rock": false
 }
 
 # --- HUD & Player References ---

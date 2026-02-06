@@ -60,7 +60,8 @@ size_flags_horizontal = 4
 text = "
 Made by JD & AL
 
-Assets: https://kenney.nl/
+Assets: https://kenney.nl/ 
+SFX: https://dabolka.itch.io/sfx-pack-4-free
 Music: opengameart.org
 Source: https://github.com/uging/ggj2026"
 label_settings = SubResource("LabelSettings_w4cji")

@@ -275,12 +275,14 @@ func _handle_ability_logic(delta: float, input_vector: Vector2, can_jump: bool, 
 
 	# 2. WHILE HOLDING - Charging or Gliding
 	if Input.is_action_pressed("ability"):
-		if (can_jump or is_near_wall) and not is_rock_smashing:
+		if (can_jump or is_near_wall) and not is_rock_smashing and not is_gliding:
 			_process_jump_charge(delta)
-			is_gliding = false
-		elif not can_jump and current_set_id == Set.FEATHER and ability_charges > 0:
+		elif not can_jump and not is_near_wall and current_set_id == Set.FEATHER and ability_charges > 0:
 			if velocity.y > -150: 
 				_process_feather_glide(delta, input_vector)
+				# Ensure charging is turned off while gliding
+				is_charging = false 
+				GlobalAudioManager.stop_charge_sound()
 	else:
 		is_gliding = false
 		feather_particles.emitting = false
@@ -316,6 +318,7 @@ func perform_air_jump() -> void:
 		final_mult = air_jump_gum
 
 	velocity.y = -jump_force_base * final_mult 
+	GlobalAudioManager._play_sfx(GlobalAudioManager.jump_sfx, -2.0, true)
 	
 	show_ability_ui()
 	play_smoke_effect(set_data[current_set_id]["color"], Vector2(0, 50))
@@ -327,6 +330,8 @@ func perform_air_jump() -> void:
 	apply_launch_stretch(1.0 if is_facing_right else -1.0)
 
 func _process_feather_glide(delta: float, input_vec: Vector2) -> void:
+	if not is_gliding:
+		GlobalAudioManager.play_glide_sound() # Start looping sound
 	is_gliding = true
 	feather_particles.emitting = true
 	feather_particles.position.y = 50.0 
@@ -404,7 +409,7 @@ func take_damage(amount: int) -> void:
 		
 	if current_set_id == Set.ROCK: 
 		amount = maxi(1, int(amount * 0.5))
-	
+	GlobalAudioManager._play_sfx(GlobalAudioManager.hurt_sfx)
 	current_health = clampi(current_health - amount, 0, max_health)
 	Global.current_health = current_health
 	health_changed.emit(current_health)
@@ -470,7 +475,9 @@ func change_set(id: int, silent: bool = false) -> void:
 	Global.current_equipped_set = id
 	var data = set_data[id]
 	
-	if not silent: play_smoke_effect(data["color"], Vector2.ZERO)
+	if not silent: 
+		GlobalAudioManager._play_sfx(GlobalAudioManager.mask_switch_sfx)
+		play_smoke_effect(data["color"], Vector2.ZERO)
 	
 	mask.texture = data["mask"]
 	mask.position = data["mask_pos"]
@@ -518,6 +525,9 @@ func _reset_temp_ability_states() -> void:
 	is_charging = false
 	charge_time = 0.0
 	feather_particles.emitting = false
+	# STOP Stop both Glide and Charge sounds to be safe
+	GlobalAudioManager.stop_glide_sound()
+	GlobalAudioManager.stop_charge_sound()
 	
 func _get_current_jump_mult() -> float:
 	match current_set_id:
@@ -587,12 +597,14 @@ func _handle_landing_logic() -> void:
 		execute_shockwave()
 		is_rock_smashing = false
 		apply_landing_squash()
+		GlobalAudioManager._play_sfx(GlobalAudioManager.rock_slam_sfx)
 	elif velocity.y >= 0: 
 		# If we land normally (not smashing), still apply a tiny squash for juice
 		# and ensure we aren't rotated from a glide.
 		if abs(visuals.rotation) > 0.01:
 			var reset_tween = create_tween()
 			reset_tween.tween_property(visuals, "rotation", 0.0, 0.1)
+			GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -10.0)
 	
 	if not is_rock_aura_active: 
 		visuals.modulate = Color.WHITE
@@ -600,9 +612,13 @@ func _handle_landing_logic() -> void:
 func perform_regular_jump() -> void:
 	velocity.y = -jump_force_base * _get_current_jump_mult()
 	# Visual feedback
-	apply_launch_stretch(1.0 if is_facing_right else -1.0)
+	GlobalAudioManager._play_sfx(GlobalAudioManager.jump_sfx)
+	apply_launch_stretch(1.0 if is_facing_right else -1.0)	
 
 func _process_jump_charge(delta: float) -> void:
+	if charge_time == 0: 
+		GlobalAudioManager.play_charge_sound() # Start the audio loop
+		
 	is_charging = true
 	can_execute_launch = true
 	# Increase charge over time
@@ -621,6 +637,7 @@ func execute_jump_launch(f_dir: float, input_vec: Vector2) -> void:
 	velocity.y = -jump_force_base * base_power * multiplier
 	if input_vec.x != 0: 
 		velocity.x = input_vec.x * speed * base_power
+	GlobalAudioManager._play_sfx(GlobalAudioManager.jump_sfx)
 	apply_launch_stretch(f_dir)
 
 func apply_launch_stretch(f_dir: float) -> void:
