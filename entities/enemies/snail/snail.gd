@@ -25,8 +25,8 @@ func _ready() -> void:
 		
 		# 1. GENERATE UNIQUE KEY
 	# Uses the Level Name (BasicLevel) + the Node Name (SpikeTrap/PlantTrap)
-	var level_name = get_tree().current_scene.name
-	var enemy_key = level_name + "_" + name
+	var level_path = get_tree().current_scene.scene_file_path
+	var enemy_key = level_path + "_" + str(global_position) # Using position makes it very unique
 	
 	# 2. CHECK IF DEAD
 	# If this specific enemy is in Global.destroyed_enemies, delete it immediately

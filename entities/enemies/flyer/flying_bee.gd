@@ -1,7 +1,5 @@
 extends CharacterBody2D
 
-enum State { PATROL, CHASE }
-
 # --- CONFIGURATION ---
 @export_group("Stats")
 @export var speed := 120.0
@@ -24,6 +22,10 @@ enum State { PATROL, CHASE }
 @export_group("Visuals")
 @export var texture: Texture2D
 
+@export_group("Retreat Behavior")
+@export var retreat_speed := 220.0
+@export var retreat_time := 1.5 # How long they run away before returning to patrol
+
 # --- STATE VARIABLES ---
 var current_state = State.PATROL
 var current_health: int
@@ -31,6 +33,8 @@ var direction := 1
 var hit_cooldown := 0.0
 var home_position : Vector2
 var player_ref: Node2D = null
+
+enum State { PATROL, CHASE, FLEE }
 
 # --- NODE REFERENCES ---
 @onready var sprite: Sprite2D = $Sprite2D
@@ -68,6 +72,8 @@ func _physics_process(delta: float) -> void:
 			_check_for_player()
 		State.CHASE:
 			_process_chase(delta)
+		State.FLEE:
+			_process_flee(delta) # Added Flee logic
 
 	move_and_slide()
 
@@ -151,6 +157,20 @@ func _return_to_patrol() -> void:
 	player_ref = null
 	current_state = State.PATROL
 
+func _process_flee(delta: float) -> void:
+	if player_ref:
+		# Move directly AWAY from the player
+		var dir_away = (global_position - player_ref.global_position).normalized()
+		velocity = velocity.lerp(dir_away * retreat_speed, 0.1)
+		sprite.flip_h = (velocity.x < 0)
+	else:
+		_return_to_patrol()
+
+func _start_retreat() -> void:
+	current_state = State.FLEE
+	# Wait for the retreat_time, then go back to patrol
+	get_tree().create_timer(retreat_time).timeout.connect(_return_to_patrol)
+
 # --- COMBAT & DAMAGE ---
 
 func _on_hurt_box_body_entered(body: Node2D) -> void:
@@ -172,8 +192,13 @@ func _on_hurt_box_body_entered(body: Node2D) -> void:
 
 	if body.has_method("take_damage"):
 		body.take_damage(damage_amount)
+		
+		# PUSH PLAYER AWAY
 		var push_dir = (body.global_position - global_position).normalized()
 		body.velocity = push_dir * knockback_force
+		
+		# RETREAT LOGIC: Back off after hitting
+		_start_retreat()
 
 func take_damage(amount: int):
 	if hit_cooldown > 0: return

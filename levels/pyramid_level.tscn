@@ -51,17 +51,23 @@ texture = ExtResource("3_1u52l")
 [node name="Snail" parent="Node2D" instance=ExtResource("6_nvhv4")]
 position = Vector2(1805, 466)
 
+[node name="Snail2" parent="Node2D" instance=ExtResource("6_nvhv4")]
+position = Vector2(2663, 41)
+
 [node name="LavaSnake" parent="Node2D" instance=ExtResource("10_kno24")]
 position = Vector2(1134, 383)
 
 [node name="FlyingBee" parent="Node2D" instance=ExtResource("7_01nkt")]
-position = Vector2(263, 314)
+position = Vector2(272, 354)
 
 [node name="FlyingBee2" parent="Node2D" instance=ExtResource("7_01nkt")]
 position = Vector2(900, 85)
 
 [node name="FlyingBee3" parent="Node2D" instance=ExtResource("7_01nkt")]
 position = Vector2(1608, 28)
+
+[node name="FlyingBee4" parent="Node2D" instance=ExtResource("7_01nkt")]
+position = Vector2(2242, -128)
 
 [node name="MainGround" type="TileMapLayer" parent="."]
 position = Vector2(1, -1)
