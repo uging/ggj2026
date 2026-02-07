@@ -42,6 +42,8 @@ func _sync_death_visuals():
 func _on_restart_pressed():
 	set_buttons_disabled(true)
 	
+	GlobalAudioManager.stop_all_loops()
+	
 	# 1. Reset health/stats
 	Global.reset_player_stats() 
 	

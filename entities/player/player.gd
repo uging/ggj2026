@@ -539,6 +539,8 @@ func _get_current_jump_mult() -> float:
 func die() -> void:
 	if is_dying: return
 	is_dying = true
+	
+	GlobalAudioManager.stop_all_loops()
 
 	# 1. Stop Goma's physics and input
 	set_physics_process(false)

@@ -6,7 +6,9 @@ var click_sfx = preload("res://resources/sounds/013_Confirm_03.wav")
 var open_sfx = preload("res://resources/sounds/qubodup-DoorOpen05.ogg")
 var close_sfx = preload("res://resources/sounds/qubodup-DoorClose03.ogg")
 var game_over_sfx = preload("res://resources/sounds/sword_sfx.wav") 
-var portal_travel_sfx = preload("res://resources/sounds/space laser.wav")
+var portal_travel_sfx = preload("res://resources/sounds/laser6.wav")
+var portal_hum_sfx = preload("res://resources/sounds/lowDown.mp3") 
+var active_hum_player: AudioStreamPlayer = null
 
 # Character SFX
 var jump_sfx = preload("res://resources/sounds/Jump2.wav")
@@ -50,7 +52,7 @@ func _connect_logic(node: Node):
 	if node.name == "GameOver":
 		_mute_music_bus(true)
 		_play_sfx(game_over_sfx)
-	
+		
 	# Keep visibility listener for PauseMenu and Close sounds
 	if node.name == "PauseMenu" or node.name == "GameOver":
 		if not node.visibility_changed.is_connected(_on_menu_visibility_changed):
@@ -109,13 +111,46 @@ func _play_sfx(sfx: AudioStream, volume: float = 0.0, randomize_pitch: bool = tr
 	asp.play()
 	asp.finished.connect(asp.queue_free)
 	
-func _on_portal_triggered(body: Node):
-	if body == Global.player:
-		_play_sfx(portal_travel_sfx)
+func play_portal_travel():
+	var asp = _play_sfx(portal_travel_sfx, 0.0, false)
 
-# NEW: Helper functions to manage the charging loop
-# Inside GlobalAudioManager.gd
+	if is_instance_valid(asp):
+		var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tween.tween_interval(0.2) 
+		tween.tween_property(asp, "volume_db", -80.0, 0.6)
+		tween.finished.connect(asp.queue_free)
 
+func start_portal_hum():
+	if active_hum_player == null:
+		active_hum_player = AudioStreamPlayer.new()
+		
+		# Ensure the stream itself is set to loop
+		if portal_hum_sfx is AudioStreamMP3:
+			portal_hum_sfx.loop = true
+		elif portal_hum_sfx is AudioStreamWAV:
+			portal_hum_sfx.loop_mode = AudioStreamWAV.LOOP_FORWARD
+			
+		active_hum_player.stream = portal_hum_sfx
+		active_hum_player.bus = "SFX"
+		active_hum_player.volume_db = -12.0
+		active_hum_player.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(active_hum_player)
+		active_hum_player.play()
+
+func update_portal_hum_volume(factor: float):
+	if is_instance_valid(active_hum_player):
+		var target_volume = lerp(-12.0, 10.0, factor)
+		# Only update if the new factor is LOUDER than current volume
+		# This prevents the "StartPortal" from quieting the "EndPortal" sound
+		if target_volume > active_hum_player.volume_db:
+			active_hum_player.volume_db = target_volume
+
+func stop_portal_hum():
+	if is_instance_valid(active_hum_player):
+		active_hum_player.stop()
+		active_hum_player.queue_free()
+	active_hum_player = null
+	
 func play_charge_sound():
 	if active_charge_player == null:
 		active_charge_player = AudioStreamPlayer.new()
@@ -129,11 +164,10 @@ func play_charge_sound():
 
 func stop_charge_sound():
 	# Stop and delete the player node when the charge is finished or cancelled
-	if active_charge_player:
+	if is_instance_valid(active_charge_player):
 		active_charge_player.stop()
 		active_charge_player.queue_free()
 		active_charge_player = null
-
 
 func play_glide_sound():
 	if active_glide_player == null:
@@ -147,10 +181,15 @@ func play_glide_sound():
 		active_glide_player.play()
 
 func stop_glide_sound():
-	if active_glide_player:
+	if is_instance_valid(active_glide_player):
 		active_glide_player.stop()
 		active_glide_player.queue_free()
 		active_glide_player = null
+
+func stop_all_loops():
+	stop_glide_sound()
+	stop_charge_sound()
+	stop_portal_hum()
 
 func _on_heart_collected():
 	_play_sfx(heart_sfx, -5.0) # Slightly quieter for hearts

@@ -64,13 +64,15 @@ text = "QUIT"
 
 [node name="VolumeLabel" type="Label" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../EndButton")
+focus_neighbor_bottom = NodePath("../VolumeSlider")
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "VOLUME"
 horizontal_alignment = 1
 
 [node name="VolumeSlider" type="HSlider" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-focus_neighbor_top = NodePath("../EndButton")
+focus_neighbor_top = NodePath("../VolumeLabel")
 focus_neighbor_bottom = NodePath("../MuteButton")
 max_value = 1.0
 step = 0.01

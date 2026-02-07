@@ -16,6 +16,7 @@ extends Node2D
 func _ready() -> void:
 	# Cleanly connect the signal
 	trigger_area.body_entered.connect(_on_portal_entered)
+	GlobalAudioManager.start_portal_hum()
 
 func _process(delta: float) -> void:
 	if is_instance_valid(Global.player):
@@ -23,6 +24,7 @@ func _process(delta: float) -> void:
 		
 		# 1. Calculate Growth Factor (0.0 to 1.0)
 		var factor = 1.0 - clamp(dist / activation_distance, 0.0, 1.0)
+		GlobalAudioManager.update_portal_hum_volume(factor)
 		
 		# 2. Dynamic Scaling
 		var target_scale = lerp(min_scale, max_scale, factor)
@@ -37,6 +39,8 @@ func _process(delta: float) -> void:
 
 func _on_portal_entered(body):
 	if body == Global.player:
+		GlobalAudioManager.stop_portal_hum()
+		GlobalAudioManager.play_portal_travel()
 		var main = get_tree().root.get_node_or_null("Main")
 		if main:
 			# If this is the end of the game, lock down gameplay elements

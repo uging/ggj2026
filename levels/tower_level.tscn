@@ -258,5 +258,5 @@ position = Vector2(607, -1662)
 [node name="EndPortal" parent="." instance=ExtResource("13_6wimq")]
 position = Vector2(67, -2064)
 
-[node name="VortexPortal" parent="." instance=ExtResource("13_6wimq")]
+[node name="StartPortal" parent="." instance=ExtResource("13_6wimq")]
 position = Vector2(1076, 424)
