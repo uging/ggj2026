@@ -643,6 +643,10 @@ func _handle_aura_damage() -> void:
 		if target.has_method("take_damage"): target.take_damage(1)
 
 func _handle_landing_logic() -> void:
+	if Global.isTitleShown:
+		is_rock_smashing = false # Reset state without noise
+		return
+		
 	if is_rock_smashing:
 		execute_shockwave()
 		is_rock_smashing = false

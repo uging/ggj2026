@@ -8,24 +8,29 @@ signal load_game_pressed
 @onready var exit_button = $ExitButton
 
 var active_tween: Tween
+var can_play_audio := false
 
 func _ready() -> void:
-	await get_tree().process_frame
-	setup_button_colors()
-	return_to_default_focus()
+	# 1. IMMEDIATELY tell the manager to be silent
+	GlobalAudioManager.mute_all_gui_sounds = true
+	can_play_audio = false # Your internal script gate
 	
-	# 1. Define our buttons and their corresponding functions in a Dictionary
+	# 2. Wait for the engine to settle
+	await get_tree().process_frame
+	
+	# 3. Setup visual appearance
+	setup_button_colors()
+	
+	# 4. Define and connect buttons
 	var button_logic = {
 		start_button: _on_start_button_pressed,
 		load_button: _on_load_button_pressed,
 		exit_button: _on_exit_button_pressed
 	}
 	
-	# 2. Loop through them to apply all connections safely
 	for button in button_logic.keys():
-		if button == null: continue # Safety check in case a node is missing
+		if button == null: continue
 		
-		# --- Safe Hover/Focus Connections ---
 		if not button.focus_entered.is_connected(_on_focus_or_hover):
 			button.focus_entered.connect(_on_focus_or_hover.bind(button))
 		if not button.mouse_entered.is_connected(_on_focus_or_hover):
@@ -33,14 +38,30 @@ func _ready() -> void:
 		if not button.mouse_exited.is_connected(_on_mouse_left_menu):
 			button.mouse_exited.connect(_on_mouse_left_menu)
 			
-		# --- Safe Pressed Connections ---
 		var target_function = button_logic[button]
 		if not button.pressed.is_connected(target_function):
 			button.pressed.connect(target_function)
 
-	# --- Load Button Visual State ---
+	# 5. --- THE FIX: SILENT INITIALIZATION ---
+	# We manually trigger the first focus while EVERYTHING is muted
+	if start_button:
+		# Triple protection: Block signals, Mute Manager, and Lock Script Gate
+		start_button.set_block_signals(true)
+		start_button.grab_focus()
+		start_button.set_block_signals(false)
+		
+		_reset_button_scales()
+		start_pulse_animation(start_button)
+		
+	# 6. Wait for all automated focus logic to finish before unmuting
+	get_tree().create_timer(0.5).timeout.connect(func():
+		GlobalAudioManager.mute_all_gui_sounds = false
+		can_play_audio = true
+	)
+
+	# 7. Load Button Visual State
 	if not FileAccess.file_exists("user://savegame.save"):
-		load_button.modulate.a = 0.5 # Dim it if no save exists
+		load_button.modulate.a = 0.5
 
 func setup_button_colors():
 	var hover_green = Color(0.2, 0.8, 0.2)
@@ -59,7 +80,7 @@ func setup_button_colors():
 func _on_focus_or_hover(button: Button) -> void:
 	if not button.has_focus():
 		button.grab_focus()
-	
+
 	_reset_button_scales()
 	start_pulse_animation(button)
 

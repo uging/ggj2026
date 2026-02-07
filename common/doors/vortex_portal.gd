@@ -56,28 +56,28 @@ func apply_portal_shake(intensity: float):
 			
 func _on_portal_entered(body):
 	if body is CharacterBody2D and (body.name == "Player" or body == Global.player):
-		# SAFETY: Don't trigger if Goma is currently performing an 'emerging' animation
 		if not body.input_enabled: 
 			return
 		
-		# Cleanup Audio
+		# 1. Start audio and freeze player
 		GlobalAudioManager.update_portal_hum_volume(0.0)
 		GlobalAudioManager.stop_portal_hum()
 		GlobalAudioManager.play_portal_travel()
 		
 		_freeze_player_for_travel() 
 		
+		# 2. THE NEW STEP: Dissolve the portal sprite itself
+		_dissolve_portal()
+		
 		if is_credits_portal:
 			_handle_credits_transition()
 		
-		# Wait for the "Suck-In" animation to finish
+		# 3. Wait for both player AND portal animations to finish
 		await get_tree().create_timer(0.8).timeout
 		
-		# Kill the suck-in tween so it doesn't fight the next scene's pop-out
 		if active_suck_tween and active_suck_tween.is_valid():
 			active_suck_tween.kill()
 		
-		# Prime Goma for the next scene
 		if is_instance_valid(Global.player) and Global.player.has_method("reset_visuals_after_travel"):
 			Global.player.reset_visuals_after_travel()
 		
@@ -85,6 +85,16 @@ func _on_portal_entered(body):
 		if main and main.has_method("change_scene"):
 			main.change_scene(next_scene_path, spawn_pos)
 
+func _dissolve_portal():
+	# Stop the _process loop from fighting the scale/rotation
+	set_process(false)
+	
+	var dissolve = create_tween().set_parallel(true)
+	# Shrink it to zero and spin it rapidly
+	dissolve.tween_property(sprite, "scale", Vector2.ZERO, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	dissolve.tween_property(sprite, "modulate:a", 0.0, 0.5)
+	dissolve.tween_property(sprite, "rotation", sprite.rotation + 15.0, 0.6)
+	
 func _freeze_player_for_travel():
 	if is_instance_valid(Global.player):
 		Global.player.set_physics_process(false)

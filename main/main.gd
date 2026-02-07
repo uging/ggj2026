@@ -37,14 +37,6 @@ func _setup_title_screen() -> void:
 	
 	# 3. Connect signals from the title script
 	title_instance.start_game.connect(_on_start_button_pressed)
-	
-	# --- THE FIX: RESET FOCUS ---
-	# Ensure the Start Button is the first thing Godot looks at.
-	# We use a tiny delay or process_frame to ensure the scene is ready.
-	await get_tree().process_frame
-	var start_btn = title_instance.get_node_or_null("StartButton")
-	if start_btn:
-		start_btn.grab_focus()
 
 func _on_start_button_pressed() -> void:
 	# --- CHANGE: Instead of loading level here, just hide the overlay ---
@@ -109,7 +101,6 @@ func load_level(path: String, spawn_pos: Vector2):
 			player.is_top_down = (path.contains("world_map"))
 
 		get_tree().paused = false
-		print("Main: Level loaded at ", path)
 
 # --- Global Access ---
 

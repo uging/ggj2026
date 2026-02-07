@@ -23,7 +23,10 @@ func _ready() -> void:
 
 func _handle_portal_arrival_animation() -> void:
 	if not is_instance_valid(Global.player): return
-
+	
+	
+	if not Global.isTitleShown:
+		GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
 	# Find the specific AREA node Goma just exited from
 	var source_node: Node2D = null
 	

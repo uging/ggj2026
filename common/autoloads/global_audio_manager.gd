@@ -28,6 +28,7 @@ var active_glide_player: AudioStreamPlayer = null
 
 # Track the last time ANY portal requested a hum
 var last_hum_request_time : float = 0.0
+var mute_all_gui_sounds := false
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -56,7 +57,7 @@ func _connect_logic(node: Node):
 		if not node.mouse_entered.is_connected(_play_sfx):
 			node.mouse_entered.connect(_play_sfx.bind(hover_sfx))
 		if not node.focus_entered.is_connected(_play_sfx):
-			node.focus_entered.connect(_play_sfx.bind(hover_sfx))
+			node.focus_entered.connect(_on_button_focused)
 		if not node.pressed.is_connected(_play_sfx):
 			node.pressed.connect(_play_sfx.bind(click_sfx))
 	
@@ -90,6 +91,17 @@ func _on_menu_visibility_changed(menu_node: Node):
 			_mute_music_bus(false)
 		_play_sfx(close_sfx)
 
+func _on_button_focused():
+	# If the title screen is currently being set up, don't play the sound
+	if mute_all_gui_sounds:
+		return
+
+	# Fallback time-based check just in case
+	if Global.isTitleShown and Time.get_ticks_msec() < 1000: 
+		return
+
+	_play_sfx(hover_sfx)
+
 func _mute_music_bus(should_mute: bool):
 	var bus_idx = AudioServer.get_bus_index("Music")
 	if bus_idx != -1:
@@ -108,6 +120,10 @@ func _find_and_stop_music(node: Node):
 
 func _play_sfx(sfx: AudioStream, volume: float = 0.0, randomize_pitch: bool = true):
 	if sfx == null: return
+	
+	# This ensures that as long as the Title Screen says "be quiet", everything stays quiet.
+	if mute_all_gui_sounds or (Global.isTitleShown and Time.get_ticks_msec() < 1500):
+		return
 	
 	var asp = AudioStreamPlayer.new()
 	asp.stream = sfx
