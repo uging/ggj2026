@@ -54,8 +54,8 @@ func _on_restart_pressed():
 	
 	var main = get_tree().root.get_node_or_null("Main")
 	if main and main.has_method("load_level"):
-		if Global.last_level_path != "":
-			main.load_level(Global.last_level_path, Global.last_spawn_pos)
+		if Global.current_level_path != "":
+			main.load_level(Global.current_level_path, Global.last_spawn_pos)
 	
 	queue_free()
 

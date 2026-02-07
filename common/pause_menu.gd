@@ -91,10 +91,10 @@ func _on_restart_button_pressed() -> void:
 	
 	# 3. Use the "Bookmarks" we just added to Global.gd
 	if main and main.has_method("load_level"):
-		if Global.last_level_path != "":
-			main.load_level(Global.last_level_path, Global.last_spawn_pos)
+		if Global.current_level_path != "":
+			main.load_level(Global.current_level_path, Global.last_spawn_pos)
 		else:
-			push_error("PauseMenu: No last_level_path found in Global!")
+			push_error("PauseMenu: No current_level_path found in Global!")
 
 func _on_map_button_pressed() -> void:
 	_mute_music_bus(false)

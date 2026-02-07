@@ -64,7 +64,11 @@ func load_level(path: String, spawn_pos: Vector2):
 		child.queue_free()
 		
 	# SAVE THE BOOKMARK
-	Global.last_level_path = path
+	# 1. Update the Origin: Save where we are before we leave
+	Global.origin_level_path = Global.current_level_path
+	
+	# 2. Update the Current: Set the new destination
+	Global.current_level_path = path
 	Global.last_spawn_pos = spawn_pos
 
 	var level_resource = load(path)

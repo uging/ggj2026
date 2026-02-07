@@ -28,21 +28,24 @@ func _handle_portal_arrival_animation() -> void:
 	var source_node: Node2D = null
 	
 	# Match the path to the actual node names in your World Map tree
-	if Global.last_level_path.contains("basic_level"):
+	# Check the ORIGIN level to find the correct exit point
+	if Global.origin_level_path.contains("basic_level"):
 		source_node = get_node_or_null("BasicLevel/BasicLevelArea")
-	elif Global.last_level_path.contains("pyramid"):
+	elif Global.origin_level_path.contains("pyramid"):
 		source_node = get_node_or_null("PyramidLevel/PyramidArea")
-	elif Global.last_level_path.contains("tower"):
+	elif Global.origin_level_path.contains("tower"):
 		source_node = get_node_or_null("TowerLevel/TowerArea")
+	elif Global.origin_level_path.contains("castle"):
+		source_node = get_node_or_null("CastleLevel/CastleArea")
 		
 	GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
 	
 	if source_node and Global.player.has_method("reset_visuals_after_travel"):
-		# 1. Trigger the visual pop-out
-		Global.player.reset_visuals_after_travel(source_node.global_position, Global.last_spawn_pos)
-
+		# Calculate arrival exactly 50 pixels below the chosen portal
+		var arrival_point = source_node.global_position + Vector2(0, 50)
+		Global.player.reset_visuals_after_travel(source_node.global_position, arrival_point)
 	else:
-		# Fallback: Just pop-in at the current spawn position
+		# Fallback for first-time login/title screen
 		Global.player.reset_visuals_after_travel(Vector2.ZERO, Global.last_spawn_pos)
 
 # --- Level Entry Bridge ---

@@ -8,8 +8,8 @@ var isTitleShown := true
 var is_restarting := false
 
 # --- Level Bookmarking ---
-# These store where the player is so Restart/Map buttons work
-var last_level_path : String = ""
+var current_level_path : String = ""  # The level Goma is in RIGHT NOW
+var origin_level_path : String = ""   # The level Goma just EXITED
 var last_spawn_pos : Vector2 = Vector2.ZERO
 
 # traps and enemies storage
