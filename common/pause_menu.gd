@@ -184,3 +184,10 @@ func _mute_music_bus(should_mute: bool):
 	var bus_idx = AudioServer.get_bus_index("Music")
 	if bus_idx != -1:
 		AudioServer.set_bus_mute(bus_idx, should_mute)
+
+func _gui_input(event: InputEvent) -> void:
+	# --- BLOCK SPACE BAR SELECTION ---
+	# If the event is a Space Bar press, mark it as handled 
+	# so it never triggers the focused button's "pressed" state.
+	if event is InputEventKey and event.keycode == KEY_SPACE:
+		get_viewport().set_input_as_handled()

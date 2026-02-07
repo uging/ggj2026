@@ -20,17 +20,29 @@ func _on_body_exited(body):
 		player_in_range = false
 		name_label.visible = false
 
-func _input(event):
-	if event.is_action_pressed("ui_accept"):
-		GlobalAudioManager.play_portal_travel()
-		# Check if Goma is standing inside this Area2D
+func _input(event: InputEvent) -> void:
+	# 1. Block input if any menu (Pause or Title) is active
+	if get_tree().paused or Global.isTitleShown:
+		return
+		
+	# 2. Only accept the Enter key specifically
+	# This avoids the "Space Bar" bleed-through from UI buttons
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ENTER:
+		# 3. Verify Goma is actually inside the Area2D before triggering
 		if overlaps_body(Global.player):
-			var suck_tween = create_tween()
-			suck_tween.tween_property(Global.player, "scale", Vector2.ZERO, 0.4)
-			suck_tween.tween_property(Global.player, "modulate:a", 0.0, 0.4)
+			_trigger_portal_sequence()
 
-			# Wait a moment for the animation
-			await get_tree().create_timer(0.4).timeout
+func _trigger_portal_sequence() -> void:
+	GlobalAudioManager.play_portal_travel()
+	
+	# --- VORTEX SUCK-IN ---
+	var suck_tween = create_tween().set_parallel(true)
+	suck_tween.tween_property(Global.player, "scale", Vector2.ZERO, 0.4)
+	suck_tween.tween_property(Global.player, "modulate:a", 0.0, 0.4)
 
-			if owner.has_method("enter_level"):
-				owner.enter_level(next_scene_path, Vector2(250, 450))
+	# Wait a moment for the animation
+	await get_tree().create_timer(0.4).timeout
+
+	if owner.has_method("enter_level"):
+		# Move to the level scene using the established coordinates
+		owner.enter_level(next_scene_path, Vector2(250, 450))

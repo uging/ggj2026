@@ -21,15 +21,25 @@ func _on_body_exited(body):
 		name_label.visible = false
 
 func _input(event):
-	if event.is_action_pressed("ui_accept") and player_in_range:
-		if overlaps_body(Global.player):
-			GlobalAudioManager.play_portal_travel()
-			# --- VORTEX SUCK-IN ---
-			var suck = create_tween().set_parallel(true)
-			suck.tween_property(Global.player, "scale", Vector2.ZERO, 0.4)
-			suck.tween_property(Global.player, "modulate:a", 0.0, 0.4)
-			
-			await get_tree().create_timer(0.4).timeout
+	# 1. Block input if the menu is open or the game is paused
+	if get_tree().paused or Global.isTitleShown:
+		return
+		
+	# 2.  Check for the Enter key specifically
+	# This prevents the Space bar from accidentally triggering level entry
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ENTER:
+		if player_in_range and overlaps_body(Global.player):
+			_trigger_vortex_sequence()
 
-			if owner.has_method("enter_level"):
-				owner.enter_level(next_scene_path, Vector2(850, 450))
+func _trigger_vortex_sequence():
+	GlobalAudioManager.play_portal_travel()
+	
+	# --- VORTEX SUCK-IN ---
+	var suck = create_tween().set_parallel(true)
+	suck.tween_property(Global.player, "scale", Vector2.ZERO, 0.4)
+	suck.tween_property(Global.player, "modulate:a", 0.0, 0.4)
+	
+	await get_tree().create_timer(0.4).timeout
+
+	if owner.has_method("enter_level"):
+		owner.enter_level(next_scene_path, Vector2(850, 450))
