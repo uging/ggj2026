@@ -26,10 +26,22 @@ var active_charge_player: AudioStreamPlayer = null
 var glide_sfx = preload("res://resources/sounds/wings_flap_large.ogg") # Replace with a wind/glide file
 var active_glide_player: AudioStreamPlayer = null
 
+# Track the last time ANY portal requested a hum
+var last_hum_request_time : float = 0.0
+
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().node_added.connect(_on_node_added)
 	_recursive_scan(get_tree().root)
+	
+func _process(_delta):
+	# The "Timer" logic:
+	# If the hum is currently playing...
+	if is_instance_valid(active_hum_player):
+		# ...and it has been more than 100ms since ANY portal called start_portal_hum()
+		if Time.get_ticks_msec() - last_hum_request_time > 100:
+			# Then it's safe to stop and delete the player.
+			stop_portal_hum()
 
 func _on_node_added(node: Node):
 	_connect_logic(node)
@@ -121,10 +133,12 @@ func play_portal_travel():
 		tween.finished.connect(asp.queue_free)
 
 func start_portal_hum():
-	if active_hum_player == null:
+	last_hum_request_time = Time.get_ticks_msec() # Update timestamp
+	
+	if not is_instance_valid(active_hum_player):
 		active_hum_player = AudioStreamPlayer.new()
+		active_hum_player.name = "PortalHumPlayer"
 		
-		# Ensure the stream itself is set to loop
 		if portal_hum_sfx is AudioStreamMP3:
 			portal_hum_sfx.loop = true
 		elif portal_hum_sfx is AudioStreamWAV:
@@ -136,6 +150,12 @@ func start_portal_hum():
 		active_hum_player.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(active_hum_player)
 		active_hum_player.play()
+		
+	# 2. Logic Guard: Only play if it's not already running
+	elif not active_hum_player.playing:
+		# Double-check the bus hasn't been reassigned
+		active_hum_player.bus = "SFX" 
+		active_hum_player.play()
 
 func update_portal_hum_volume(factor: float):
 	if is_instance_valid(active_hum_player):
@@ -144,12 +164,14 @@ func update_portal_hum_volume(factor: float):
 		# This prevents the "StartPortal" from quieting the "EndPortal" sound
 		if target_volume > active_hum_player.volume_db:
 			active_hum_player.volume_db = target_volume
-
+		
 func stop_portal_hum():
 	if is_instance_valid(active_hum_player):
 		active_hum_player.stop()
 		active_hum_player.queue_free()
 	active_hum_player = null
+	if is_instance_valid(Global.player) and Global.player.has_node("Camera2D"):
+		Global.player.get_node("Camera2D").offset = Vector2.ZERO
 	
 func play_charge_sound():
 	if active_charge_player == null:

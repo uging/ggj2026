@@ -34,8 +34,6 @@ func _sync_equipment_visuals():
 	credits_mask.scale = data["mask_scale"]
 	credits_cape.texture = data["cape"]
 	
-	print("Credits: Goma synced to Set ID: ", current_id)
-
 func _start_patrol():
 	var walk_tween = create_tween().set_loops()
 	

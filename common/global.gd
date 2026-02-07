@@ -74,7 +74,5 @@ func reset_player_stats():
 		player.is_dying = false
 		player.health_changed.emit(3) # Force HUD to show 3 hearts next time it's shown
 	
-	print("Global: Player stats reset.")
 	# Unlock damage after a short delay (1 second after restart)
 	get_tree().create_timer(1.0).timeout.connect(func(): is_restarting = false)
-	print("Global: Player stats reset and damage locked.")

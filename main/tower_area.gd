@@ -3,7 +3,7 @@ extends Area2D
 @export var next_scene_path: String = "res://levels/tower_level.tscn"
 
 var player_in_range: bool = false
-@onready var name_label: Label = $NameLabel  # Add Label child named "NameLabel"
+@onready var name_label: Label = $NameLabel
 
 func _ready():
 	body_entered.connect(_on_body_entered)
@@ -21,10 +21,15 @@ func _on_body_exited(body):
 		name_label.visible = false
 
 func _input(event):
-	if event.is_action_pressed("ui_accept"):
-		# Check if Goma is standing inside this Area2D
+	if event.is_action_pressed("ui_accept") and player_in_range:
 		if overlaps_body(Global.player):
-			# 'owner' refers to the WorldMap root
-			# We tell the world map to tell 'Main' to load the level
+			GlobalAudioManager.play_portal_travel()
+			# --- VORTEX SUCK-IN ---
+			var suck = create_tween().set_parallel(true)
+			suck.tween_property(Global.player, "scale", Vector2.ZERO, 0.4)
+			suck.tween_property(Global.player, "modulate:a", 0.0, 0.4)
+			
+			await get_tree().create_timer(0.4).timeout
+
 			if owner.has_method("enter_level"):
-				owner.enter_level("res://levels/tower_level.tscn", Vector2(700, 450))
+				owner.enter_level(next_scene_path, Vector2(850, 450))

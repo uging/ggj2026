@@ -12,9 +12,8 @@ func _ready():
 
 func _input(event):
 	if event.is_action_pressed("pause"):
-		# 1. NEW: Don't pause if the Title Screen is active!
+		# 1. Don't pause if the Title Screen is active!
 		if Global.isTitleShown:
-			print("Title screen active. Ignoring pause.")
 			return
 
 		# 2. Don't pause if we aren't in a level
@@ -23,10 +22,7 @@ func _input(event):
 
 		# 3. Don't pause if the Game Over screen is already open!
 		if get_tree().root.find_child("GameOver", true, false):
-			print("Game Over is active. Ignoring pause.")
 			return
-
-		print("ESC pressed! Pausing game...")
 		toggle_pause()
 
 func toggle_pause():
@@ -96,7 +92,6 @@ func _on_restart_button_pressed() -> void:
 	# 3. Use the "Bookmarks" we just added to Global.gd
 	if main and main.has_method("load_level"):
 		if Global.last_level_path != "":
-			print("Restarting level: ", Global.last_level_path)
 			main.load_level(Global.last_level_path, Global.last_spawn_pos)
 		else:
 			push_error("PauseMenu: No last_level_path found in Global!")

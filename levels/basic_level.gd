@@ -7,6 +7,17 @@ func _ready() -> void:
 	await get_tree().process_frame 
 	
 	# 2. Configure environment-specific physics
+	# --- Portal Exit Animation ---
+	# Look for a portal in this level to "spit" Goma out of
+	var portal = get_node_or_null("StartPortal") 
+	if portal and is_instance_valid(Global.player):
+		if Global.player.has_method("reset_visuals_after_travel"):
+			# Start at portal, end at the spawn position set in Main
+			Global.player.reset_visuals_after_travel(portal.global_position, Global.last_spawn_pos)
+			await get_tree().create_timer(0.4).timeout
+			GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
+	
+	# 2. Configure environment-specific physics
 	if is_instance_valid(Global.player):
 		Global.player.is_top_down = is_top_down_level
 		Global.player.gravity = level_gravity

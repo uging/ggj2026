@@ -23,7 +23,6 @@ func _ready() -> void:
 	tween.tween_property(self, "position:y", 10.0, 1.2).as_relative().set_trans(Tween.TRANS_SINE)
 
 func _on_body_entered(body: Node2D) -> void:
-	print("Heart touched by: ", body.name)
 	# Check if the body has our 'heal' function
 	if body.has_method("heal"):
 		# Only pick up if health is less than the max (10)

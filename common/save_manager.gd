@@ -23,7 +23,6 @@ func save_game():
 	if file:
 		var json_string = JSON.stringify(data)
 		file.store_line(json_string)
-		print("Data saved successfully to Disk!")
 
 func load_game():
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -46,5 +45,3 @@ func load_game():
 		# 2. Update local SaveManager vars for scene transitions
 		current_health = Global.current_health
 		current_world = data.get("world", "res://scenes/worlds/world_1.tscn")
-
-		print("Data loaded: Health ", current_health, " | Mask ID: ", Global.current_equipped_set)

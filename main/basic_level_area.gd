@@ -22,9 +22,15 @@ func _on_body_exited(body):
 
 func _input(event):
 	if event.is_action_pressed("ui_accept"):
+		GlobalAudioManager.play_portal_travel()
 		# Check if Goma is standing inside this Area2D
 		if overlaps_body(Global.player):
-			# 'owner' refers to the WorldMap root
-			# We tell the world map to tell 'Main' to load the level
+			var suck_tween = create_tween()
+			suck_tween.tween_property(Global.player, "scale", Vector2.ZERO, 0.4)
+			suck_tween.tween_property(Global.player, "modulate:a", 0.0, 0.4)
+
+			# Wait a moment for the animation
+			await get_tree().create_timer(0.4).timeout
+
 			if owner.has_method("enter_level"):
-				owner.enter_level("res://levels/basic_level.tscn", Vector2(250, 450))
+				owner.enter_level(next_scene_path, Vector2(250, 450))

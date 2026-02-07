@@ -12,27 +12,52 @@ func _ready() -> void:
 	if help_label:
 		help_label.show()
 	
-	# 2. Ensure physics is running if we arrived here from a paused state
+	# 2. Ensure physics is running
 	get_tree().paused = false
-	print("World Map: Hub initialized and ready.")
+	
+	# --- NEW: Portal Exit Logic ---
+	# Wait for Main.gd to finish moving Goma to the last_spawn_pos
+	await get_tree().process_frame
+	
+	_handle_portal_arrival_animation()
+
+func _handle_portal_arrival_animation() -> void:
+	if not is_instance_valid(Global.player): return
+
+	# Find the specific AREA node Goma just exited from
+	var source_node: Node2D = null
+	
+	# Match the path to the actual node names in your World Map tree
+	if Global.last_level_path.contains("basic_level"):
+		source_node = get_node_or_null("BasicLevel/BasicLevelArea")
+	elif Global.last_level_path.contains("pyramid"):
+		source_node = get_node_or_null("PyramidLevel/PyramidArea")
+	elif Global.last_level_path.contains("tower"):
+		source_node = get_node_or_null("TowerLevel/TowerArea")
+		
+	GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
+	
+	if source_node and Global.player.has_method("reset_visuals_after_travel"):
+		# 1. Trigger the visual pop-out
+		Global.player.reset_visuals_after_travel(source_node.global_position, Global.last_spawn_pos)
+
+	else:
+		# Fallback: Just pop-in at the current spawn position
+		Global.player.reset_visuals_after_travel(Vector2.ZERO, Global.last_spawn_pos)
 
 # --- Level Entry Bridge ---
-# This is called by your TowerArea, BasicLevelArea, and PyramidArea scripts.
 func enter_level(level_path: String, spawn_point: Vector2):
-	# Locate the permanent Main manager in the tree
+	# REMOVED: reset_visuals_after_travel call here
+	# (Because basic_level_area.gd handles the "suck-in" tween now)
+
 	var main_node = get_tree().root.get_node_or_null("Main")
 	
 	if main_node and main_node.has_method("load_level"):
-		# Hand off the transition to the Manager
 		main_node.load_level(level_path, spawn_point)
 	else:
-		# Fallback: This allows you to run the world_map.tscn 
-		# directly (F6) for testing without errors.
 		push_warning("Main manager not found. Executing direct scene change.")
 		get_tree().change_scene_to_file(level_path)
 
-# --- Save/Load Bridge (Optional) ---
-# If you want to save the game every time the player returns to the map
 func _on_map_entered():
 	if has_node("/root/SaveManager"):
 		get_node("/root/SaveManager").save_game()

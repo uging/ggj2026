@@ -123,20 +123,24 @@ var set_data = {
 }
 
 # --- Initialization ---
-# player.gd
 
 func _ready() -> void:
+	# --- VORTEX RESET  ---
+	# Reset Goma's visuals to their default Inspector values immediately
+	reset_visuals_after_travel()
+	set_process_input(true)
+	# ------------------------
+
 	# 1. Immediate sync from Global
-	current_health = Global.current_health 
+	current_health = Global.current_health
 	max_health = Global.max_health_limit
 	
-	# 2. Force HUD to show 3 hearts immediately
-	# We do this before the 'await' to ensure the UI is correct on frame 1.
-	health_changed.emit(current_health) 
+	# 2. Force HUD to show hearts immediately
+	health_changed.emit(current_health)
 	
 	# 3. Apply 4-second "Ghost Mode"
-	is_invincible = true 
-	start_invincibility_effect() 
+	is_invincible = true
+	start_invincibility_effect()
 	
 	var original_mask = collision_mask
 	collision_mask = 1 # Only collide with the world layer
@@ -164,6 +168,43 @@ func _setup_idle_animation() -> void:
 	tween.tween_property(visuals, "position:y", -5.0, 0.8).as_relative()
 	tween.tween_property(visuals, "position:y", 5.0, 0.8).as_relative()
 
+func reset_visuals_after_travel(portal_pos: Vector2 = Vector2.ZERO, target_pos: Vector2 = Vector2.ZERO) -> void:
+	var player_tweens = create_tween()
+	player_tweens.kill() 
+	
+	# 1. Disable input so portals don't re-trigger immediately
+	input_enabled = false
+	
+	if portal_pos != Vector2.ZERO:
+		global_position = portal_pos
+	
+	# 2. Prep starting state
+	self.scale = Vector2.ZERO
+	self.modulate.a = 0.0
+	show()
+	set_physics_process(true)
+	set_process_input(true)
+	visuals.rotation = 0
+	
+	# 3. The "Emerging" Animation
+	var appear_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	
+	if target_pos != Vector2.ZERO:
+		# Use a slightly faster move to get away from the portal center
+		appear_tween.tween_property(self, "global_position", target_pos, 0.4).set_delay(0.1)
+	
+	appear_tween.tween_property(self, "scale", Vector2.ONE, 0.5).set_delay(0.1)
+	appear_tween.tween_property(self, "modulate:a", 1.0, 0.3).set_delay(0.1)
+	
+	if visuals.has_node("Goma"):
+		var goma_sprite = visuals.get_node("Goma")
+		goma_sprite.modulate.a = 1.0
+		goma_sprite.scale = Vector2(0.166, 0.174)
+
+	appear_tween.finished.connect(func():
+		input_enabled = true 
+	)
+	
 # --- Physics Process ---
 
 func _physics_process(delta: float) -> void:

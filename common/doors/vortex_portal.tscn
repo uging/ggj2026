@@ -4,12 +4,12 @@
 [ext_resource type="Texture2D" uid="uid://ccphw024lbbpp" path="res://common/doors/assets/vortex_portal.png" id="2_ef6bl"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ef6bl"]
-radius = 57.035076
+radius = 61.03278
 
 [node name="VortexPortal" type="Node2D"]
 z_index = 5
 script = ExtResource("1_2cc08")
-activation_distance = 150.0
+activation_distance = 250.0
 max_scale = 0.4
 min_scale = 0.1
 
