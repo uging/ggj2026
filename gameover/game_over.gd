@@ -41,29 +41,22 @@ func _sync_death_visuals():
 
 func _on_restart_pressed():
 	set_buttons_disabled(true)
-	
 	GlobalAudioManager.stop_all_loops()
-	
-	# 1. Reset health/stats
 	Global.reset_player_stats() 
-	
-	# Unmute music for the new attempt
 	_mute_music_bus(false)
 	
-	# 2. Animate Goma coming back to life
+	# 1. Animate the UI character coming "Back to Life"
 	var tween = create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(character_anchor, "rotation_degrees", 0, 0.5)
 	tween.parallel().tween_property(character_anchor, "modulate", Color.WHITE, 0.3)
 	
 	await tween.finished
 	
-	# 3. Reload level
 	var main = get_tree().root.get_node_or_null("Main")
 	if main and main.has_method("load_level"):
 		if Global.last_level_path != "":
 			main.load_level(Global.last_level_path, Global.last_spawn_pos)
 	
-	get_tree().paused = false
 	queue_free()
 
 func _on_menu_pressed():

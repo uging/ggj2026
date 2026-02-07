@@ -90,16 +90,11 @@ func load_level(path: String, spawn_pos: Vector2):
 			# --- THE FIX: Conditional Input/Physics Logic ---
 			# If the title is shown, Goma must remain frozen regardless of level load
 			if Global.isTitleShown:
-				player.hide() # Keep Goma hidden behind the title if desired
-				player.set_physics_process(false)
-				player.set_process_input(false)
-				player.input_enabled = false # Ensure custom input flag is also off
-				hud.hide()
+				player.process_mode = Node.PROCESS_MODE_DISABLED
+				player.hide()
 			else:
+				player.process_mode = Node.PROCESS_MODE_INHERIT
 				player.show()
-				player.set_physics_process(true)
-				player.set_process_input(true)
-				player.input_enabled = true
 				
 				# HUD Logic
 				hud.show()

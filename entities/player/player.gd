@@ -123,45 +123,53 @@ var set_data = {
 }
 
 # --- Initialization ---
-
 func _ready() -> void:
-	# --- VORTEX RESET  ---
-	# Reset Goma's visuals to their default Inspector values immediately
+	# 1. IMMEDIATE VISUAL PURGE
+	# Wipe away any lingering death states (rotation/tint) before the first frame
+	visuals.modulate = Color.WHITE 
+	visuals.rotation_degrees = 0 
+	visuals.scale = Vector2.ONE 
+	
+	# 2. VORTEX RESET & ENGINE SYNC
+	# Handles the "Pop-out" scale animation and physics/input setup
 	reset_visuals_after_travel()
 	set_process_input(true)
-	# ------------------------
-
-	# 1. Immediate sync from Global
+	
+	# 3. STAT SYNC
+	# Sync Goma's health with the Global manager immediately
 	current_health = Global.current_health
 	max_health = Global.max_health_limit
-	
-	# 2. Force HUD to show hearts immediately
 	health_changed.emit(current_health)
 	
-	# 3. Apply 4-second "Ghost Mode"
+	# 4. STANDARD SETUP
+	# Moved BEFORE the flash so it doesn't overwrite the brightness
+	_reset_states()
+	_setup_idle_animation()
+
+	# 5. PORTAL SPAWN FLASH & PROTECTION
+	# This creates the high-brightness arrival effect
 	is_invincible = true
-	start_invincibility_effect()
-	
 	var original_mask = collision_mask
-	collision_mask = 1 # Only collide with the world layer
+	collision_mask = 1 # Temporary "Ghost Mode" collision
 	
-	get_tree().create_timer(4.0).timeout.connect(func():
+	# THE FLASH: Over-brighten visuals and fade to normal
+	visuals.modulate = Color(3.0, 3.0, 3.0, 1.0)
+	var flash_tween = create_tween()
+	flash_tween.tween_property(visuals, "modulate", Color.WHITE, 0.6).set_trans(Tween.TRANS_SINE)
+	
+	# Release protection window
+	get_tree().create_timer(1.5).timeout.connect(func():
 		is_invincible = false
 		collision_mask = original_mask
 	)
 
-	# 4. Standard Setup
-	_reset_states()
-	_setup_idle_animation()
-	
-	# Wait for HUD to be fully ready for secondary syncs
+	# 6. HUD & SECONDARY SYNC
+	# Wait for the HUD to be fully ready for mask/ability icons
 	await get_tree().process_frame
 	masks_updated.emit(unlocked_masks)
 	
 	if ability_container:
 		ability_icons = ability_container.get_children()
-		
-	get_tree().create_timer(0.1).timeout.connect(func(): input_enabled = true)
 
 func _setup_idle_animation() -> void:
 	var tween = create_tween().set_loops().set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
@@ -557,7 +565,6 @@ func _reset_states() -> void:
 	is_rock_smashing = false
 	is_charging = false
 	charge_time = 0.0
-	visuals.modulate = Color.WHITE
 	visuals.rotation = 0
 	if rock_aura_visual: rock_aura_visual.hide()
 
