@@ -29,26 +29,36 @@ layout_mode = 2
 
 [node name="ResumeButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../MuteButton")
+focus_neighbor_bottom = NodePath("../RestartButton")
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "RESUME"
 
 [node name="RestartButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../ResumeButton")
+focus_neighbor_bottom = NodePath("../MapButton")
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "RESTART"
 
 [node name="MapButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../RestartButton")
+focus_neighbor_bottom = NodePath("../SaveButton")
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "MAP"
 
 [node name="SaveButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../MapButton")
+focus_neighbor_bottom = NodePath("../EndButton")
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "SAVE"
 
 [node name="EndButton" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../SaveButton")
+focus_neighbor_bottom = NodePath("../VolumeSlider")
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "QUIT"
 
@@ -60,12 +70,16 @@ horizontal_alignment = 1
 
 [node name="VolumeSlider" type="HSlider" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../EndButton")
+focus_neighbor_bottom = NodePath("../MuteButton")
 max_value = 1.0
 step = 0.01
 value = 0.1
 
 [node name="MuteButton" type="CheckButton" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+focus_neighbor_top = NodePath("../VolumeSlider")
+focus_neighbor_bottom = NodePath("../ResumeButton")
 theme_override_fonts/font = ExtResource("2_jibdd")
 text = "MUTE SOUND"
 

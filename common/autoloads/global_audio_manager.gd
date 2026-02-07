@@ -1,27 +1,27 @@
 extends Node
 
 # Load your audio files
-var hover_sfx = preload("res://resources/sounds/SwitchSound.ogg")
-var click_sfx = preload("res://resources/sounds/SelectSound.ogg")
-var open_sfx = preload("res://resources/sounds/doorOpen_1.ogg")
-var close_sfx = preload("res://resources/sounds/doorClose_4.ogg")
-var game_over_sfx = preload("res://resources/sounds/DeathSound.ogg") 
-var portal_travel_sfx = preload("res://resources/sounds/laserLarge_004.ogg")
+var hover_sfx = preload("res://resources/sounds/001_Hover_01.wav")
+var click_sfx = preload("res://resources/sounds/013_Confirm_03.wav")
+var open_sfx = preload("res://resources/sounds/qubodup-DoorOpen05.ogg")
+var close_sfx = preload("res://resources/sounds/qubodup-DoorClose03.ogg")
+var game_over_sfx = preload("res://resources/sounds/sword_sfx.wav") 
+var portal_travel_sfx = preload("res://resources/sounds/space laser.wav")
 
 # Character SFX
 var jump_sfx = preload("res://resources/sounds/Jump2.wav")
-var land_sfx = preload("res://resources/sounds/Jump10.wav")
-var dash_sfx = preload("res://resources/sounds/Jump1.wav")
-var hurt_sfx = preload("res://resources/sounds/Hit_Hurt9.wav")
-var rock_slam_sfx = preload("res://resources/sounds/Explosion7.wav")
+var land_sfx = preload("res://resources/sounds/jumpland.wav")
+var dash_sfx = preload("res://resources/sounds/skweak2.ogg")
+var hurt_sfx = preload("res://resources/sounds/hit1.ogg")
+var rock_slam_sfx = preload("res://resources/sounds/boom8.wav")
 
-var heart_sfx = preload("res://resources/sounds/Pickup_Coin3.wav")  # Healing sound
-var mask_pickup_sfx = preload("res://resources/sounds/Powerup2.wav") # New mask found
-var mask_switch_sfx = preload("res://resources/sounds/Powerup3.wav") # Power up / Switch
+var heart_sfx = preload("res://resources/sounds/SFX_Pickup_09.wav")  # Healing sound
+var mask_pickup_sfx = preload("res://resources/sounds/SFX_Pickup_16.wav") # New mask found
+var mask_switch_sfx = preload("res://resources/sounds/SFX_Powerup_20.wav") # Power up / Switch
 
-var charge_sfx = preload("res://resources/sounds/Laser_Shoot.wav") # Change to your charge file
+var charge_sfx = preload("res://resources/sounds/skweak3.ogg") # Change to your charge file
 var active_charge_player: AudioStreamPlayer = null
-var glide_sfx = preload("res://resources/sounds/lowFrequency_explosion_000.ogg") # Replace with a wind/glide file
+var glide_sfx = preload("res://resources/sounds/wings_flap_large.ogg") # Replace with a wind/glide file
 var active_glide_player: AudioStreamPlayer = null
 
 func _ready():
