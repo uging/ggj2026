@@ -36,16 +36,21 @@ func _sync_equipment_visuals():
 	var credits_mask = character_anchor.get_node("Mask")
 	var credits_cape = character_anchor.get_node("Cape")
 	
-	# If your Goma body texture ever changes per set, add data["body"] to set_data
-	# Otherwise, ensure the 'Goma' node in the editor has your base texture assigned.
+	# Body Sync: Match Gameplay Goma's Transform
+	credits_body.position = Vector2(1.0, 0.0) 
+	credits_body.scale = Vector2(0.166, 0.174)
 	credits_body.show()
-	credits_body.modulate.a = 1.0 # Force full visibility
-	character_anchor.scale = Vector2.ONE # Force full scale
+	credits_body.modulate.a = 1.0
 	
+	# Cape Sync: Match Gameplay Cape's Transform
+	credits_cape.texture = data["cape"]
+	credits_cape.position = Vector2(-19.625, 6.125) 
+	credits_cape.scale = Vector2(0.172, 0.195)
+	
+	# Mask Sync: Match Gameplay Mask's Transform
 	credits_mask.texture = data["mask"]
 	credits_mask.position = data["mask_pos"]
 	credits_mask.scale = data["mask_scale"]
-	credits_cape.texture = data["cape"]
 	
 func _start_patrol():
 	var walk_tween = create_tween().set_loops()
