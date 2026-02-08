@@ -73,6 +73,9 @@ func reset_player_stats():
 		player.current_health = 3
 		player.is_dying = false
 		player.health_changed.emit(3) # Force HUD to show 3 hearts next time it's shown
+		player.is_facing_right = true
+		if player.has_node("Visuals"):
+			player.get_node("Visuals").scale.x = 1.0
 	
 	# Unlock damage after a short delay (1 second after restart)
 	get_tree().create_timer(1.0).timeout.connect(func(): is_restarting = false)

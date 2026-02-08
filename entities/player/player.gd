@@ -176,9 +176,13 @@ func _setup_idle_animation() -> void:
 	tween.tween_property(visuals, "position:y", -5.0, 0.8).as_relative()
 	tween.tween_property(visuals, "position:y", 5.0, 0.8).as_relative()
 
-func reset_visuals_after_travel(portal_pos: Vector2 = Vector2.ZERO, target_pos: Vector2 = Vector2.ZERO) -> void:
+func reset_visuals_after_travel(portal_pos: Vector2 = Vector2.ZERO, target_pos: Vector2 = Vector2.ZERO, force_face_right: bool = false) -> void:
 	var player_tweens = create_tween()
 	player_tweens.kill() 
+	
+	if force_face_right:
+		is_facing_right = true
+		visuals.scale.x = 1.0
 	
 	# 1. Disable input so portals don't re-trigger immediately
 	input_enabled = false

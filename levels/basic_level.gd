@@ -3,40 +3,44 @@ extends Node2D
 @export var level_gravity := 1600.0
 
 func _ready() -> void:
-	# 1. Wait for Main.gd to finish moving Goma into position 
+	# 1. AUDIO INITIALIZATION
+	# Force the music bus to silent immediately to prevent "popping"
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), -80.0)
+	
+	# Wait for the engine to settle and Main.gd to position the player
 	await get_tree().process_frame 
 	
-	# 2. Configure environment-specific physics
-	# --- Portal Exit Animation ---
-	# Look for a portal in this level to "spit" Goma out of
-	var portal = get_node_or_null("StartPortal") 
-	if portal and is_instance_valid(Global.player):
-		if Global.player.has_method("reset_visuals_after_travel"):
-			# Start at portal, end at the spawn position set in Main
-			Global.player.reset_visuals_after_travel(portal.global_position, Global.last_spawn_pos)
-			await get_tree().create_timer(0.4).timeout
-			GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
-	
-	# 2. Configure environment-specific physics
+	# 2. PHYSICS & MUSIC PROGRESSION
 	if is_instance_valid(Global.player):
 		Global.player.is_top_down = is_top_down_level
 		Global.player.gravity = level_gravity
 		
-		# 3. Handle Goma's internal camera safely [cite: 14]
+	# Start the slow fade-in for the level theme
+	GlobalAudioManager.fade_music(0.0, 1.5) 
+	
+	# 3. VORTEX POP-OUT
+	var portal = get_node_or_null("StartPortal") 
+	if portal and is_instance_valid(Global.player):
+		if Global.player.has_method("reset_visuals_after_travel"):
+			# Reset visuals and force face right for the world level
+			Global.player.reset_visuals_after_travel(portal.global_position, Global.last_spawn_pos, true)
+			
+			# Delay the landing sound to match the "pop-out" timing
+			await get_tree().create_timer(0.4).timeout
+			GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
+			
+	# 4. CAMERA CONFIGURATION
 	var cam = Global.player.get_node_or_null("Camera2D")
 	if cam:
 		cam.make_current()
-		# --- ADD CAMERA LIMITS HERE ---
-		# 0 is the far left of your level. 
-		# 2750 (example) is the far right near your ExitNode.
 		cam.limit_left = 0
-		cam.limit_top = -500 # Adjust based on your sky height
-		cam.limit_bottom = 700 # Adjust based on your pits
+		cam.limit_top = -500
+		cam.limit_bottom = 700
 		cam.limit_right = 3000
 
-	# 4. Final HUD Sync (Main.gd already called .show(), we just sync data) 
+	# 5. HUD & UI SYNC
 	if is_instance_valid(Global.hud) and is_instance_valid(Global.player):
-		# Re-connect the health signal to the HUD's specific handler
+		# Ensure signals are connected once and only once
 		if not Global.player.health_changed.is_connected(Global.hud._on_health_changed):
 			Global.player.health_changed.connect(Global.hud._on_health_changed)
 

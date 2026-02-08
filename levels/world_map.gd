@@ -7,7 +7,13 @@ extends Node2D
 func _ready() -> void:
 	# 1. Initialize world map state
 	if bg_music:
-		bg_music.play()
+		# Ensure the stream is physically playing
+		if not bg_music.playing:
+			bg_music.play()
+		
+		# --- THE MUSIC PROGRESSION ---
+		# Fade the bus back to normal (0.0dB) over 1.2 seconds
+		GlobalAudioManager.fade_music(0.0, 1.2)
 	
 	if help_label:
 		help_label.show()
@@ -23,7 +29,6 @@ func _ready() -> void:
 
 func _handle_portal_arrival_animation() -> void:
 	if not is_instance_valid(Global.player): return
-	
 	
 	if not Global.isTitleShown:
 		GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
@@ -46,7 +51,7 @@ func _handle_portal_arrival_animation() -> void:
 	if source_node and Global.player.has_method("reset_visuals_after_travel"):
 		# Calculate arrival exactly 50 pixels below the chosen portal
 		var arrival_point = source_node.global_position + Vector2(0, 50)
-		Global.player.reset_visuals_after_travel(source_node.global_position, arrival_point)
+		Global.player.reset_visuals_after_travel(source_node.global_position, arrival_point, false)
 	else:
 		# Fallback for first-time login/title screen
 		Global.player.reset_visuals_after_travel(Vector2.ZERO, Global.last_spawn_pos)

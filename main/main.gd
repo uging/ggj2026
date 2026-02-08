@@ -63,6 +63,9 @@ func load_level(path: String, spawn_pos: Vector2):
 	Global.current_level_path = path
 	Global.last_spawn_pos = spawn_pos
 
+	if is_instance_valid(player):
+		player.is_top_down = (path.contains("world_map"))
+		
 	var level_resource = load(path)
 	if level_resource:
 		var new_level = level_resource.instantiate()

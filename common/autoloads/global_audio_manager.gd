@@ -234,3 +234,21 @@ func _on_heart_collected():
 
 func _on_mask_item_collected():
 	_play_sfx(mask_pickup_sfx, 0.0) # Full volume for big discoveries
+
+func fade_music(target_db: float, duration: float) -> void:
+	var bus_idx = AudioServer.get_bus_index("Music")
+	if bus_idx == -1: return
+	
+	# Kill any existing volume tweens to prevent conflicts
+	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	
+	# Current volume as starting point
+	var current_db = AudioServer.get_bus_volume_db(bus_idx)
+	
+	# Tween the volume property on the AudioServer
+	tween.tween_method(
+		func(db): AudioServer.set_bus_volume_db(bus_idx, db),
+		current_db, 
+		target_db, 
+		duration
+	)
