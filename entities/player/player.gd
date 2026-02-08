@@ -127,6 +127,7 @@ var set_data = {
 # --- Initialization ---
 func _ready() -> void:
 	# 1. IMMEDIATE VISUAL PURGE
+	self.modulate = Color.WHITE
 	visuals.modulate = Color.WHITE 
 	visuals.rotation_degrees = 0 
 	visuals.scale = Vector2.ONE 
@@ -587,26 +588,28 @@ func _get_current_jump_mult() -> float:
 		_:           return jump_mult_default
 		
 func die() -> void:
+	var existing_tweens = get_tree().get_processed_tweens()
+	for t in existing_tweens:
+		if t.is_valid():
+			t.kill()
 	if is_dying: return
 	is_dying = true
-	
-	GlobalAudioManager.stop_all_loops()
 
-	# 1. Stop Goma's physics and input
+	# 1. STOP physics/input
 	set_physics_process(false)
 	set_process_input(false)
-	
-	# 2. Freeze the game world (enemies, traps, etc.)
 	get_tree().paused = true
 
-	# 3. Visual Death Flair (Optional: Tilt Goma)
+	# 2. Visual Death Animation
 	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween.tween_property(visuals, "rotation_degrees", 90, 0.5)
 	tween.tween_property(visuals, "modulate", Color.DARK_SLATE_GRAY, 0.5)
 
-	# 4. Trigger the UI through the Manager
-	# This ensures the Game Over screen is added to the UILayer in Main
-	Global.trigger_game_over_ui()
+	# 3. CRITICAL: Add this so Goma is "Clean" for the next load
+	tween.finished.connect(func():
+		visuals.modulate = Color.WHITE 
+		Global.trigger_game_over_ui()
+	)
 
 func trigger_game_over():
 	# Stop the game
