@@ -56,7 +56,7 @@ func toggle_pause():
 
 		# SYNC MUTE BUTTON STATE
 		$CenterContainer/VBoxContainer/MuteButton.button_pressed = AudioServer.is_bus_mute(bus_index)
-		$CenterContainer/VBoxContainer/VolumeSlider.focus_neighbor_top = $CenterContainer/VBoxContainer/ResumeButton.get_path()
+		$CenterContainer/VBoxContainer/VolumeSlider.focus_neighbor_top = $CenterContainer/VBoxContainer/EndButton.get_path()
 		$CenterContainer/VBoxContainer/VolumeSlider.focus_neighbor_bottom = $CenterContainer/VBoxContainer/MuteButton.get_path()
 
 		# 1. First, handle the visibility of buttons
