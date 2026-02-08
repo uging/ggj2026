@@ -23,6 +23,11 @@ func _input(event):
 		# 3. Don't pause if the Game Over screen is already open!
 		if get_tree().root.find_child("GameOver", true, false):
 			return
+			
+		# --- 4. Don't pause if we are in the Credits ---
+		if Global.current_level_path.contains("credits"):
+			return
+			
 		toggle_pause()
 
 func toggle_pause():
