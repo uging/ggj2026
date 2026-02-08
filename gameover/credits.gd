@@ -32,8 +32,15 @@ func _sync_equipment_visuals():
 	var data = real_player.set_data[current_id]
 	
 	# Update the decorative sprites in the Credits scene
+	var credits_body = character_anchor.get_node("Goma")
 	var credits_mask = character_anchor.get_node("Mask")
 	var credits_cape = character_anchor.get_node("Cape")
+	
+	# If your Goma body texture ever changes per set, add data["body"] to set_data
+	# Otherwise, ensure the 'Goma' node in the editor has your base texture assigned.
+	credits_body.show()
+	credits_body.modulate.a = 1.0 # Force full visibility
+	character_anchor.scale = Vector2.ONE # Force full scale
 	
 	credits_mask.texture = data["mask"]
 	credits_mask.position = data["mask_pos"]

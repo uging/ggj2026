@@ -50,23 +50,43 @@ func _on_start_button_pressed() -> void:
 		player.health_changed.emit(3)
 
 func _on_load_button_pressed() -> void:
-	# 1. Hide UI first to set Global.isTitleShown = false [KEEP]
-	hide_title_screen() 
+	# 1. Create the Loading Overlay (Black Background)
+	var fade_overlay = ColorRect.new()
+	fade_overlay.color = Color.BLACK
+	fade_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fade_overlay.z_index = 100 # Ensure it is on top of everything
+	ui_layer.add_child(fade_overlay)
 	
-	# 2. Trigger the actual data load [KEEP]
-	SaveManager.load_game()
+	# 2. Add "Loading..." Text
+	var loading_label = Label.new()
+	loading_label.text = "Loading..."
+	# Center the text on the screen
+	loading_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	fade_overlay.add_child(loading_label)
 	
-	# 3. Sync player stats and visuals from the newly loaded Global data [UPDATE]
+	# 3. Process the Load
+	hide_title_screen() # Sets Global.isTitleShown = false
+	SaveManager.load_game() # Loads level and position
+	
+	# 4. Sync Goma's stats and visuals
 	if is_instance_valid(player):
-		# Sync Health and emit signal for HUD [KEEP]
 		player.current_health = Global.current_health
 		player.health_changed.emit(player.current_health)
 		
-		# We use 'true' for the silent parameter to avoid the poof sound on load
+		# Sync Mask and Cape without the poof sound
 		player.change_set(Global.current_equipped_set, true)
 		
-		# Force the movement mode check [KEEP]
+		# Set correct physics (Top-down vs Platformer)
 		player.is_top_down = (Global.current_level_path.contains("world_map"))
+
+	# 5. Fade out and clean up
+	# We wait a tiny fraction of a second so the engine can settle
+	await get_tree().create_timer(0.2).timeout 
+	
+	var fade_tween = create_tween()
+	# Fades the entire overlay (including the label)
+	fade_tween.tween_property(fade_overlay, "modulate:a", 0.0, 0.5) 
+	fade_tween.finished.connect(func(): fade_overlay.queue_free())
 		
 # --- Level Management ---
 
@@ -93,8 +113,6 @@ func load_level(path: String, spawn_pos: Vector2):
 		# This prevents the "Two Gomas" issue by removing any Goma 
 		# that accidentally exists inside the level scene file.
 		var extra_goma = new_level.find_child("Player", true, false)
-		if not extra_goma:
-			extra_goma = new_level.find_child("Goma", true, false)
 			
 		if extra_goma:
 			extra_goma.queue_free() 
