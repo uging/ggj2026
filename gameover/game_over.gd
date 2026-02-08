@@ -21,23 +21,30 @@ func _ready():
 	restart_btn.grab_focus()
 	
 func _sync_death_visuals():
-	# Get the real player to see what they were wearing at time of death
 	var real_player = Global.player
 	if not is_instance_valid(real_player): return
-	_mute_music_bus(false)
 	
-	# Retrieve the set data based on the current ID
 	var current_id = real_player.current_set_id
 	var data = real_player.set_data[current_id]
 	
-	# Update the decorative sprites in the GameOver UI
+	var death_body = character_anchor.get_node("Goma")
 	var death_mask = character_anchor.get_node("Mask")
 	var death_cape = character_anchor.get_node("Cape")
 	
+	# Body Sync: Match the Credits baseline
+	death_body.position = Vector2(1.0, 0.0) 
+	death_body.scale = Vector2(0.166, 0.174)
+	death_body.show()
+	
+	# Cape Sync: Match the Credits baseline
+	death_cape.texture = data["cape"]
+	death_cape.position = Vector2(-19.625, 6.125) 
+	death_cape.scale = Vector2(0.172, 0.195)
+	
+	# Mask Sync: Pulls directly from player.gd set_data
 	death_mask.texture = data["mask"]
 	death_mask.position = data["mask_pos"]
 	death_mask.scale = data["mask_scale"]
-	death_cape.texture = data["cape"]
 
 func _on_restart_pressed():
 	set_buttons_disabled(true)
