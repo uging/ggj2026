@@ -15,6 +15,12 @@ func _ready():
 	# 3. Start decorative loops
 	_start_patrol()
 	_start_jump()
+	
+	$ButtonContainer/MainMenuButton.pressed.connect(_on_main_menu_button_pressed)
+	$ButtonContainer/ExitButton.pressed.connect(_on_exit_button_pressed)
+
+	# Let the player use the D-pad/Arrow keys immediately
+	$ButtonContainer/MainMenuButton.grab_focus()
 
 func _sync_equipment_visuals():
 	# Get the real gameplay player from Global
@@ -57,3 +63,6 @@ func _start_jump():
 func _on_main_menu_button_pressed():
 	Global.reset_player_stats()
 	get_tree().change_scene_to_file("res://main/main.tscn")
+
+func _on_exit_button_pressed():
+	get_tree().quit()

@@ -36,25 +36,28 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -422.0
-offset_top = -325.0
+offset_top = -351.0
 offset_right = 404.0
-offset_bottom = 166.0
+offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="VBoxContainer"]
+[node name="ScrollingContent" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/ScrollingContent"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Game Over"
 label_settings = SubResource("LabelSettings_m5nh7")
 
-[node name="Label2" type="Label" parent="VBoxContainer"]
+[node name="Label2" type="Label" parent="VBoxContainer/ScrollingContent"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Thank You for Playing"
 label_settings = SubResource("LabelSettings_gc7tn")
 
-[node name="Label3" type="Label" parent="VBoxContainer"]
+[node name="Label3" type="Label" parent="VBoxContainer/ScrollingContent"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "
@@ -77,10 +80,10 @@ autoplay = true
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 3
 anchors_preset = 0
-offset_left = 538.0
-offset_top = 471.0
-offset_right = 738.0
-offset_bottom = 671.0
+offset_left = 434.0
+offset_top = 445.0
+offset_right = 634.0
+offset_bottom = 645.0
 
 [node name="CharacterAnchor" type="Node2D" parent="CharacterControl"]
 position = Vector2(100, 140)
@@ -99,3 +102,29 @@ texture = ExtResource("7_sd10d")
 position = Vector2(8, -27)
 scale = Vector2(0.114, 0.122)
 texture = ExtResource("8_3dkdu")
+
+[node name="ButtonContainer" type="HBoxContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -96.0
+offset_top = -50.0
+offset_right = 96.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 30
+
+[node name="MainMenuButton" type="Button" parent="ButtonContainer"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_gc7tn")
+text = "Back to Main"
+
+[node name="ExitButton" type="Button" parent="ButtonContainer"]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_gc7tn")
+text = "Exit"
