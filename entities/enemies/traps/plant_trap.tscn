@@ -10,7 +10,8 @@ size = Vector2(49, 28.5)
 size = Vector2(61, 38.25)
 
 [node name="SpikeTrap" type="Area2D"]
-collision_layer = 0
+collision_layer = 4
+collision_mask = 2
 script = ExtResource("1_uu6ug")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -23,6 +24,8 @@ position = Vector2(7, 11)
 shape = SubResource("RectangleShape2D_fkc1t")
 
 [node name="HurtBox" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
 position = Vector2(7.5, 10.875)

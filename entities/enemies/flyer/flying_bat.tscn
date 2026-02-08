@@ -13,10 +13,9 @@ chase_speed = 200.0
 damage_amount = 2
 max_health = 3
 knockback_force = 600.0
+detection_radius = 350.0
 wave_frequency = 0.008
 wave_amplitude = 15.0
-detection_radius = 350.0
-leash_distance = 600.0
 required_mask_id = 2
 
 [node name="Sprite2D" parent="." index="0"]

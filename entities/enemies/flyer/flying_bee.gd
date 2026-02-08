@@ -49,13 +49,11 @@ func _ready() -> void:
 	_setup_nodes()
 	_setup_detection_radius()
 	
-	# Wait for Global/Scene to settle
 	await get_tree().process_frame
 	
 	if not _check_spawn_requirements():
 		return
 
-	# Init stats
 	current_health = max_health
 	if texture: sprite.texture = texture
 	
@@ -66,6 +64,7 @@ func _physics_process(delta: float) -> void:
 	if hit_cooldown > 0: 
 		hit_cooldown -= delta
 
+	# 1. Handle Movement Logic based on State
 	match current_state:
 		State.PATROL:
 			_process_patrol(delta)
@@ -75,7 +74,22 @@ func _physics_process(delta: float) -> void:
 		State.FLEE:
 			_process_flee()
 
+	# 2. Execute movement
 	move_and_slide()
+
+	# 3. Centralized Visual Logic (Fixed Face-Direction)
+	_update_visual_orientation()
+
+# --- VISUAL HELPERS ---
+
+func _update_visual_orientation() -> void:
+	if current_state == State.PATROL:
+		# Face moving direction in patrol
+		sprite.flip_h = (direction == -1)
+	else:
+		# Face the player in CHASE or FLEE
+		if player_ref and is_instance_valid(player_ref):
+			sprite.flip_h = (player_ref.global_position.x < global_position.x)
 
 # --- SETUP HELPERS ---
 
@@ -96,12 +110,10 @@ func _connect_signals() -> void:
 	detection_area.body_exited.connect(_on_detection_body_exited)
 
 func _check_spawn_requirements() -> bool:
-	# 1. Mask Check
 	if required_mask_id != 0 and not _is_mask_unlocked(required_mask_id):
 		queue_free()
 		return false
 	
-	# 2. Persistence Check
 	if persistence_enabled:
 		var enemy_key = get_tree().current_scene.name + "_" + name
 		if Global.destroyed_enemies.has(enemy_key):
@@ -123,10 +135,11 @@ func _process_patrol(_delta: float) -> void:
 	if wall_ray.is_colliding():
 		direction *= -1
 		wall_ray.target_position.x = abs(wall_ray.target_position.x) * direction
-		sprite.flip_h = (direction == -1)
 
 	velocity.x = direction * speed
 	velocity.y = sin(Time.get_ticks_msec() * wave_frequency) * wave_amplitude
+	# starts from where the chase actually begins
+	home_position = global_position
 
 func _process_chase(_delta: float) -> void:
 	if not player_ref or global_position.distance_to(home_position) > leash_distance:
@@ -137,75 +150,70 @@ func _process_chase(_delta: float) -> void:
 	los_ray.target_position = to_local(player_ref.global_position)
 	los_ray.force_raycast_update()
 
-	if los_ray.is_colliding() and los_ray.get_collider().name != "Player":
-		_return_to_patrol()
-		return
+	if los_ray.is_colliding():
+		var collider = los_ray.get_collider()
+		# Use direct reference check instead of name string
+		if collider != player_ref and not collider.is_in_group("player"):
+			_return_to_patrol()
+			return
 
 	var dir_to_player = global_position.direction_to(player_ref.global_position)
-	velocity = velocity.lerp(dir_to_player * chase_speed, 0.05)
-	sprite.flip_h = (velocity.x < 0)
+	velocity = velocity.lerp(dir_to_player * chase_speed, 0.1)
 
 func _check_for_player() -> void:
-	if player_ref:
+	if player_ref and is_instance_valid(player_ref):
 		los_ray.target_position = to_local(player_ref.global_position)
 		los_ray.force_raycast_update()
 
-		if not los_ray.is_colliding() or los_ray.get_collider().name == "Player":
+		if not los_ray.is_colliding():
+			current_state = State.CHASE
+			return
+
+		var collider = los_ray.get_collider()
+		if collider == player_ref or (collider and collider.is_in_group("player")):
 			current_state = State.CHASE
 
 func _return_to_patrol() -> void:
+	direction = -1 if sprite.flip_h else 1
 	player_ref = null
 	current_state = State.PATROL
 
 func _process_flee() -> void:
 	if player_ref:
-		# Move directly AWAY from the player
 		var dir_away = (global_position - player_ref.global_position).normalized()
 		velocity = velocity.lerp(dir_away * retreat_speed, 0.1)
-		sprite.flip_h = (velocity.x < 0)
 	else:
 		_return_to_patrol()
 
 func _start_retreat() -> void:
 	current_state = State.FLEE
-	# Wait for the retreat_time, then go back to patrol
 	get_tree().create_timer(retreat_time).timeout.connect(_return_to_patrol)
 
 # --- COMBAT & DAMAGE ---
 
 func _on_hurt_box_body_entered(body: Node2D) -> void:
-	if body.name != "Player": return
+	if not body.is_in_group("player"): return
 	
-	# 1. Check for PHYSICAL contact moves 
 	var is_smashing = body.get("is_rock_smashing") == true
 	var is_rock_mask = body.get("current_set_id") == 4
 	var is_falling_fast = body.velocity.y > 700.0
 
-	# If Goma slams into the enemy or falls on it with the Rock Mask 
 	if is_smashing or (is_rock_mask and is_falling_fast):
 		take_damage(1)
-		# Add a small bounce for juice
 		if body.has_method("bounce_off_enemy"): 
 			body.bounce_off_enemy()
 		else:
 			body.velocity.y = -400 
 		return
 			
-	# 2. Damage the Player 
-	# Only hurt Goma if he isn't invincible and doesn't have the Aura active.
-	# This protects Goma from taking damage while his shield is up. 
 	var is_aura_active = body.get("is_rock_aura_active") == true
 	if body.get("is_invincible") or is_aura_active: 
 		return
 
 	if body.has_method("take_damage"):
 		body.take_damage(damage_amount)
-		
-		# PUSH PLAYER AWAY 
 		var push_dir = (body.global_position - global_position).normalized()
 		body.velocity = push_dir * knockback_force
-		
-		# RETREAT LOGIC: Back off after hitting 
 		_start_retreat()
 
 func take_damage(amount: int):
@@ -246,9 +254,11 @@ func start_hover_animation():
 # --- SIGNALS ---
 
 func _on_detection_body_entered(body: Node2D) -> void:
-	if body.name == "Player":
+	if body.is_in_group("player"):
 		player_ref = body
 
 func _on_detection_body_exited(body: Node2D) -> void:
-	if body.name == "Player":
-		_return_to_patrol()
+	if body == player_ref:
+		# Don't clear immediately; only clear if we are actually out of range
+		if global_position.distance_to(player_ref.global_position) > detection_radius:
+			_return_to_patrol()

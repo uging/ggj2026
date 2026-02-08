@@ -1,7 +1,11 @@
-[gd_scene load_steps=3 format=3 uid="uid://7eobpmdypy84"]
+[gd_scene load_steps=4 format=3 uid="uid://7eobpmdypy84"]
 
 [ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="1_58oxv"]
 [ext_resource type="Texture2D" uid="uid://d1kihuccgc4bb" path="res://entities/enemies/flyer/assets/ghost.png" id="2_t5v7w"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_t5v7w"]
+resource_local_to_scene = true
+radius = 300.0
 
 [node name="FlyingBee" instance=ExtResource("1_58oxv")]
 modulate = Color(1, 1, 1, 0.5882353)
@@ -9,12 +13,14 @@ speed = 100.0
 chase_speed = 160.0
 damage_amount = 2
 max_health = 5
-persistence_enabled = true
+detection_radius = 160.0
 wave_frequency = 0.002
 wave_amplitude = 60.0
-detection_radius = 160.0
-leash_distance = 500.0
+persistence_enabled = true
 required_mask_id = 4
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_t5v7w")
+
+[node name="CollisionShape2D" parent="DetectionArea" index="0"]
+shape = SubResource("CircleShape2D_t5v7w")

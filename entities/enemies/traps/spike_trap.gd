@@ -19,7 +19,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 func _on_body_entered(body: Node2D) -> void:
-	if body.name == "Player":
+	if body.is_in_group("player"):
 		var is_smashing = body.get("is_rock_smashing") == true
 		var is_falling_fast = body.velocity.y > 700.0
 		var is_aura_active = body.get("is_rock_aura_active") == true
