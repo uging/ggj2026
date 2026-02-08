@@ -131,13 +131,30 @@ func show_title_screen():
 func hide_title_screen():
 	title_node.hide()
 	Global.isTitleShown = false
-
+	
+	# Re-enable GUI sounds now that the menu is gone
+	GlobalAudioManager.mute_all_gui_sounds = false
 	if is_instance_valid(player):
-		player.process_mode = Node.PROCESS_MODE_INHERIT 
+		player.process_mode = Node.PROCESS_MODE_INHERIT
 		player.show()
 		player.input_enabled = true
 		
-		# --- THE FIX: Re-enable the Camera when playing ---
+		# --- THE TRANSITION FADE ---
+		# Find the music node inside the level_container
+		var map_audio = level_container.find_child("AudioStreamPlayer", true, false)
+		if map_audio:
+			if not map_audio.playing: 
+				map_audio.play()
+			
+			# 1. Quick "Dip" (to -20db) to create a 'swish' effect as the menu closes
+			GlobalAudioManager.fade_music(-20.0, 0.4) 
+			
+			# 2. After 0.4s, smoothly "Rise" back to full 0dB volume
+			get_tree().create_timer(0.4).timeout.connect(func():
+				GlobalAudioManager.fade_music(0.0, 1.2)
+			)
+
+		# Re-enable the Camera
 		var cam = player.get_node_or_null("Camera2D")
 		if cam:
 			cam.enabled = true

@@ -29,6 +29,7 @@ var active_glide_player: AudioStreamPlayer = null
 # Track the last time ANY portal requested a hum
 var last_hum_request_time : float = 0.0
 var mute_all_gui_sounds := false
+var music_tween: Tween
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -240,15 +241,15 @@ func fade_music(target_db: float, duration: float) -> void:
 	if bus_idx == -1: return
 	
 	# Kill any existing volume tweens to prevent conflicts
-	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	
-	# Current volume as starting point
+	if music_tween and music_tween.is_valid():
+		music_tween.kill()
+		
+	music_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	var current_db = AudioServer.get_bus_volume_db(bus_idx)
-	
-	# Tween the volume property on the AudioServer
-	tween.tween_method(
+
+	music_tween.tween_method(
 		func(db): AudioServer.set_bus_volume_db(bus_idx, db),
 		current_db, 
 		target_db, 
 		duration
-	)
+	).set_trans(Tween.TRANS_SINE) # Use SINE for a smoother transition
