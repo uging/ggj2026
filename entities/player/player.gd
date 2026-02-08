@@ -410,12 +410,10 @@ func trigger_rock_smash() -> void:
 	is_gliding = false
 	velocity.x = 0
 	
-	# 1. Cost & UI
+	# Cost & UI
 	ability_charges = max(0, ability_charges - 0.5) # Heavier cost for a heavy move
 	show_ability_ui()
 	
-	# 2. The "Wind-up" Visuals
-	visuals.modulate = Color(0.3, 0.3, 0.3) # Darken to show "heavy" state
 	var flip = 1.0 if is_facing_right else -1.0
 	
 	# Squash the player slightly in mid-air to show tension
@@ -627,6 +625,7 @@ func _activate_rock_aura() -> void:
 	is_rock_aura_active = true
 	is_invincible = true
 	aura_timer = aura_max_duration
+	rock_aura_visual.modulate = Color(1.0, 0.6, 0.0, 0.6) # Orange with 60% transparency
 	rock_aura_visual.show()
 	var pulse = create_tween().set_loops()
 	pulse.tween_property(rock_aura_visual, "scale", Vector2(0.33, 0.33), 0.6)
@@ -635,6 +634,20 @@ func _activate_rock_aura() -> void:
 func _deactivate_rock_aura() -> void:
 	is_rock_aura_active = false
 	is_invincible = false
+	# --- THE BREAK EFFECT ---
+	var shatter = create_tween().set_parallel(true)
+	
+	# The "Flash & Burst": Briefly turn bright white then expand huge
+	rock_aura_visual.modulate = Color(2.0, 2.0, 2.0, 1.0) # Overbright flash
+	shatter.tween_property(rock_aura_visual, "scale", Vector2(1.5, 1.5), 0.1).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	shatter.tween_property(rock_aura_visual, "modulate", Color(1.0, 0.5, 0.0, 0.0), 0.2).set_delay(0.1)
+	
+	shatter.finished.connect(func(): 
+		rock_aura_visual.hide()
+		# Resetting scale for next use
+		rock_aura_visual.scale = Vector2(0.3, 0.3) 
+	)
+	
 	rock_aura_visual.hide()
 	visuals.modulate = Color.WHITE
 
@@ -662,9 +675,6 @@ func _handle_landing_logic() -> void:
 			reset_tween.tween_property(visuals, "rotation", 0.0, 0.1)
 			GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -10.0)
 	
-	if not is_rock_aura_active: 
-		visuals.modulate = Color.WHITE
-
 func perform_regular_jump() -> void:
 	velocity.y = -jump_force_base * _get_current_jump_mult()
 	# Visual feedback

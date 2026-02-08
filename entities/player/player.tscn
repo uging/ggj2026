@@ -41,9 +41,13 @@ alpha_curve = SubResource("CurveTexture_26q78")
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1jxqw"]
 particle_flag_disable_z = true
 spread = 180.0
+initial_velocity_min = 400.0
+initial_velocity_max = 600.0
 radial_velocity_min = 299.99997
 radial_velocity_max = 299.99997
-gravity = Vector3(0, 0, 0)
+gravity = Vector3(0, 1500, 0)
+scale_min = 4.0
+scale_max = 8.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1jxqw"]
 radius = 100.0
@@ -85,6 +89,7 @@ process_material = SubResource("ParticleProcessMaterial_2hs0m")
 [node name="FeatherParticles" parent="Visuals" instance=ExtResource("6_1jxqw")]
 
 [node name="ShockwaveParticles" type="GPUParticles2D" parent="Visuals"]
+modulate = Color(0.4745098, 0.30588236, 0.11764706, 0.9254902)
 emitting = false
 amount = 20
 lifetime = 0.5
