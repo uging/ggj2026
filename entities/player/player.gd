@@ -125,46 +125,44 @@ var set_data = {
 # --- Initialization ---
 func _ready() -> void:
 	# 1. IMMEDIATE VISUAL PURGE
-	# Wipe away any lingering death states (rotation/tint) before the first frame
 	visuals.modulate = Color.WHITE 
 	visuals.rotation_degrees = 0 
 	visuals.scale = Vector2.ONE 
 	
-	# 2. VORTEX RESET & ENGINE SYNC
-	# Handles the "Pop-out" scale animation and physics/input setup
-	reset_visuals_after_travel()
-	set_process_input(true)
+	# We only want Goma to "pop out" of a portal if the Title is NOT shown.
+	if not Global.isTitleShown:
+		# 2. VORTEX RESET & ENGINE SYNC
+		reset_visuals_after_travel()
+		set_process_input(true)
+		
+		# 5. PORTAL SPAWN FLASH & PROTECTION
+		is_invincible = true
+		var original_mask = collision_mask
+		collision_mask = 1 
+		
+		visuals.modulate = Color(3.0, 3.0, 3.0, 1.0)
+		var flash_tween = create_tween()
+		flash_tween.tween_property(visuals, "modulate", Color.WHITE, 0.6).set_trans(Tween.TRANS_SINE)
+		
+		get_tree().create_timer(1.5).timeout.connect(func():
+			is_invincible = false
+			collision_mask = original_mask
+		)
+	else:
+		# If the Title IS shown, make sure Goma is invisible and frozen
+		hide()
+		set_process_input(false)
 	
-	# 3. STAT SYNC
-	# Sync Goma's health with the Global manager immediately
+	# 3. STAT SYNC (Keep this outside the check)
 	current_health = Global.current_health
 	max_health = Global.max_health_limit
 	health_changed.emit(current_health)
 	
 	# 4. STANDARD SETUP
-	# Moved BEFORE the flash so it doesn't overwrite the brightness
 	_reset_states()
 	_setup_idle_animation()
 
-	# 5. PORTAL SPAWN FLASH & PROTECTION
-	# This creates the high-brightness arrival effect
-	is_invincible = true
-	var original_mask = collision_mask
-	collision_mask = 1 # Temporary "Ghost Mode" collision
-	
-	# THE FLASH: Over-brighten visuals and fade to normal
-	visuals.modulate = Color(3.0, 3.0, 3.0, 1.0)
-	var flash_tween = create_tween()
-	flash_tween.tween_property(visuals, "modulate", Color.WHITE, 0.6).set_trans(Tween.TRANS_SINE)
-	
-	# Release protection window
-	get_tree().create_timer(1.5).timeout.connect(func():
-		is_invincible = false
-		collision_mask = original_mask
-	)
-
 	# 6. HUD & SECONDARY SYNC
-	# Wait for the HUD to be fully ready for mask/ability icons
 	await get_tree().process_frame
 	masks_updated.emit(unlocked_masks)
 	

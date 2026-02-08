@@ -114,13 +114,21 @@ func _on_start_button_pressed() -> void:
 
 func _on_load_button_pressed() -> void:
 	if FileAccess.file_exists("user://savegame.save"):
-		load_game_pressed.emit()
+		load_game_pressed.emit() # This tells Main.gd to start loading
 	else:
-		# Tiny "No" shake effect if they click it with no save
-		var tween = create_tween()
-		tween.tween_property(load_button, "position:x", load_button.position.x + 10, 0.05)
-		tween.tween_property(load_button, "position:x", load_button.position.x - 10, 0.05)
-		tween.tween_property(load_button, "position:x", load_button.position.x, 0.05)
+		# PUNCHIER SHAKE: Feedback that the button is "locked"
+		var original_x = load_button.position.x
+		var shake = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		
+		# 3 rapid cycles (Right -> Left -> Center)
+		for i in range(3):
+			shake.tween_property(load_button, "position:x", original_x + 8.0, 0.04)
+			shake.tween_property(load_button, "position:x", original_x - 8.0, 0.04)
+		
+		shake.tween_property(load_button, "position:x", original_x, 0.04)
+		
+		# Optional: Play a buzzer/error sound
+		GlobalAudioManager._play_sfx(GlobalAudioManager.hurt_sfx)
 
 func _on_exit_button_pressed() -> void:
 	get_tree().quit()

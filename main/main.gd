@@ -37,6 +37,7 @@ func _setup_title_screen() -> void:
 	
 	# 3. Connect signals from the title script
 	title_instance.start_game.connect(_on_start_button_pressed)
+	title_instance.load_game_pressed.connect(_on_load_button_pressed)
 
 func _on_start_button_pressed() -> void:
 	# --- CHANGE: Instead of loading level here, just hide the overlay ---
@@ -48,59 +49,87 @@ func _on_start_button_pressed() -> void:
 		player.current_health = 3
 		player.health_changed.emit(3)
 
+func _on_load_button_pressed() -> void:
+	# 1. Hide UI first to set Global.isTitleShown = false [KEEP]
+	hide_title_screen() 
+	
+	# 2. Trigger the actual data load [KEEP]
+	SaveManager.load_game()
+	
+	# 3. Sync player stats and visuals from the newly loaded Global data [UPDATE]
+	if is_instance_valid(player):
+		# Sync Health and emit signal for HUD [KEEP]
+		player.current_health = Global.current_health
+		player.health_changed.emit(player.current_health)
+		
+		# We use 'true' for the silent parameter to avoid the poof sound on load
+		player.change_set(Global.current_equipped_set, true)
+		
+		# Force the movement mode check [KEEP]
+		player.is_top_down = (Global.current_level_path.contains("world_map"))
+		
 # --- Level Management ---
 
 func load_level(path: String, spawn_pos: Vector2):
-	# 1. Clear old level
+	# 1. Clear old level [KEEP]
 	for child in level_container.get_children():
 		child.queue_free()
 		
-	# SAVE THE BOOKMARK
-	# 1. Update the Origin: Save where we are before we leave
+	# 2. Update Bookmarks [KEEP]
 	Global.origin_level_path = Global.current_level_path
-	
-	# 2. Update the Current: Set the new destination
 	Global.current_level_path = path
 	Global.last_spawn_pos = spawn_pos
 
+	# 3. Handle Movement Mode [KEEP]
 	if is_instance_valid(player):
 		player.is_top_down = (path.contains("world_map"))
 		
+	# 4. Instantiate New Level [UPDATE]
 	var level_resource = load(path)
 	if level_resource:
 		var new_level = level_resource.instantiate()
+		
+		# --- DUPLICATE PROTECTION ---
+		# This prevents the "Two Gomas" issue by removing any Goma 
+		# that accidentally exists inside the level scene file.
+		var extra_goma = new_level.find_child("Player", true, false)
+		if not extra_goma:
+			extra_goma = new_level.find_child("Goma", true, false)
+			
+		if extra_goma:
+			extra_goma.queue_free() 
+		# --- END DUPLICATE PROTECTION ---
+
 		level_container.add_child(new_level)
 
-		# --- THE CRITICAL UPDATE FOR CREDITS ---
+		# 5. Handle Credits vs Gameplay [KEEP]
 		var is_credits = path.contains("credits")
 
 		if is_credits:
-			# If it's the credits, keep the "Gameplay" versions invisible
 			player.hide()
 			player.set_physics_process(false)
 			player.set_process_input(false)
 			hud.hide()
 		else:
-			# Standard gameplay positioning
+			# 6. Positioning [KEEP]
 			player.global_position = spawn_pos
 			player.z_index = 10
 			player.is_dying = false
 			
-			# --- THE FIX: Conditional Input/Physics Logic ---
-			# If the title is shown, Goma must remain frozen regardless of level load
+			# 7. Menu vs Gameplay State [UPDATE]
 			if Global.isTitleShown:
 				player.process_mode = Node.PROCESS_MODE_DISABLED
 				player.hide()
 			else:
 				player.process_mode = Node.PROCESS_MODE_INHERIT
 				player.show()
-				
-				# HUD Logic
 				hud.show()
-				if hud.has_method("setup_health"):
-					hud.setup_health(player)
+				
+				# Instead of setup_health, we use the signal to sync the hearts.
+				if is_instance_valid(player):
+					player.health_changed.emit(player.current_health)
 
-			# 3. Handle Movement Mode
+			# 8. Re-confirm Movement Mode [KEEP]
 			player.is_top_down = (path.contains("world_map"))
 
 		get_tree().paused = false

@@ -116,4 +116,5 @@ label_settings = SubResource("LabelSettings_re7it")
 script = ExtResource("6_hecjl")
 
 [connection signal="pressed" from="StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="LoadButton" to="." method="_on_load_button_pressed"]
 [connection signal="pressed" from="ExitButton" to="." method="_on_start_button_pressed"]

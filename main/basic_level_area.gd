@@ -25,6 +25,9 @@ func _input(event: InputEvent) -> void:
 	if get_tree().paused or Global.isTitleShown:
 		return
 		
+	if not is_instance_valid(Global.player): 
+		return
+		
 	# 2. Only accept the Enter key specifically
 	# This avoids the "Space Bar" bleed-through from UI buttons
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ENTER:
