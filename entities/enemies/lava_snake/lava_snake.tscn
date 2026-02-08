@@ -1,10 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://br0e78iidqro2"]
+[gd_scene load_steps=5 format=3 uid="uid://br0e78iidqro2"]
 
 [ext_resource type="Script" uid="uid://caumsnfvsycyl" path="res://entities/enemies/lava_snake/lava_snake.gd" id="1_aaad7"]
 [ext_resource type="Texture2D" uid="uid://gru7gjgrife1" path="res://entities/enemies/lava_snake/assets/snakeLava.png" id="2_q0qjq"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1nghx"]
 size = Vector2(12, 62.25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xiqcn"]
+size = Vector2(20, 68)
 
 [node name="LavaSnake" type="Area2D"]
 script = ExtResource("1_aaad7")
@@ -15,3 +18,8 @@ texture = ExtResource("2_q0qjq")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_1nghx")
+
+[node name="HurtBox" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
+shape = SubResource("RectangleShape2D_xiqcn")

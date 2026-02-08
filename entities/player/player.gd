@@ -9,6 +9,7 @@ enum Set { DEFAULT = 1, FEATHER = 2, GUM = 3, ROCK = 4 }
 const DOUBLE_TAP_WINDOW := 0.25
 const UI_FADE_SPEED := 0.5
 const CHARGE_THRESHOLD := 0.15
+const AURA_TICK_RATE := 0.4 # Matches the enemy's hit_cooldown
 
 # --- References ---
 @onready var visuals: Node2D = $Visuals
@@ -70,6 +71,7 @@ var last_wall_normal := Vector2.ZERO
 var can_execute_launch := false
 var wall_rejump_timer := 0.0
 var wall_rejump_duration := 0.2 # How long the grace period lasts
+var aura_tick_timer := 0.0
 
 var current_set_id: int = Set.DEFAULT
 var is_facing_right := true
@@ -221,7 +223,7 @@ func _physics_process(delta: float) -> void:
 	if get_tree().paused or is_dying: return
 
 	_handle_resource_regen(delta)
-	if is_rock_aura_active: _handle_aura_damage()
+	if is_rock_aura_active: _handle_aura_damage(delta)
 
 	if is_top_down:
 		_process_top_down_movement(delta)
@@ -651,12 +653,27 @@ func _deactivate_rock_aura() -> void:
 	rock_aura_visual.hide()
 	visuals.modulate = Color.WHITE
 
-func _handle_aura_damage() -> void:
-	blast_zone.monitoring = true
-	for area in blast_zone.get_overlapping_areas():
-		var target = area if area.has_method("take_damage") else area.get_parent()
-		if target.has_method("take_damage"): target.take_damage(1)
-
+func _handle_aura_damage(delta: float) -> void:
+	aura_tick_timer -= delta
+	# Only "pulse" the damage at set intervals
+	if aura_tick_timer <= 0:
+		aura_tick_timer = AURA_TICK_RATE
+		
+		# Toggle monitoring to force a fresh physics check
+		blast_zone.monitoring = false
+		blast_zone.monitoring = true
+		
+		# Wait one physics frame for the engine to find the overlaps
+		await get_tree().physics_frame
+		
+		var overlapping_areas = blast_zone.get_overlapping_areas()
+		for area in overlapping_areas:
+			# Check if we hit the enemy's HurtBox 
+			if area.name == "HurtBox": 
+				var target = area.get_parent()				
+				if target.has_method("take_damage") and not target.is_in_group("player"):
+					target.take_damage(1)
+					
 func _handle_landing_logic() -> void:
 	if Global.isTitleShown:
 		is_rock_smashing = false # Reset state without noise

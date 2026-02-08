@@ -73,7 +73,7 @@ func _physics_process(delta: float) -> void:
 		State.CHASE:
 			_process_chase(delta)
 		State.FLEE:
-			_process_flee(delta) # Added Flee logic
+			_process_flee()
 
 	move_and_slide()
 
@@ -157,7 +157,7 @@ func _return_to_patrol() -> void:
 	player_ref = null
 	current_state = State.PATROL
 
-func _process_flee(delta: float) -> void:
+func _process_flee() -> void:
 	if player_ref:
 		# Move directly AWAY from the player
 		var dir_away = (global_position - player_ref.global_position).normalized()
@@ -176,28 +176,36 @@ func _start_retreat() -> void:
 func _on_hurt_box_body_entered(body: Node2D) -> void:
 	if body.name != "Player": return
 	
-	# Check for Player "Attack" States
+	# 1. Check for PHYSICAL contact moves 
 	var is_smashing = body.get("is_rock_smashing") == true
-	var is_aura_active = body.get("is_rock_aura_active") == true
 	var is_rock_mask = body.get("current_set_id") == 4
 	var is_falling_fast = body.velocity.y > 700.0
 
-	if is_smashing or is_aura_active or (is_rock_mask and is_falling_fast):
+	# If Goma slams into the enemy or falls on it with the Rock Mask 
+	if is_smashing or (is_rock_mask and is_falling_fast):
 		take_damage(1)
-		if body.has_method("bounce_off_enemy"): body.bounce_off_enemy()
-		body.velocity.y = -400 
+		# Add a small bounce for juice
+		if body.has_method("bounce_off_enemy"): 
+			body.bounce_off_enemy()
+		else:
+			body.velocity.y = -400 
 		return
 			
-	if body.get("is_invincible"): return
+	# 2. Damage the Player 
+	# Only hurt Goma if he isn't invincible and doesn't have the Aura active.
+	# This protects Goma from taking damage while his shield is up. 
+	var is_aura_active = body.get("is_rock_aura_active") == true
+	if body.get("is_invincible") or is_aura_active: 
+		return
 
 	if body.has_method("take_damage"):
 		body.take_damage(damage_amount)
 		
-		# PUSH PLAYER AWAY
+		# PUSH PLAYER AWAY 
 		var push_dir = (body.global_position - global_position).normalized()
 		body.velocity = push_dir * knockback_force
 		
-		# RETREAT LOGIC: Back off after hitting
+		# RETREAT LOGIC: Back off after hitting 
 		_start_retreat()
 
 func take_damage(amount: int):
