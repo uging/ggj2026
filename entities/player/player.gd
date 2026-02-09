@@ -49,7 +49,7 @@ const AURA_TICK_RATE := 0.4 # Matches the enemy's hit_cooldown
 # --- Jump Height Multipliers ---
 @export_subgroup("Jump Multipliers")
 @export var jump_mult_default := 1.0
-@export var jump_mult_feather := 1.0
+@export var jump_mult_feather := 1.1
 @export var jump_mult_gum := 1.2
 @export var jump_mult_rock := 0.85
 
