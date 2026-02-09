@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=4 uid="uid://cywrg0bjuyd0q"]
+[gd_scene load_steps=16 format=4 uid="uid://cywrg0bjuyd0q"]
 
 [ext_resource type="Script" uid="uid://d35w1jylxasvg" path="res://levels/basic_level.gd" id="1_jxqax"]
 [ext_resource type="Texture2D" uid="uid://co4nqst4qm0h1" path="res://resources/tilesheet_complete.png" id="2_h6lqb"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://bcmevgqpoeyet" path="res://entities/enemies/traps/spike_trap.tscn" id="10_hu82h"]
 [ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="11_gdvbf"]
 [ext_resource type="PackedScene" uid="uid://bugywcndydomy" path="res://common/doors/vortex_portal.tscn" id="12_kd0wh"]
+[ext_resource type="Texture2D" uid="uid://col0urumv1nd" path="res://entities/enemies/slime/assets/slimeGreen.png" id="13_gwrfg"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6t68p"]
 texture = ExtResource("2_h6lqb")
@@ -322,16 +323,16 @@ position = Vector2(1556, 557)
 collision_layer = 1
 
 [node name="FlyingBee" parent="." instance=ExtResource("8_gdvbf")]
-position = Vector2(352, 82)
+position = Vector2(561, 285)
 
 [node name="FlyingBee2" parent="." instance=ExtResource("8_gdvbf")]
 position = Vector2(1489, 224)
 
 [node name="FlyingBee3" parent="." instance=ExtResource("11_gdvbf")]
-position = Vector2(940, 112)
+position = Vector2(945, 120)
 
 [node name="FlyingBee4" parent="." instance=ExtResource("11_gdvbf")]
-position = Vector2(2006, -81)
+position = Vector2(2047, 20)
 
 [node name="MaskRockPickup" parent="." instance=ExtResource("8_tf5ar")]
 position = Vector2(794, 497)
@@ -346,3 +347,7 @@ position = Vector2(7, 462)
 
 [node name="EndPorta" parent="." instance=ExtResource("12_kd0wh")]
 position = Vector2(2753, 389)
+
+[node name="SlimeGreen" type="Sprite2D" parent="."]
+position = Vector2(1786, 404)
+texture = ExtResource("13_gwrfg")

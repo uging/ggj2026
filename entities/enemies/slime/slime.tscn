@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3 uid="uid://m155hurm52kt"]
+
+[ext_resource type="Script" uid="uid://br7t4c4ge5n6d" path="res://entities/enemies/slime/slime.gd" id="1_40ead"]
+[ext_resource type="Texture2D" uid="uid://col0urumv1nd" path="res://entities/enemies/slime/assets/slimeGreen.png" id="1_m8e27"]
+[ext_resource type="PackedScene" uid="uid://cfefgtiidrp6" path="res://ui/components/enemy_health_bar.tscn" id="3_xh4mf"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_40ead"]
+radius = 17.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_xh4mf"]
+radius = 26.24881
+
+[node name="Slime" type="CharacterBody2D"]
+collision_layer = 4
+script = ExtResource("1_40ead")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_m8e27")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_40ead")
+
+[node name="FloorRay" type="RayCast2D" parent="."]
+target_position = Vector2(0, 30)
+
+[node name="WallRay" type="RayCast2D" parent="."]
+target_position = Vector2(35, 0)
+
+[node name="HurtBox" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
+shape = SubResource("CircleShape2D_xh4mf")
+
+[node name="EnemyHealthBar" parent="." instance=ExtResource("3_xh4mf")]
+offset_left = -20.0
+offset_top = -39.0
+offset_right = 20.0
+offset_bottom = -29.0

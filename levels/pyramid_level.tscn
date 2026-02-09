@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://5sutltexle6j" path="res://levels/pit.gd" id="6_7wby1"]
 [ext_resource type="PackedScene" uid="uid://cbi5nmj310fsq" path="res://entities/enemies/snail/snail.tscn" id="6_nvhv4"]
 [ext_resource type="PackedScene" uid="uid://ktoolncvo1a4" path="res://entities/enemies/flyer/flying_bat.tscn" id="7_01nkt"]
-[ext_resource type="PackedScene" uid="uid://br0e78iidqro2" path="res://entities/enemies/lava_snake/lava_snake.tscn" id="10_kno24"]
+[ext_resource type="PackedScene" uid="uid://bbkgvi42pnxcf" path="res://entities/enemies/slime/slime_purple.tscn" id="11_01nkt"]
 [ext_resource type="PackedScene" uid="uid://bugywcndydomy" path="res://common/doors/vortex_portal.tscn" id="11_nvhv4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8o7p4"]
@@ -53,9 +53,6 @@ position = Vector2(1805, 466)
 
 [node name="Snail2" parent="Node2D" instance=ExtResource("6_nvhv4")]
 position = Vector2(2663, 41)
-
-[node name="LavaSnake" parent="Node2D" instance=ExtResource("10_kno24")]
-position = Vector2(1134, 383)
 
 [node name="FlyingBee" parent="Node2D" instance=ExtResource("7_01nkt")]
 position = Vector2(272, 354)
@@ -110,3 +107,6 @@ position = Vector2(-182, 509)
 position = Vector2(2860, 9)
 next_scene_path = "res://gameover/credits.tscn"
 is_credits_portal = true
+
+[node name="Slime" parent="." instance=ExtResource("11_01nkt")]
+position = Vector2(814, 391)

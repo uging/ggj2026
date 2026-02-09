@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://bgh77nwtdn33x"]
+[gd_scene load_steps=17 format=4 uid="uid://bgh77nwtdn33x"]
 
 [ext_resource type="Script" uid="uid://cqwsgmf7gyux6" path="res://levels/tower_level.gd" id="1_a8dg0"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="1_hr45r"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://dis0d7tfpkpli" path="res://entities/enemies/flyer/flying_fly.tscn" id="12_qxwb5"]
 [ext_resource type="PackedScene" uid="uid://bugywcndydomy" path="res://common/doors/vortex_portal.tscn" id="13_6wimq"]
 [ext_resource type="PackedScene" uid="uid://6t54oy8ccwbe" path="res://entities/enemies/flyer/flying_bee.tscn" id="13_f363n"]
+[ext_resource type="PackedScene" uid="uid://dos7y2yt0ybrm" path="res://entities/enemies/slime/slime_blue.tscn" id="14_6wimq"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_35uxj"]
 texture = ExtResource("2_35uxj")
@@ -237,9 +238,6 @@ stream = ExtResource("8_nhahx")
 autoplay = true
 bus = &"Music"
 
-[node name="Snail" parent="." instance=ExtResource("10_jdkyd")]
-position = Vector2(595, 462)
-
 [node name="FlyingBee" parent="." instance=ExtResource("11_uin8l")]
 position = Vector2(1046, -1801)
 
@@ -260,3 +258,10 @@ position = Vector2(67, -2064)
 
 [node name="StartPortal" parent="." instance=ExtResource("13_6wimq")]
 position = Vector2(1076, 424)
+
+[node name="Snail" parent="." instance=ExtResource("10_jdkyd")]
+z_index = 2
+position = Vector2(31, -1643)
+
+[node name="Slime" parent="." instance=ExtResource("14_6wimq")]
+position = Vector2(604, 444)

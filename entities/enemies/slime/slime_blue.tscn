@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://dos7y2yt0ybrm"]
+
+[ext_resource type="PackedScene" uid="uid://m155hurm52kt" path="res://entities/enemies/slime/slime.tscn" id="1_bgwka"]
+[ext_resource type="Texture2D" uid="uid://c6w1pewc6dkxe" path="res://entities/enemies/slime/assets/slimeBlue.png" id="2_artsl"]
+
+[node name="Slime" instance=ExtResource("1_bgwka")]
+type = 1
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_artsl")
