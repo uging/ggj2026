@@ -31,10 +31,59 @@ var last_hum_request_time : float = 0.0
 var mute_all_gui_sounds := false
 var music_tween: Tween
 
+# --- MUSIC REGISTRY ---
+var music_player: AudioStreamPlayer = null
+
+# Map the "Name" of your scene's root node to the music file
+var level_music_registry = {
+	"WorldMap": preload("res://resources/sounds/autism island.ogg"),
+	"TowerLevel": preload("res://resources/sounds/Exploring Town.ogg"),
+	"PyramidLevel": preload("res://resources/sounds/Cunning plan.ogg"),
+	"BasicLevel": preload("res://resources/sounds/tropicalfantasy.ogg"),
+	"Credits": preload("res://resources/sounds/themsong.wav")
+}
+
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().node_added.connect(_on_node_added)
 	_recursive_scan(get_tree().root)
+	
+	music_player = AudioStreamPlayer.new()
+	music_player.bus = "Music"
+	music_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(music_player)
+	
+	get_tree().node_added.connect(_on_node_added_for_music)
+
+func _on_node_added_for_music(node: Node):
+	# 1. Safety Check: Only trigger if the node is being loaded into our main container
+	# This stops 'PyramidLevel' (the portal) in the 'WorldMap' from starting the wrong song
+	if node.get_parent() and node.get_parent().name == "LevelContainer":
+		
+		# 2. Registry Check: Does this level name have a song assigned?
+		if level_music_registry.has(node.name):
+			# 3. Start Silent: Prevents the initial 'pop' or overlap
+			var bus_idx = AudioServer.get_bus_index("Music")
+			AudioServer.set_bus_volume_db(bus_idx, -80.0)
+			
+			# 4. Change Track: Physically stop old and start new
+			play_music(level_music_registry[node.name])
+			
+			# 5. Smooth Transition: Fade in over 1.5 seconds
+			fade_music(0.0, 1.5)
+
+func play_music(music_stream: AudioStream):
+	if is_instance_valid(music_player) and music_player.stream == music_stream:
+		return 
+	
+	music_player.stop()
+	music_player.stream = music_stream
+	
+	# Loop settings for Web/Compatibility
+	if music_stream is AudioStreamMP3: music_stream.loop = true
+	elif music_stream is AudioStreamWAV: music_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	
+	music_player.play()
 	
 func _process(_delta):
 	# The "Timer" logic:

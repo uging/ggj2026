@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=4 uid="uid://2f2evocr74n8"]
+[gd_scene load_steps=35 format=4 uid="uid://2f2evocr74n8"]
 
 [ext_resource type="Script" uid="uid://byqid2dlld8w2" path="res://levels/world_map.gd" id="1_40iy8"]
 [ext_resource type="TileSet" uid="uid://cm86mllv60gwm" path="res://levels/background.tres" id="3_s5si2"]
@@ -18,7 +18,6 @@
 [ext_resource type="Script" uid="uid://cdlwtab4fbggm" path="res://main/castle_area.gd" id="17_jgfse"]
 [ext_resource type="Texture2D" uid="uid://ckjrph8yrw7w" path="res://resources/temple.png" id="18_vtulp"]
 [ext_resource type="Script" uid="uid://brmx07ibt3j68" path="res://main/pyramid_area.gd" id="19_usum4"]
-[ext_resource type="AudioStream" uid="uid://c1wmn443t6ec0" path="res://resources/sounds/autism island.ogg" id="20_iu882"]
 [ext_resource type="Script" uid="uid://ddi46rcepqq8b" path="res://main/key_label.gd" id="21_5n3u1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4dugh"]
@@ -306,11 +305,6 @@ metadata/_edit_group_ = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InvisibleWall4"]
 position = Vector2(418, 14.5)
 shape = SubResource("RectangleShape2D_73k8k")
-
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("20_iu882")
-autoplay = true
-bus = &"Music"
 
 [node name="KeyLabel" type="Label" parent="."]
 visible = false

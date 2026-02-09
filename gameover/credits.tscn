@@ -1,8 +1,7 @@
-[gd_scene load_steps=12 format=3 uid="uid://cmlw7rt3qypjb"]
+[gd_scene load_steps=11 format=3 uid="uid://cmlw7rt3qypjb"]
 
 [ext_resource type="FontFile" uid="uid://bbc5b2ody45vr" path="res://resources/fonts/KaushanScript-Regular.otf" id="2_8mo1g"]
 [ext_resource type="FontFile" uid="uid://dqj3kl2spwtkw" path="res://resources/fonts/Kenney Blocks.ttf" id="3_217rd"]
-[ext_resource type="AudioStream" uid="uid://crunbnmp7qpuu" path="res://resources/sounds/themsong.wav" id="3_m5nh7"]
 [ext_resource type="Script" uid="uid://d3g55x0xe88x2" path="res://gameover/credits.gd" id="3_mn72n"]
 [ext_resource type="FontFile" uid="uid://dasrxrrurr323" path="res://resources/fonts/Kenney Pixel Square.ttf" id="4_gc7tn"]
 [ext_resource type="Texture2D" uid="uid://5n84e57l8sk4" path="res://entities/player/assets/goma.png" id="6_qbb33"]
@@ -71,10 +70,6 @@ horizontal_alignment = 1
 
 [node name="Timer" type="Timer" parent="."]
 wait_time = 5.0
-
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("3_m5nh7")
-autoplay = true
 
 [node name="CharacterControl" type="Control" parent="."]
 custom_minimum_size = Vector2(200, 200)

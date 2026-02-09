@@ -1,27 +1,16 @@
 extends Node2D
 
 # --- References ---
-@onready var bg_music = $AudioStreamPlayer
 @onready var help_label = $KeyLabel
 
-func _ready() -> void:
-	# 1. Initialize world map state
-	if bg_music:
-		# Ensure the stream is physically playing
-		if not bg_music.playing:
-			bg_music.play()
-		
-		# --- THE MUSIC PROGRESSION ---
-		# Fade the bus back to normal (0.0dB) over 1.2 seconds
-		GlobalAudioManager.fade_music(0.0, 1.2)
-	
+func _ready() -> void:	
 	if help_label:
 		help_label.show()
 	
-	# 2. Ensure physics is running
+	# Ensure physics is running
 	get_tree().paused = false
 	
-	# --- NEW: Portal Exit Logic ---
+	# Portal Exit Logic ---
 	# Wait for Main.gd to finish moving Goma to the last_spawn_pos
 	await get_tree().process_frame
 	

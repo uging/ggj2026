@@ -2,27 +2,22 @@ extends Node2D
 @export var is_top_down_level := false
 @export var level_gravity := 1600.0
 
-func _ready() -> void:
-	# 1. Start Music Silent
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), -80.0)
-	
+func _ready() -> void:	
 	await get_tree().process_frame
 	
-	# 2. Physics & Music Progression
+	# Physics & Music Progression
 	if is_instance_valid(Global.player):
 		Global.player.is_top_down = is_top_down_level
 		Global.player.gravity = level_gravity
 		
-	GlobalAudioManager.fade_music(0.0, 1.5)
-		
-	# 3. Vortex Pop-out (Changed to 'true' to face right)
+	# Vortex Pop-out (Changed to 'true' to face right)
 	var portal = get_node_or_null("StartPortal")
 	if portal and is_instance_valid(Global.player):
 		Global.player.reset_visuals_after_travel(portal.global_position, Global.last_spawn_pos, false)
 		await get_tree().create_timer(0.4).timeout
 		GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
 			
-	# 4. Camera & HUD Setup
+	# Camera & HUD Setup
 	if is_instance_valid(Global.player):
 		var cam = Global.player.get_node_or_null("Camera2D")
 		if cam:

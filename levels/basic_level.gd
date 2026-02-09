@@ -3,22 +3,16 @@ extends Node2D
 @export var level_gravity := 1600.0
 
 func _ready() -> void:
-	# 1. AUDIO INITIALIZATION
-	# Force the music bus to silent immediately to prevent "popping"
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), -80.0)
 	
 	# Wait for the engine to settle and Main.gd to position the player
 	await get_tree().process_frame 
 	
-	# 2. PHYSICS & MUSIC PROGRESSION
+	# PHYSICS & MUSIC PROGRESSION
 	if is_instance_valid(Global.player):
 		Global.player.is_top_down = is_top_down_level
 		Global.player.gravity = level_gravity
-		
-	# Start the slow fade-in for the level theme
-	GlobalAudioManager.fade_music(0.0, 1.5) 
-	
-	# 3. VORTEX POP-OUT
+			
+	# VORTEX POP-OUT
 	var portal = get_node_or_null("StartPortal") 
 	if portal and is_instance_valid(Global.player):
 		if Global.player.has_method("reset_visuals_after_travel"):
@@ -29,7 +23,7 @@ func _ready() -> void:
 			await get_tree().create_timer(0.4).timeout
 			GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
 			
-	# 4. CAMERA CONFIGURATION
+	# CAMERA CONFIGURATION
 	var cam = Global.player.get_node_or_null("Camera2D")
 	if cam:
 		cam.make_current()
@@ -38,7 +32,7 @@ func _ready() -> void:
 		cam.limit_bottom = 700
 		cam.limit_right = 3000
 
-	# 5. HUD & UI SYNC
+	# HUD & UI SYNC
 	if is_instance_valid(Global.hud) and is_instance_valid(Global.player):
 		# Ensure signals are connected once and only once
 		if not Global.player.health_changed.is_connected(Global.hud._on_health_changed):

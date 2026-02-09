@@ -93,6 +93,7 @@ func _on_load_button_pressed() -> void:
 func load_level(path: String, spawn_pos: Vector2):
 	# 1. Clear old level [KEEP]
 	for child in level_container.get_children():
+		level_container.remove_child(child)
 		child.queue_free()
 		
 	# 2. Update Bookmarks [KEEP]
@@ -181,19 +182,16 @@ func hide_title_screen():
 	
 	# Re-enable GUI sounds now that the menu is gone
 	GlobalAudioManager.mute_all_gui_sounds = false
+	
 	if is_instance_valid(player):
 		player.process_mode = Node.PROCESS_MODE_INHERIT
 		player.show()
 		player.input_enabled = true
 		
-		# --- THE TRANSITION FADE ---
-		# Find the music node inside the level_container
-		var map_audio = level_container.find_child("AudioStreamPlayer", true, false)
-		if map_audio:
-			if not map_audio.playing: 
-				map_audio.play()
-			
-			# 1. Quick "Dip" (to -20db) to create a 'swish' effect as the menu closes
+		# ONLY apply the manual 'dip' if we are actually on the World Map
+		# This prevents the World Map fade logic from overriding the Pyramid/Tower music
+		if Global.current_level_path.contains("world_map"):
+			# 1. Quick "Dip" (to -20db) to create a 'swish' effect
 			GlobalAudioManager.fade_music(-20.0, 0.4) 
 			
 			# 2. After 0.4s, smoothly "Rise" back to full 0dB volume
