@@ -31,12 +31,3 @@ func _ready() -> void:
 		cam.limit_top = -500
 		cam.limit_bottom = 700
 		cam.limit_right = 3000
-
-	# HUD & UI SYNC
-	if is_instance_valid(Global.hud) and is_instance_valid(Global.player):
-		# Ensure signals are connected once and only once
-		if not Global.player.health_changed.is_connected(Global.hud._on_health_changed):
-			Global.player.health_changed.connect(Global.hud._on_health_changed)
-
-		if Global.hud.has_method("setup_health"):
-			Global.hud.setup_health(Global.player)

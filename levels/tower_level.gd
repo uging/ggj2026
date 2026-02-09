@@ -17,7 +17,7 @@ func _ready() -> void:
 		await get_tree().create_timer(0.4).timeout
 		GlobalAudioManager._play_sfx(GlobalAudioManager.land_sfx, -2.0)
 			
-	# Camera & HUD Setup
+	# Camera
 	if is_instance_valid(Global.player):
 		var cam = Global.player.get_node_or_null("Camera2D")
 		if cam:
@@ -26,9 +26,3 @@ func _ready() -> void:
 			cam.limit_top = -2200 
 			cam.limit_right = 1800 
 			cam.limit_bottom = 950
-
-	if is_instance_valid(Global.hud) and is_instance_valid(Global.player):
-		if not Global.player.health_changed.is_connected(Global.hud._on_health_changed):
-			Global.player.health_changed.connect(Global.hud._on_health_changed)
-		if Global.hud.has_method("setup_health"):
-			Global.hud.setup_health(Global.player)

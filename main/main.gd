@@ -154,6 +154,17 @@ func load_level(path: String, spawn_pos: Vector2):
 				player.process_mode = Node.PROCESS_MODE_INHERIT
 				player.show()
 				hud.show()
+				# 1. Connect Health (Safety check)
+				if not player.health_changed.is_connected(hud._on_health_changed):
+					player.health_changed.connect(hud._on_health_changed)
+
+				# 2. THE FIX: Connect Masks
+				if not player.masks_updated.is_connected(hud._on_masks_updated):
+					player.masks_updated.connect(hud._on_masks_updated)
+
+				# 3. Force an immediate sync so the HUD isn't blank on load
+				hud.update_hearts(player.current_health)
+				hud.update_masks(Global.unlocked_masks)
 				
 				# Instead of setup_health, we use the signal to sync the hearts.
 				if is_instance_valid(player):

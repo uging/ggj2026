@@ -60,7 +60,13 @@ func is_mask_unlocked(mask_name: String) -> bool:
 func unlock_mask(mask_name: String):
 	if unlocked_masks.has(mask_name):
 		unlocked_masks[mask_name] = true
-		if player and player.has_signal("masks_updated"):
+		
+		# Direct HUD update: Fast and reliable
+		if is_instance_valid(hud) and hud.has_method("update_masks"):
+			hud.update_masks(unlocked_masks)
+		
+		# Signal emission: Good for player-specific logic
+		if is_instance_valid(player) and player.has_signal("masks_updated"):
 			player.masks_updated.emit(unlocked_masks)
 
 func reset_player_stats():
