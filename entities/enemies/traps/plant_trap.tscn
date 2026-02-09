@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://b7e4hrbvbf413"]
+[gd_scene load_steps=6 format=3 uid="uid://b7e4hrbvbf413"]
 
 [ext_resource type="Script" uid="uid://dymti180cn16a" path="res://entities/enemies/traps/spike_trap.gd" id="1_uu6ug"]
 [ext_resource type="Texture2D" uid="uid://cpyn1vh0pq7m0" path="res://entities/enemies/traps/assets/spike_trap_plant.png" id="2_uu6ug"]
+[ext_resource type="PackedScene" uid="uid://cfefgtiidrp6" path="res://ui/components/enemy_health_bar.tscn" id="3_g7ddl"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fkc1t"]
 size = Vector2(49, 28.5)
@@ -11,7 +12,6 @@ size = Vector2(61, 38.25)
 
 [node name="SpikeTrap" type="Area2D"]
 collision_layer = 4
-collision_mask = 2
 script = ExtResource("1_uu6ug")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
@@ -30,3 +30,9 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
 position = Vector2(7.5, 10.875)
 shape = SubResource("RectangleShape2D_0bb6i")
+
+[node name="EnemyHealthBar" parent="." instance=ExtResource("3_g7ddl")]
+offset_left = -12.0
+offset_top = -35.0
+offset_right = 28.0
+offset_bottom = -25.0

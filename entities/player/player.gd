@@ -602,7 +602,7 @@ func die() -> void:
 
 	# 2. Visual Death Animation
 	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tween.tween_property(visuals, "rotation_degrees", 90, 0.5)
+	tween.tween_property(visuals, "rotation_degrees", 90, 0.15)
 	tween.tween_property(visuals, "modulate", Color.DARK_SLATE_GRAY, 0.5)
 
 	# 3. CRITICAL: Add this so Goma is "Clean" for the next load

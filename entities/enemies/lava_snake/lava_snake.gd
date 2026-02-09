@@ -6,6 +6,7 @@ extends Area2D
 var current_health : int
 
 @onready var sprite = $Sprite2D
+@onready var health_bar = $EnemyHealthBar
 
 func _ready() -> void:
 	# Initialize health
@@ -24,6 +25,8 @@ func _ready() -> void:
 	if Global.destroyed_enemies.has(enemy_key):
 		queue_free()
 		return 
+		
+	health_bar.setup(max_health)
 	
 	# 4. Start the "Living" animations
 	start_wiggle()
@@ -68,6 +71,7 @@ var hit_cooldown := 0.0
 func take_damage(amount: int):
 	if hit_cooldown > 0: return # Skip if recently hit
 	current_health -= amount
+	health_bar.update_health(current_health)
 	hit_cooldown = 0.4 # wait 0.4s before taking damage again
 	
 	# Visual Feedback: Quick red flash

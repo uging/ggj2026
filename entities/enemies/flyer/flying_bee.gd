@@ -42,6 +42,7 @@ enum State { PATROL, CHASE, FLEE }
 @onready var los_ray: RayCast2D = $LOSRay
 @onready var hurt_box: Area2D = $HurtBox
 @onready var detection_area: Area2D = $DetectionArea
+@onready var health_bar = $EnemyHealthBar
 
 # --- LIFECYCLE ---
 
@@ -55,6 +56,7 @@ func _ready() -> void:
 		return
 
 	current_health = max_health
+	health_bar.setup(max_health)
 	if texture: sprite.texture = texture
 	
 	_connect_signals()
@@ -219,6 +221,7 @@ func _on_hurt_box_body_entered(body: Node2D) -> void:
 func take_damage(amount: int):
 	if hit_cooldown > 0: return
 	
+	health_bar.update_health(current_health)
 	current_health -= amount
 	hit_cooldown = 0.4
 	

@@ -4,17 +4,20 @@ extends Area2D
 @export var knockback_force := 500.0
 @export var trap_health := 1 
 
+@onready var health_bar = $EnemyHealthBar
+
 func _ready() -> void:
 	# 1. GENERATE UNIQUE KEY
 	# Uses the Level Name (BasicLevel) + the Node Name (SpikeTrap/PlantTrap)
 	var level_name = get_tree().current_scene.name
 	var enemy_key = level_name + "_" + name
-	
 	# 2. CHECK IF DEAD
 	# If this specific enemy is in Global.destroyed_enemies, delete it immediately
 	if Global.destroyed_enemies.has(enemy_key):
 		queue_free()
 		return 
+		
+	health_bar.setup(trap_health)
 
 	body_entered.connect(_on_body_entered)
 
@@ -50,6 +53,7 @@ func _physics_process(_delta: float) -> void:
 
 func take_damage(amount: int):
 	trap_health -= amount
+	health_bar.update_health(trap_health)
 	if trap_health <= 0:
 		break_trap()
 

@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://6t54oy8ccwbe"]
+[gd_scene load_steps=7 format=3 uid="uid://6t54oy8ccwbe"]
 
 [ext_resource type="Script" uid="uid://sehkrk547mkb" path="res://entities/enemies/flyer/flying_bee.gd" id="1_5quwy"]
 [ext_resource type="Texture2D" uid="uid://m2b7hgqkugkx" path="res://entities/enemies/flyer/assets/bee.png" id="1_etcgh"]
+[ext_resource type="PackedScene" uid="uid://cfefgtiidrp6" path="res://ui/components/enemy_health_bar.tscn" id="3_ig7lc"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_5quwy"]
 radius = 31.016125
@@ -16,7 +17,6 @@ radius = 300.0
 [node name="FlyingBee" type="CharacterBody2D"]
 collision_layer = 4
 script = ExtResource("1_5quwy")
-leash_distance = 1000.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_etcgh")
@@ -43,3 +43,9 @@ shape = SubResource("CircleShape2D_xd02h")
 
 [node name="LOSRay" type="RayCast2D" parent="."]
 collision_mask = 3
+
+[node name="EnemyHealthBar" parent="." instance=ExtResource("3_ig7lc")]
+offset_left = -22.0
+offset_top = -60.0
+offset_right = 18.0
+offset_bottom = -50.0

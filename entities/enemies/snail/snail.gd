@@ -16,6 +16,7 @@ var turn_cooldown := 0.0
 @onready var wall_ray: RayCast2D = $WallRay
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var hurt_box: Area2D = $HurtBox
+@onready var health_bar = $EnemyHealthBar
 
 func _ready() -> void:
 	current_health = max_health # Initialize health
@@ -33,6 +34,7 @@ func _ready() -> void:
 	if Global.destroyed_enemies.has(enemy_key):
 		queue_free()
 		return 
+	health_bar.setup(max_health)
 	
 	start_crawling_animation()
 
@@ -93,6 +95,7 @@ func take_damage(amount: int):
 	if hit_cooldown > 0: return # Skip if recently hit
 	
 	current_health -= amount
+	health_bar.update_health(current_health)
 	hit_cooldown = 0.4 # Wait 0.4s before taking damage again
 	
 	# Visual Hit Flash
