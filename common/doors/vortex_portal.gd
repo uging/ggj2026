@@ -58,7 +58,6 @@ func _on_portal_entered(body):
 	if body is CharacterBody2D and (body.name == "Player" or body == Global.player):
 		if not body.input_enabled: 
 			return
-		GlobalAudioManager.fade_music(-80.0, 0.8)
 		# 1. Start audio and freeze player
 		GlobalAudioManager.update_portal_hum_volume(0.0)
 		GlobalAudioManager.stop_portal_hum()

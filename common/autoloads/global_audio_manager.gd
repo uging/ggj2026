@@ -35,12 +35,28 @@ var music_tween: Tween
 var music_player: AudioStreamPlayer = null
 
 # Map the "Name" of your scene's root node to the music file
+# --- UPDATED MUSIC REGISTRY ---
 var level_music_registry = {
-	"WorldMap": preload("res://resources/sounds/autism island.ogg"),
-	"TowerLevel": preload("res://resources/sounds/Exploring Town.ogg"),
-	"PyramidLevel": preload("res://resources/sounds/Cunning plan.ogg"),
-	"BasicLevel": preload("res://resources/sounds/tropicalfantasy.ogg"),
-	"Credits": preload("res://resources/sounds/themsong.wav")
+	"WorldMap": {
+		"stream": preload("res://resources/sounds/autism island.ogg"),
+		"use_fade": false  # Switch: OFF for instant start
+	},
+	"TowerLevel": {
+		"stream": preload("res://resources/sounds/Exploring Town.ogg"),
+		"use_fade": true   # Switch: ON for smooth entry
+	},
+	"PyramidLevel": {
+		"stream": preload("res://resources/sounds/Cunning plan.ogg"),
+		"use_fade": true
+	},
+	"BasicLevel": {
+		"stream": preload("res://resources/sounds/tropicalfantasy.ogg"),
+		"use_fade": true
+	},
+	"Credits": {
+		"stream": preload("res://resources/sounds/themsong.wav"),
+		"use_fade": false  # Switch: OFF for instant credits music
+	}
 }
 
 func _ready():
@@ -56,33 +72,45 @@ func _ready():
 	get_tree().node_added.connect(_on_node_added_for_music)
 
 func _on_node_added_for_music(node: Node):
-	# 1. Safety Check: Only trigger if the node is being loaded into our main container
-	# This stops 'PyramidLevel' (the portal) in the 'WorldMap' from starting the wrong song
-	if node.get_parent() and node.get_parent().name == "LevelContainer":
+	# 1. Check if the node is in our main container
+	var is_valid_parent = node.get_parent() and node.get_parent().name == "LevelContainer"
+	
+	if is_valid_parent and level_music_registry.has(node.name):
+		var data = level_music_registry[node.name] # This is the Dictionary
+		var bus_idx = AudioServer.get_bus_index("Music")
 		
-		# 2. Registry Check: Does this level name have a song assigned?
-		if level_music_registry.has(node.name):
-			# 3. Start Silent: Prevents the initial 'pop' or overlap
-			var bus_idx = AudioServer.get_bus_index("Music")
+		# Kill any portal fade-outs still running
+		if music_tween and music_tween.is_valid():
+			music_tween.kill()
+		
+		if data["use_fade"]:
+			# --- FADE ON ---
 			AudioServer.set_bus_volume_db(bus_idx, -80.0)
-			
-			# 4. Change Track: Physically stop old and start new
-			play_music(level_music_registry[node.name])
-			
-			# 5. Smooth Transition: Fade in over 1.5 seconds
+			# FIX: Pass data["stream"], not just data
+			play_music(data["stream"])
 			fade_music(0.0, 1.5)
+		else:
+			# --- FADE OFF (SWITCH) ---
+			AudioServer.set_bus_volume_db(bus_idx, 0.0)
+			# FIX: Pass data["stream"], not just data
+			play_music(data["stream"])
 
 func play_music(music_stream: AudioStream):
+	# 1. Don't restart the song if it's already playing
 	if is_instance_valid(music_player) and music_player.stream == music_stream:
 		return 
 	
+	# 2. Stop current playback to clear the audio buffer for the web
 	music_player.stop()
 	music_player.stream = music_stream
 	
-	# Loop settings for Web/Compatibility
-	if music_stream is AudioStreamMP3: music_stream.loop = true
-	elif music_stream is AudioStreamWAV: music_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	# 3. Web/Compatibility loop settings
+	if music_stream is AudioStreamMP3: 
+		music_stream.loop = true
+	elif music_stream is AudioStreamWAV: 
+		music_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	
+	# 4. Start playback
 	music_player.play()
 	
 func _process(_delta):

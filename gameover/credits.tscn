@@ -20,7 +20,7 @@ font_size = 30
 font = ExtResource("4_gc7tn")
 font_size = 30
 
-[node name="CreditsLayer" type="CanvasLayer"]
+[node name="Credits" type="CanvasLayer"]
 script = ExtResource("3_mn72n")
 
 [node name="ColorRect" type="ColorRect" parent="."]
@@ -123,3 +123,6 @@ custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_gc7tn")
 text = "Exit"
+
+[connection signal="pressed" from="ButtonContainer/MainMenuButton" to="." method="_on_main_menu_button_pressed"]
+[connection signal="pressed" from="ButtonContainer/ExitButton" to="." method="_on_exit_button_pressed"]

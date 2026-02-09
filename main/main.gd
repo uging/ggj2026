@@ -129,6 +129,17 @@ func load_level(path: String, spawn_pos: Vector2):
 			player.set_physics_process(false)
 			player.set_process_input(false)
 			hud.hide()
+
+			# CHANGE: Get the Dictionary, then pass only the stream
+			if GlobalAudioManager.level_music_registry.has("Credits"):
+				var data = GlobalAudioManager.level_music_registry["Credits"]
+				GlobalAudioManager.play_music(data["stream"]) # Access the Object inside
+
+				# Check your 'use_fade' switch
+				if data["use_fade"]:
+					GlobalAudioManager.fade_music(0.0, 1.5)
+				else:
+					AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), 0.0)
 		else:
 			# 6. Positioning [KEEP]
 			player.global_position = spawn_pos
