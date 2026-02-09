@@ -250,11 +250,11 @@ position = Vector2(707, -520)
 [node name="FlyingBee5" parent="." instance=ExtResource("13_f363n")]
 position = Vector2(607, -1662)
 
+[node name="Slime" parent="." instance=ExtResource("14_6wimq")]
+position = Vector2(605, 471)
+
 [node name="EndPortal" parent="." instance=ExtResource("13_6wimq")]
 position = Vector2(67, -2064)
 
 [node name="StartPortal" parent="." instance=ExtResource("13_6wimq")]
 position = Vector2(1076, 424)
-
-[node name="Slime" parent="." instance=ExtResource("14_6wimq")]
-position = Vector2(605, 471)
