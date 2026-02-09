@@ -238,6 +238,9 @@ stream = ExtResource("8_nhahx")
 autoplay = true
 bus = &"Music"
 
+[node name="Snail" parent="." instance=ExtResource("10_jdkyd")]
+position = Vector2(595, 462)
+
 [node name="FlyingBee" parent="." instance=ExtResource("11_uin8l")]
 position = Vector2(1046, -1801)
 
@@ -258,10 +261,3 @@ position = Vector2(67, -2064)
 
 [node name="StartPortal" parent="." instance=ExtResource("13_6wimq")]
 position = Vector2(1076, 424)
-
-[node name="Snail" parent="." instance=ExtResource("10_jdkyd")]
-z_index = 2
-position = Vector2(31, -1643)
-
-[node name="Slime" parent="." instance=ExtResource("14_6wimq")]
-position = Vector2(604, 444)
