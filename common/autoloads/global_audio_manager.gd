@@ -59,6 +59,14 @@ var level_music_registry = {
 	}
 }
 
+var enemy_sfx_map = {
+	"slime": preload("res://resources/sounds/small2.ogg"),
+	"bee": preload("res://resources/sounds/bee.ogg"),
+	"fly": preload("res://resources/sounds/hit1_silverfish.ogg"),
+	"bat": preload("res://resources/sounds/hurt2.ogg"),
+	"snail": preload("res://resources/sounds/small2.ogg")
+}
+
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().node_added.connect(_on_node_added)
@@ -284,6 +292,13 @@ func stop_charge_sound():
 		active_charge_player.stop()
 		active_charge_player.queue_free()
 		active_charge_player = null
+		
+func play_enemy_hurt(enemy_type: String):
+	if enemy_sfx_map.has(enemy_type):
+		_play_sfx(enemy_sfx_map[enemy_type], -2.0) # Uses your existing pitch randomization
+	else:
+		# Fallback to the generic hurt sound if the type isn't found
+		_play_sfx(hurt_sfx)
 
 func play_glide_sound():
 	if active_glide_player == null:

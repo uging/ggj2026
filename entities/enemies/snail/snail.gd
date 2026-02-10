@@ -98,6 +98,8 @@ func take_damage(amount: int):
 	health_bar.update_health(current_health)
 	hit_cooldown = 0.4 # Wait 0.4s before taking damage again
 	
+	GlobalAudioManager.play_enemy_hurt("snail")
+	
 	# Visual Hit Flash
 	var flash = create_tween()
 	flash.tween_property(sprite, "modulate", Color.RED, 0.05)

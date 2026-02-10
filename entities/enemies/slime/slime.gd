@@ -157,6 +157,8 @@ func take_damage(amount: int) -> void:
 	health_bar.update_health(current_health)
 	hit_cooldown = 0.2
 	
+	GlobalAudioManager.play_enemy_hurt("slime")
+	
 	# Visual flash
 	var flash = create_tween()
 	flash.tween_property(sprite, "modulate", Color.RED, 0.05)

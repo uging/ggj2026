@@ -9,6 +9,7 @@ extends CharacterBody2D
 @export var knockback_force := 500.0
 @export var detection_radius := 200.0
 @export var leash_distance := 400.0 
+@export_enum("bee", "bat", "ghost", "fly") var sfx_key: String = "bee"
 
 @export_group("Movement Behavior")
 @export var wave_frequency := 0.005 # How fast they bob
@@ -220,6 +221,8 @@ func _on_hurt_box_body_entered(body: Node2D) -> void:
 
 func take_damage(amount: int):
 	if hit_cooldown > 0: return
+	
+	GlobalAudioManager.play_enemy_hurt(sfx_key)
 	
 	health_bar.update_health(current_health)
 	current_health -= amount
