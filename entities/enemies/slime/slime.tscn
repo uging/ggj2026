@@ -13,6 +13,14 @@ radius = 26.24881
 [node name="Slime" type="CharacterBody2D"]
 collision_layer = 4
 script = ExtResource("1_40ead")
+type = null
+speed = null
+jump_force = null
+gravity = null
+damage_amount = null
+knockback_force = null
+retreat_speed = null
+retreat_time = null
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_m8e27")

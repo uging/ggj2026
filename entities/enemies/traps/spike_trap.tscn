@@ -12,6 +12,7 @@ size = Vector2(68, 43.5)
 
 [node name="SpikeTrap" type="Area2D"]
 collision_layer = 4
+collision_mask = 3
 script = ExtResource("1_fkc1t")
 
 [node name="EnemyHealthBar" parent="." instance=ExtResource("3_gfji8")]

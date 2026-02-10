@@ -12,6 +12,7 @@ size = Vector2(61, 38.25)
 
 [node name="SpikeTrap" type="Area2D"]
 collision_layer = 4
+collision_mask = 3
 script = ExtResource("1_uu6ug")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

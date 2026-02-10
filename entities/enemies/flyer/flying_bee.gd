@@ -1,22 +1,17 @@
-extends CharacterBody2D
+extends EnemyBase
 
 # --- CONFIGURATION ---
 @export_group("Stats")
-@export var speed := 120.0
+# 'speed' is inherited from EnemyBase (120.0)
 @export var chase_speed := 180.0
-@export var damage_amount := 1
-@export var max_health := 2
-@export var knockback_force := 500.0
 @export var detection_radius := 200.0
 @export var leash_distance := 400.0 
-@export_enum("bee", "bat", "ghost", "fly") var sfx_key: String = "bee"
 
 @export_group("Movement Behavior")
-@export var wave_frequency := 0.005 # How fast they bob
-@export var wave_amplitude := 30.0  # How far they bob
+@export var wave_frequency := 0.005 
+@export var wave_amplitude := 30.0  
 
 @export_group("Requirements & Persistence")
-@export var persistence_enabled := false
 ## 0=None, 1=Ninja, 2=Feather, 3=Gum, 4=Rock
 @export var required_mask_id : int = 3 
 
@@ -25,29 +20,28 @@ extends CharacterBody2D
 
 @export_group("Retreat Behavior")
 @export var retreat_speed := 220.0
-@export var retreat_time := 1.5 # How long they run away before returning to patrol
+@export var retreat_time := 1.5 
 
 # --- STATE VARIABLES ---
 var current_state = State.PATROL
-var current_health: int
 var direction := 1
-var hit_cooldown := 0.0
 var home_position : Vector2
 var player_ref: Node2D = null
 
 enum State { PATROL, CHASE, FLEE }
 
 # --- NODE REFERENCES ---
-@onready var sprite: Sprite2D = $Sprite2D
 @onready var wall_ray: RayCast2D = $WallRay
 @onready var los_ray: RayCast2D = $LOSRay
-@onready var hurt_box: Area2D = $HurtBox
 @onready var detection_area: Area2D = $DetectionArea
-@onready var health_bar = $EnemyHealthBar
 
 # --- LIFECYCLE ---
 
 func _ready() -> void:
+	# 1. Run Base Setup (Signals & Health)
+	super._ready()
+	
+	# 2. Bee Specific Setup
 	_setup_nodes()
 	_setup_detection_radius()
 	
@@ -56,18 +50,15 @@ func _ready() -> void:
 	if not _check_spawn_requirements():
 		return
 
-	current_health = max_health
-	health_bar.setup(max_health)
 	if texture: sprite.texture = texture
 	
-	_connect_signals()
+	_connect_bee_signals()
 	start_hover_animation()
 
 func _physics_process(delta: float) -> void:
-	if hit_cooldown > 0: 
-		hit_cooldown -= delta
+	# Run hit_cooldown timer from EnemyBase
+	super._physics_process(delta)
 
-	# 1. Handle Movement Logic based on State
 	match current_state:
 		State.PATROL:
 			_process_patrol(delta)
@@ -77,20 +68,15 @@ func _physics_process(delta: float) -> void:
 		State.FLEE:
 			_process_flee()
 
-	# 2. Execute movement
 	move_and_slide()
-
-	# 3. Centralized Visual Logic (Fixed Face-Direction)
 	_update_visual_orientation()
 
 # --- VISUAL HELPERS ---
 
 func _update_visual_orientation() -> void:
 	if current_state == State.PATROL:
-		# Face moving direction in patrol
 		sprite.flip_h = (direction == -1)
 	else:
-		# Face the player in CHASE or FLEE
 		if player_ref and is_instance_valid(player_ref):
 			sprite.flip_h = (player_ref.global_position.x < global_position.x)
 
@@ -107,13 +93,14 @@ func _setup_detection_radius() -> void:
 		if shape_node.shape is CircleShape2D:
 			shape_node.shape.radius = detection_radius
 
-func _connect_signals() -> void:
-	hurt_box.body_entered.connect(_on_hurt_box_body_entered)
+func _connect_bee_signals() -> void:
+	# HurtBox is already connected by super._ready()
 	detection_area.body_entered.connect(_on_detection_body_entered)
 	detection_area.body_exited.connect(_on_detection_body_exited)
 
 func _check_spawn_requirements() -> bool:
-	if required_mask_id != 0 and not _is_mask_unlocked(required_mask_id):
+	# Original check logic
+	if required_mask_id != 0 and not _is_mask_unlocked_internal(required_mask_id):
 		queue_free()
 		return false
 	
@@ -122,10 +109,9 @@ func _check_spawn_requirements() -> bool:
 		if Global.destroyed_enemies.has(enemy_key):
 			queue_free()
 			return false
-			
 	return true
 
-func _is_mask_unlocked(mask_id: int) -> bool:
+func _is_mask_unlocked_internal(mask_id: int) -> bool:
 	match mask_id:
 		2: return Global.unlocked_masks.get("feather", false)
 		3: return Global.unlocked_masks.get("gum", false)
@@ -141,7 +127,6 @@ func _process_patrol(_delta: float) -> void:
 
 	velocity.x = direction * speed
 	velocity.y = sin(Time.get_ticks_msec() * wave_frequency) * wave_amplitude
-	# starts from where the chase actually begins
 	home_position = global_position
 
 func _process_chase(_delta: float) -> void:
@@ -149,13 +134,11 @@ func _process_chase(_delta: float) -> void:
 		_return_to_patrol()
 		return
 
-	# Update LOS
 	los_ray.target_position = to_local(player_ref.global_position)
 	los_ray.force_raycast_update()
 
 	if los_ray.is_colliding():
 		var collider = los_ray.get_collider()
-		# Use direct reference check instead of name string
 		if collider != player_ref and not collider.is_in_group("player"):
 			_return_to_patrol()
 			return
@@ -168,12 +151,7 @@ func _check_for_player() -> void:
 		los_ray.target_position = to_local(player_ref.global_position)
 		los_ray.force_raycast_update()
 
-		if not los_ray.is_colliding():
-			current_state = State.CHASE
-			return
-
-		var collider = los_ray.get_collider()
-		if collider == player_ref or (collider and collider.is_in_group("player")):
+		if not los_ray.is_colliding() or los_ray.get_collider() == player_ref or los_ray.get_collider().is_in_group("player"):
 			current_state = State.CHASE
 
 func _return_to_patrol() -> void:
@@ -188,60 +166,24 @@ func _process_flee() -> void:
 	else:
 		_return_to_patrol()
 
-func _start_retreat() -> void:
+# Called by EnemyBase automatically
+func _start_retreat(target_player: Node2D = null) -> void:
+	if target_player: player_ref = target_player
 	current_state = State.FLEE
 	get_tree().create_timer(retreat_time).timeout.connect(_return_to_patrol)
 
-# --- COMBAT & DAMAGE ---
-
-func _on_hurt_box_body_entered(body: Node2D) -> void:
-	if not body.is_in_group("player"): return
-	
-	var is_smashing = body.get("is_rock_smashing") == true
-	var is_rock_mask = body.get("current_set_id") == 4
-	var is_falling_fast = body.velocity.y > 700.0
-
-	if is_smashing or (is_rock_mask and is_falling_fast):
-		take_damage(1)
-		if body.has_method("bounce_off_enemy"): 
-			body.bounce_off_enemy()
-		else:
-			body.velocity.y = -400 
-		return
-			
-	var is_aura_active = body.get("is_rock_aura_active") == true
-	if body.get("is_invincible") or is_aura_active: 
-		return
-
-	if body.has_method("take_damage"):
-		body.take_damage(damage_amount)
-		var push_dir = (body.global_position - global_position).normalized()
-		body.velocity = push_dir * knockback_force
-		_start_retreat()
-
-func take_damage(amount: int):
-	if hit_cooldown > 0: return
-	
-	GlobalAudioManager.play_enemy_hurt(sfx_key)
-	
-	health_bar.update_health(current_health)
-	current_health -= amount
-	hit_cooldown = 0.4
-	
-	var flash = create_tween()
-	flash.tween_property(sprite, "modulate", Color.RED, 0.05)
-	flash.tween_property(sprite, "modulate", Color.WHITE, 0.05)
-	
-	if current_health <= 0:
-		die()
+# --- OVERRIDES ---
 
 func die():
+	if is_dead: return
+	is_dead = true
+	
 	if persistence_enabled:
 		var enemy_key = get_tree().current_scene.name + "_" + name
 		Global.destroyed_enemies[enemy_key] = true
 	
 	set_physics_process(false)
-	hurt_box.set_deferred("monitoring", false)
+	if hurt_box: hurt_box.set_deferred("monitoring", false)
 	
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(self, "rotation", 1.5, 0.2)
@@ -265,6 +207,5 @@ func _on_detection_body_entered(body: Node2D) -> void:
 
 func _on_detection_body_exited(body: Node2D) -> void:
 	if body == player_ref:
-		# Don't clear immediately; only clear if we are actually out of range
 		if global_position.distance_to(player_ref.global_position) > detection_radius:
 			_return_to_patrol()

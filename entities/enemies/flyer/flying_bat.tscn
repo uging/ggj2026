@@ -8,16 +8,16 @@ resource_local_to_scene = true
 radius = 300.0
 
 [node name="FlyingBee" instance=ExtResource("1_pvcj8")]
-speed = 150.0
 chase_speed = 200.0
-damage_amount = 2
-max_health = 3
-knockback_force = 600.0
 detection_radius = 350.0
-sfx_key = "bat"
 wave_frequency = 0.008
 wave_amplitude = 15.0
 required_mask_id = 2
+speed = 150.0
+damage_amount = 2
+knockback_force = 600.0
+max_health = 3
+sfx_key = "bat"
 
 [node name="Sprite2D" parent="." index="0"]
 texture = ExtResource("2_lrtyv")
