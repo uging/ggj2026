@@ -61,7 +61,8 @@ var level_music_registry = {
 
 var enemy_sfx_map = {
 	"slime": preload("res://resources/sounds/small2.ogg"),
-	"bee": preload("res://resources/sounds/bee.ogg"),
+	"bee": preload("res://resources/sounds/bee.ogg"
+	),
 	"fly": preload("res://resources/sounds/hit1_silverfish.ogg"),
 	"bat": preload("res://resources/sounds/hurt2.ogg"),
 	"snail": preload("res://resources/sounds/small2.ogg")
